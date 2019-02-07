@@ -1,0 +1,116 @@
+{% extends 'ui/base.html' %}
+
+{% block content %}
+<div class="w-75 mx-auto">
+<form class="form-horizontal" onsubmit="return validateForm()" action="/ui/get/" name="form">
+  
+  <!-- Date input -->
+  <div class="form-group row">
+    <label class="control-label col-sm-3" for="date">Date:</label>
+    <div class="col-sm-7">
+      <input type="date" class="form-control" id="date" name="date">
+    </div>
+  </div>
+
+  <!-- Time input -->
+  <div class="form-group row">
+      <label class="control-label col-sm-3" for="time">Time Interval:</label>
+      <div class="col-sm-3">
+        <input type="time" step="0.001" class="form-control" id="start_time" name="start_time" value="00:00:00.000">
+      </div>
+      <div class="col-sm-1">to</div>
+      <div class="col-sm-3">
+        <input type="time" step="0.001" class="form-control" id="finish_time" name="finish_time" value="23:59:59.999">
+      </div>
+    </div>
+
+  <!-- Timezone input -->
+  <div class="form-group row">
+      <label class="control-label col-sm-3" for="timezone">Timezone:</label>
+      <div class="col-sm-7">
+        <select class="form-control" id="sel1" name="timezone">
+          <option value="utc">UTC</option>
+          <option value="Asia/Kolkata">IST</option>
+        </select>
+      </div>
+    </div>
+
+  <!-- Channel Value input -->
+  <div class="form-group row">
+    <label class="control-label col-sm-3" for="channel_value">Channel Name:</label>
+    <div class="col-sm-7">
+      <select class="form-control" id="sel1" name="channel_value">
+        {% for channel in channels %}
+          <option value="{{channel.channel_value}}"> {{channel.channel_name}} </option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <!-- Device ID input -->
+  <div class="form-group row">
+    <label class="control-label col-sm-3" for="device_id">Device:</label>
+    <div class="col-sm-7">
+      <select class="form-control" id="sel1" name="device_id">
+          <option value="both">Both</option>
+        <option value="a">a</option>
+        <option value="b">b</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Submit Button -->
+  <div class="form-group row"> 
+    <div class="col-sm-10">
+      <button type="submit" class="btn btn-primary btn-block">Submit</button>
+    </div>
+  </div>
+
+</form>
+</div>
+
+
+<script type="text/javascript">
+  function formatDate() {
+    var d = new Date(),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+
+    return [year, month, day].join('-');
+  }
+  document.getElementById('date').value = formatDate();
+
+  function validateForm() {
+
+		//	check for empty fields
+    var date_input = document.forms["form"]["date"].value;
+    var start_time_input = document.forms["form"]["start_time"].value;
+    var finish_time_input = document.forms["form"]["finish_time"].value;
+		
+		// console.log("start_time is " + start_time_input);
+		// console.log("finish_time is " + finish_time_input);
+		
+    if (date_input =="" || start_time_input =="" || finish_time_input == "") {
+			alert("Please Fill All Required Field!");
+			return false;
+    }
+		else { //	check if start_time more than end_time
+			start_time = new Date('2000-01-01T' + start_time_input).getTime();
+			finish_time = new Date('2000-01-01T' + finish_time_input).getTime();
+
+			// console.log("Start time in seconds is " + start_time);
+			// console.log("Finish time in seconds is " + finish_time);
+      
+			if (start_time > finish_time) {
+				alert("Starting time can't exceed ending time!");
+				return false;
+			}
+		}
+
+  }
+</script>
+{% endblock %}
