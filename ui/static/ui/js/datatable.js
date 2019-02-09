@@ -4,19 +4,15 @@ console.log("inside datatable!!!");
 
 function setColumns(columnNames) {
 
-    headerRowHtml = '';
-    footerRowHtml = '';
+    rowHtml = '';
 
     $.each(columnNames, function(i, columnName) {
-        headerColumnHtml = '<th scope="col">' + columnName + '</th>';
-        footerColumnHtml = '<th scope="col"><input type="text" placeholder="Search '+columnName+'" /></th>';
-
-        headerRowHtml += headerColumnHtml;
-        footerRowHtml += footerColumnHtml;
+        columnHtml = '<th scope="col">' + columnName + '</th>';
+        rowHtml += columnHtml;
     });
 
-    $('tr#header-row').html(headerRowHtml);
-    $('tr#footer-row').html(footerRowHtml);
+    $('tr#header-row').html(rowHtml);
+    $('tr#footer-row').html(rowHtml);
 }
 
 $(document).ready(function(){
@@ -52,7 +48,14 @@ $(document).ready(function(){
         });
 
 
-        //  3. search feature for each individual field
+        //  3. make text boxes in footer
+        $('#example tfoot th').each( function () {
+            var title = $(this).text();
+            $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+        } );
+
+
+        //  4. search feature for each individual field
         table.columns().every(function() {
             var that = this;
             $('input', this.footer()).on('keyup change', function() {
@@ -64,7 +67,7 @@ $(document).ready(function(){
             });
         });
 
-        //  4. refreshing regularly
+        //  5. refreshing regularly
         setInterval( function () {
             console.log("refreshing table");
             table.ajax.reload(null, false);
