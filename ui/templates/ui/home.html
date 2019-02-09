@@ -39,7 +39,7 @@
   <div class="form-group row">
     <label class="control-label col-sm-3" for="channel_value">Channel Name:</label>
     <div class="col-sm-7">
-      <select class="form-control" id="sel1" name="channel_value">
+      <select class="form-control" id="sel1" name="channel_value" multiple="multiple" data-toggle="select">
         {% for channel in channels %}
           <option value="{{channel.channel_value}}"> {{channel.channel_name}} </option>
         {% endfor %}
