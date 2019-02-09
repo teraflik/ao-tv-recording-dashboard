@@ -71,12 +71,12 @@ class GeneralView(APIView):
     
     def get(self, request):
 
-        input_date = request.GET['date']
-        input_start_time = handle_buggy_time(request.GET['start_time'])
-        input_finish_time = handle_buggy_time(request.GET['finish_time'])
-        input_timezone = request.GET['timezone']
-        channel_value = request.GET['channel_value']
-        device_id = request.GET['device_id']
+        input_date = request.GET.get('date')
+        input_start_time = handle_buggy_time(request.GET.get('start_time'))
+        input_finish_time = handle_buggy_time(request.GET.get('finish_time'))
+        input_timezone = request.GET.get('timezone')
+        channel_values = request.GET.getlist('channel_values')
+        device_id = request.GET.get('device_id')
 
         input_timezone = pytz.timezone(input_timezone)
         start_datetime = input_timezone.localize(datetime.datetime.strptime(input_date + " " + input_start_time, "%Y-%m-%d %H:%M:%S.%f"))
@@ -86,10 +86,10 @@ class GeneralView(APIView):
         
         filters['timestamp__range'] = [start_datetime, finish_datetime]
         
-        if request.GET.get("device_id") != 'both':
-            filters['device_id'] = request.GET.get("device_id")
+        if device_id != 'both':
+            filters['device_id'] = device_id
         
-        filters['channel_value'] = int(request.GET.get("channel_value"))
+        filters['channel_value__in'] = [int(x) for x in channel_values]
 
         recordings = Recording.objects.filter(**filters)
         serializer = RecordingSerializer(recordings, many=True)
