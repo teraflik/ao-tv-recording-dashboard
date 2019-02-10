@@ -81,6 +81,9 @@ class GeneralView(APIView):
         input_timezone = pytz.timezone(input_timezone)
         start_datetime = input_timezone.localize(datetime.datetime.strptime(input_date + " " + input_start_time, "%Y-%m-%d %H:%M:%S.%f"))
         finish_datetime = input_timezone.localize(datetime.datetime.strptime(input_date + " " + input_finish_time, "%Y-%m-%d %H:%M:%S.%f"))
+
+        start_datetime = start_datetime - datetime.timedelta(minutes=5)
+        finish_datetime = finish_datetime + datetime.timedelta(minutes=5)
         
         filters = {}
         
