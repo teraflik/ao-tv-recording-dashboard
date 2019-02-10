@@ -84,7 +84,7 @@ class GeneralView(APIView):
         
         filters = {}
         
-        filters['timestamp__range'] = [start_datetime, finish_datetime]
+        # filters['show_timestamp__range'] = [start_datetime, finish_datetime]
         
         if device_id != 'both':
             filters['device_id'] = device_id
@@ -92,7 +92,9 @@ class GeneralView(APIView):
         filters['channel_value__in'] = [int(x) for x in channel_values]
 
         recordings = Recording.objects.filter(**filters)
-        serializer = RecordingSerializer(recordings, many=True)
+
+        ans = [obj for obj in recordings.all() if obj.show_timestamp > start_datetime and obj.show_timestamp < finish_datetime]
+        serializer = RecordingSerializer(ans, many=True)
         
         return Response(serializer.data)
         # return JsonResponse(request.GET)

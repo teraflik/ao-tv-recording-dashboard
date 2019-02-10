@@ -7,6 +7,9 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from __future__ import unicode_literals
 
+import datetime
+import pytz
+
 from django.db import models
 
 
@@ -71,6 +74,19 @@ class Recording(models.Model):
     clip_number = models.IntegerField(blank=True, null=True)
     clip_slot = models.CharField(max_length=255, blank=True, null=True)
     migration_status = models.IntegerField(blank=True, null=True)
+
+    @property
+    def show_timestamp(self):
+        '''
+        Returns the timestamp of the show after parsing through the request_id
+        '''
+        splits = self.request_id.split("_")
+        if len(splits) == 2:
+            return self.timestamp
+        date_str = splits[0]
+        time_str = splits[2]
+        IST = pytz.timezone("Asia/Kolkata")
+        return IST.localize(datetime.datetime.strptime(date_str + " " + time_str, "%Y%m%d %H%M%S.%f"))
 
     class Meta:
         managed = False
