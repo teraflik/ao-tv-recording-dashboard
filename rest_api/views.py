@@ -1,6 +1,7 @@
 import datetime
 import pytz
 
+from django.db.models import Q
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from rest_framework.views import APIView
@@ -79,15 +80,22 @@ class GeneralView(APIView):
         device_id = request.GET.get('device_id')
 
         input_timezone = pytz.timezone(input_timezone)
+        ist_timezone = pytz.timezone('Asia/Kolkata')
+
         start_datetime = input_timezone.localize(datetime.datetime.strptime(input_date + " " + input_start_time, "%Y-%m-%d %H:%M:%S.%f"))
         finish_datetime = input_timezone.localize(datetime.datetime.strptime(input_date + " " + input_finish_time, "%Y-%m-%d %H:%M:%S.%f"))
 
-        start_datetime = start_datetime - datetime.timedelta(minutes=5)
-        finish_datetime = finish_datetime + datetime.timedelta(minutes=5)
+        start_datetime = start_datetime - datetime.timedelta(minutes=1)
+        finish_datetime = finish_datetime + datetime.timedelta(minutes=1)
+        
+
+        start_date_ist_str = start_datetime.astimezone(ist_timezone).strftime("%Y%m%d")
+        start_time_ist_str = start_datetime.astimezone(ist_timezone).strftime("%H%M%S.%f")
+
+        finish_date_ist_str = finish_datetime.astimezone(ist_timezone).strftime("%Y%m%d")
+        finish_time_ist_str = finish_datetime.astimezone(ist_timezone).strftime("%H%M%S.%f")
         
         filters = {}
-        
-        # filters['show_timestamp__range'] = [start_datetime, finish_datetime]
         
         if device_id != 'both':
             filters['device_id'] = device_id
@@ -96,9 +104,16 @@ class GeneralView(APIView):
 
         recordings = Recording.objects.filter(**filters)
 
-        ans = [obj for obj in recordings.all() if obj.show_timestamp > start_datetime and obj.show_timestamp < finish_datetime]
-        serializer = RecordingSerializer(ans, many=True)
+        q = Q()
+        for ch in channel_values:
+            start = '_'.join([start_date_ist_str, ch, start_time_ist_str])
+            finish = '_'.join([finish_date_ist_str, ch, finish_time_ist_str])
+            q = q | (Q(request_id__range=[start, finish]) & ~Q(stage_message__in = ["Start Recording", "Stop Recording"]))
+
+        q = q | Q(stage_message__in = ["Start Recording", "Stop Recording"], timestamp__range = [start_datetime, finish_datetime])
+        recordings = recordings.filter(q)        
         
+        serializer = RecordingSerializer(recordings, many=True)
         return Response(serializer.data)
         # return JsonResponse(request.GET)
     

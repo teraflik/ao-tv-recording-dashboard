@@ -75,19 +75,6 @@ class Recording(models.Model):
     clip_slot = models.CharField(max_length=255, blank=True, null=True)
     migration_status = models.IntegerField(blank=True, null=True)
 
-    @property
-    def show_timestamp(self):
-        '''
-        Returns the timestamp of the show after parsing through the request_id
-        '''
-        splits = self.request_id.split("_")
-        if len(splits) == 2:
-            return self.timestamp
-        date_str = splits[0]
-        time_str = splits[2]
-        IST = pytz.timezone("Asia/Kolkata")
-        return IST.localize(datetime.datetime.strptime(date_str + " " + time_str, "%Y%m%d %H%M%S.%f"))
-
     class Meta:
         managed = False
         db_table = 'recording'
