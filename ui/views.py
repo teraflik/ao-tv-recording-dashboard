@@ -19,5 +19,16 @@ def home(request):
     return render(request, 'ui/home.html', {'channels': channels})
 
 def general(request):
-    return render(request, 'ui/datatable.html', {"request_params": request.GET})
+    myDict = dict(request.GET._iterlists())
+    
+    for key, value in myDict.items():
+        if key != 'channel_values':
+            myDict[key] = value[0]
+    
+    # map channel_values to channel_names
+    channel_values = [int(x) for x in myDict['channel_values']]
+    channel_names = [t['channel_name'] for t in channels.filter(channel_value__in=channel_values)]
+    myDict['channel_names'] = channel_names
+
+    return render(request, 'ui/datatable.html', myDict)
     # return JsonResponse(request.GET)
