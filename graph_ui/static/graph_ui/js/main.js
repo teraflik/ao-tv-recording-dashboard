@@ -1,8 +1,3 @@
-var testData = [
-    {times: [{"starting_time": 1355752800000, "ending_time": 1355759900000}, {"starting_time": 1355767900000, "ending_time": 1355774400000}]},
-    {times: [{"starting_time": 1355759910000, "ending_time": 1355761900000}, ]},
-    {times: [{"starting_time": 1355761910000, "ending_time": 1355763910000}]}
-];
 var rectAndCircleTestData = [
     {times: [{"starting_time": 1355752800000,
             "display": "circle"}, {"starting_time": 1355767900000, "ending_time": 1355774400000}]},
@@ -50,13 +45,6 @@ var testDataRelative = [
     {times: [{"starting_time": 1355759910000, "ending_time": 1355761900000}]},
     {times: [{"starting_time": 1355761910000, "ending_time": 1355763910000}]}
 ];
-var width = 500;
-
-function timelineRect() {
-    var chart = d3.timeline();
-    var svg = d3.select("#timeline1").append("svg").attr("width", width)
-    .datum(testData).call(chart);
-}
 
 function timelineRectNoAxis() {
     var chart = d3.timeline().showTimeAxis();
@@ -199,18 +187,94 @@ chart.fullLengthBackgrounds();
         .datum(labelTestData).call(chart);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var testData = [
+    {label: "Recording", times: [{"starting_time": 1549913400000, "display": "circle", "color": "lightgreen"}, 
+                                 {"starting_time": 1549929600000, "display": "circle", "color": "red"}]},
+    {label: "Processing", times: [{"starting_time": 1549927800000, "ending_time": 1549929600000, "color": "purple", "label": "C.S."},
+                                  {"starting_time": 1549913400000, "ending_time": 1549915200000, "color": "magenta", "label": "U.D."}]}
+];
+
+var width = 1000;
+
+function timelineRect() {
+    var chart = d3.timeline()
+                  .showTimeAxisTick()
+                  .width(width*5)
+                //   .rowSeparators("yellow")
+                  .display("rect")
+                //   .background('silver')
+                  .beginning(1549909800000)
+                  .itemHeight(30)
+                //   .itemMargin(15)
+                  .ending(1549996200000)
+                  .rotateTicks(45)
+                  .stack()
+                  .tickFormat( //
+                    {format: d3.time.format("%H:%M"),
+                    tickTime: d3.time.minutes,
+                    tickInterval: 30,
+                    tickSize: 6});
+
+    var svg = d3.select("#timeline1")
+                .append("svg")
+                .attr("width", width)
+                .datum(testData)
+                .call(chart);
+}
+
+function update(color) {
+
+    //  Get new data
+    testData[0]['times'][0]["color"] = color;
+    
+    //  Remove the old element
+    d3.select("svg").remove();
+    
+    //  Create the new element
+	var svg = d3.select("#timeline1")
+                .append("svg")
+                .attr("width", width)
+                .datum(testData)
+                .call(chart);
+}
+
+
 timelineRect();
-timelineRectNoAxis();
-timelineCircle();
-timelineRectAndCircle();
-timelineHover();
-timelineStackedIcons();
-timelineLabelColor();
-timelineRotatedTicks();
-timelineRectColors();
-timelineRectColorsPerTime();
-timelineRelativeTime();
-timelineAxisTop();
-timelineBgndTick();
-timelineBgnd();
-timelineComplex();
+// timelineRectNoAxis();
+// timelineCircle();
+// timelineRectAndCircle();
+// timelineHover();
+// timelineStackedIcons();
+// timelineLabelColor();
+// timelineRotatedTicks();
+// timelineRectColors();
+// timelineRectColorsPerTime();
+// timelineRelativeTime();
+// timelineAxisTop();
+// timelineBgndTick();
+// timelineBgnd();
+// timelineComplex();
