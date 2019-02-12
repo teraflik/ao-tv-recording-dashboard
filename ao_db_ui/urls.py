@@ -21,4 +21,5 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include('rest_api.urls')),
     url(r'^ui/', include('ui.urls')),
+    url(r'^graph_ui/', include('graph_ui.urls')),
 ]

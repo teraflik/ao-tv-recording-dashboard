@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     # 'reversion',
     'corsheaders',
     'rest_framework',
+    'graph_ui.apps.GraphUiConfig',
     'ui.apps.UiConfig',
     'rest_api.apps.RestApiConfig',
     'django.contrib.admin',
