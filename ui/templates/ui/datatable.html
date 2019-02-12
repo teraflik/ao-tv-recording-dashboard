@@ -1,7 +1,15 @@
 {% extends 'ui/base.html' %}
+{% load static %}
+
+{% block head %}
+    <!-- For datatable -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.3.1/dt-1.10.18/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/dt-1.10.18/datatables.min.js"></script>
+{% endblock %}
+
+
 
 {% block content %}
-
 <div>
     <table class="table table-bordered table-hover" style="font-size: 12px">
         <thead>
@@ -37,4 +45,11 @@
         </tr>
     </tfoot>
 </table>
+{% endblock %}
+
+
+
+{% block footer %}
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="{% static "ui/js/datatable.js" %}"></script>
 {% endblock %}
