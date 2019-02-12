@@ -1,7 +1,27 @@
 {% extends 'ui/base.html' %}
+{% load static %}
+
+{% block head %}
+    <!-- For D3.js -->
+    <script src='https://d3js.org/d3.v4.min.js'></script>
+{% endblock %}
+
+
+
+
 
 {% block content %}
+<center>
+    <h3>Hello D3!</h3>
+</center>
+{% endblock %}
 
-<h3>Hello D3!</h3>
 
+
+
+{% block footer %}
+<script>
+    d3.select('h3').style('color', 'darkblue');
+    d3.select('h3').style('font-size', '24px');
+</script>
 {% endblock %}
