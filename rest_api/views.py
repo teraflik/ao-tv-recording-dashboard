@@ -61,7 +61,9 @@ class FilterRecordingTrackingView(APIView):
         pass
 
 def handle_buggy_time(input_time):
-    if len(input_time.split(".")) == 2:
+    if not input_time:
+        return None
+    elif len(input_time.split(".")) == 2:
         return input_time
     elif len(input_time.split(":")) == 3:
         return input_time + '.000'
@@ -72,12 +74,22 @@ class GeneralView(APIView):
     
     def get(self, request):
 
-        input_date = request.GET.get('date')
-        input_start_time = handle_buggy_time(request.GET.get('start_time'))
-        input_finish_time = handle_buggy_time(request.GET.get('finish_time'))
-        input_timezone = request.GET.get('timezone')
-        channel_values = request.GET.getlist('channel_values')
-        device_id = request.GET.get('device_id')
+        #   retrieve the GET parameters
+        input_date = request.GET.get('date') or str(datetime.datetime.date(datetime.datetime.now()))
+        input_start_time = handle_buggy_time(request.GET.get('start_time')) or '00:00:00.000'
+        input_finish_time = handle_buggy_time(request.GET.get('finish_time')) or '23:59:59.999'
+        input_timezone = request.GET.get('timezone') or 'Asia/Kolkata'
+        channel_values = request.GET.getlist('channel_values') or list(map(str, ChannelInfo.objects.values_list('channel_value', flat=True)))
+        device_id = request.GET.get('device_id') or 'both'
+
+        # temp_json = {
+        #                 "input_date": input_date,
+        #                 "input_start_time": input_start_time,
+        #                 "input_finish_time": input_finish_time,
+        #                 "input_timezone": input_timezone,
+        #                 "channel_values": channel_values,
+        #                 "device_id": device_id
+        #             }
 
         input_timezone = pytz.timezone(input_timezone)
         ist_timezone = pytz.timezone('Asia/Kolkata')
@@ -115,7 +127,7 @@ class GeneralView(APIView):
         
         serializer = RecordingSerializer(recordings, many=True)
         return Response(serializer.data)
-        # return JsonResponse(request.GET)
+        # return JsonResponse(temp_json)
     
     def post(self, request):
         pass

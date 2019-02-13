@@ -26,9 +26,10 @@ def general(request):
             myDict[key] = value[0]
     
     # map channel_values to channel_names
-    channel_values = [int(x) for x in myDict['channel_values']]
-    channel_names = [t['channel_name'] for t in channels.filter(channel_value__in=channel_values)]
-    myDict['channel_names'] = channel_names
+    if myDict.get('channel_values'):
+        channel_values = [int(x) for x in myDict['channel_values']]
+        channel_names = [t['channel_name'] for t in channels.filter(channel_value__in=channel_values)]
+        myDict['channel_names'] = channel_names
 
     return render(request, 'ui/datatable.html', myDict)
     # return JsonResponse(request.GET)
