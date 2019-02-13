@@ -32,20 +32,64 @@ function prepareEndpoint() {
 
 var globalRawData;
 
-function formatData(rawData) {
-  //  get row corresponding to "stage number": 1
+function formatData(rawData, endpoint) {
+  
+  //  get row corresponding to "stage number": [1, 6]
   startRecordingRow = rawData.filter(function(row) { return row["stage_number"] == 1; });
   stopRecordingRow = rawData.filter(function(row) { return row["stage_number"] == 6; });
+  
   
   //  extract time of the start and stop.
   var startRecordingTime = new Date(startRecordingRow[0]["timestamp"]).valueOf();
   var stopRecordingTime = new Date(stopRecordingRow[0]["timestamp"]).valueOf();
+
+  
+  //  filter out the processing rows
+  processingRows = rawData.filter(function(row) { return (row["stage_number"] != 1 && row["stage_number"] != 6); })
+  
+  
+  //  get the latest stage_number for all the processing rows
+  hashMap = {}
+  for(i = 0; i < processingRows.length; i++) {
+    if (!hashMap[processingRows[i]["request_id"]]) {
+      hashMap[processingRows[i]["request_id"]] = processingRows[i]["stage_number"];
+    }
+    else if (hashMap[processingRows[i]["request_id"]] < processingRows[i]["stage_number"]) {
+      hashMap[processingRows[i]["request_id"]] = processingRows[i]["stage_number"];
+    }
+  }
+  console.log(hashMap);
+  //  1. map request_id to seconds offset and 2. stage_number to a color.
+  var stageToColor = {2: "yellow", 3: "orange", 4: "maroon", 5: "brown"};
+
+  var today = endpoint.searchParams.get('date');
+
+
+  // var date = new Date(endpoint.searchParams.get('date') + " 00:00:00");
+  var array = [];
+  for (var key in hashMap) {
+    var color = stageToColor[hashMap[key]];
+    var time = key.split("_")[2];
+    time = new Date(today + " " + time[0] + time[1] + ":" + time[2] + time[3] + ":" + time[4] + time[5]).valueOf();
+    array.push({
+                  "color": color,
+                  "starting_time": time + 2 * 60 * 1000,
+                  "ending_time": time + 1800000 - 2 * 60 * 1000,
+
+    });
+  }
+
+  console.log(array);
+  
+  
   //  create data with entry
   var formattedData = [
     {label: "Recording", times: [{"starting_time": startRecordingTime, "display": "circle", "color": "green"}, 
                                  {"starting_time": stopRecordingTime, "display": "circle", "color": "red"}]},
-    {label: "Processing", times: []}
-  ]
+    {label: "Processing", times: array}
+  ];
+
+
   return formattedData;
 }
 
@@ -69,7 +113,7 @@ var svg = d3.select("#timeline1")
 function main(rawData, endpoint) {
 
   //  fill in data according 
-  var formattedData = formatData(rawData);
+  var formattedData = formatData(rawData, endpoint);
   globalRawData = rawData;
   
   // configure the timeline
@@ -77,7 +121,7 @@ function main(rawData, endpoint) {
   var date = new Date(endpoint.searchParams.get('date') + " 00:00:00");
   var chart = d3.timeline()
                 .showTimeAxisTick()
-                .width(width*5)
+                .width(width*3)
               //   .rowSeparators("yellow")
                 .display("rect")
               //   .background('silver')
