@@ -8,13 +8,13 @@ function yyyy_mm_dd(date) {
 
 function prepareEndpoint() {
   //  In future, this will take a key value pair as argument which would be set as the URL parameters.
-  var generalEndpoint = new URL(document.URL.replace('graph_ui/home', 'api/get'));
+  var generalEndpoint = new URL(document.URL.replace('graph_ui/d3-timeline', 'api/get'));
 
   // Endpoint for Sony Channel, device_id=a
   var sonyDeviceAEndpoint = new URL(generalEndpoint);
 
-  sonyDeviceAEndpoint.searchParams.append("channel_values", 4);
-  sonyDeviceAEndpoint.searchParams.append("device_id", 'a');
+  // sonyDeviceAEndpoint.searchParams.append("channel_values", 4);
+  // sonyDeviceAEndpoint.searchParams.append("device_id", 'a');
 
 
   if (!sonyDeviceAEndpoint.searchParams.get('date')) {
@@ -22,14 +22,6 @@ function prepareEndpoint() {
   }
   return sonyDeviceAEndpoint;
 }
-
-
-// var testData = [
-//   {label: "Recording", times: [{"starting_time": 1549913400000, "display": "circle", "color": "lightgreen"}, 
-//                                 {"starting_time": 1549929600000, "display": "circle", "color": "red"}]},
-//   {label: "Processing", times: [{"starting_time": 1549927800000, "ending_time": 1549929600000, "color": "purple", "label": "C.S."},
-//                                 {"starting_time": 1549913400000, "ending_time": 1549915200000, "color": "magenta", "label": "U.D."}]}
-// ];
 
 var globalRawData;
 

@@ -1,5 +1,5 @@
 from django.shortcuts import render
 # Create your views here.
 
-def home(request):
-    return render(request, 'graph_ui/home.html')
+def d3_timeline(request):
+    return render(request, 'graph_ui/d3-timeline-home.html')
