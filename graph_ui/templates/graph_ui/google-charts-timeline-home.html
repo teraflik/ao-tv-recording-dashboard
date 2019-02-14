@@ -1,0 +1,18 @@
+{% extends 'ui/base.html' %}
+{% load static %}
+
+{% block head %}
+    <!-- For Google Charts -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+{% endblock %}
+
+
+{% block content %}
+      <div id="timeline" style="height: 180px;"></div>
+{% endblock %}
+
+
+{% block footer %}
+  <script src="{% static "graph_ui/js/google-charts-timeline-main.js" %}"></script>
+{% endblock %}
