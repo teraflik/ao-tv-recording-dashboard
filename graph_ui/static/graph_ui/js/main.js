@@ -11,7 +11,8 @@ function prepareEndpoint() {
   var generalEndpoint = new URL(document.URL.replace('graph_ui/home', 'api/get'));
 
   // Endpoint for Sony Channel, device_id=a
-  var sonyDeviceAEndpoint = new URL(generalEndpoint)
+  var sonyDeviceAEndpoint = new URL(generalEndpoint);
+
   sonyDeviceAEndpoint.searchParams.append("channel_values", 4);
   sonyDeviceAEndpoint.searchParams.append("device_id", 'a');
 
