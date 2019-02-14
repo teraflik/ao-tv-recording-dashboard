@@ -107,6 +107,41 @@ var svg = d3.select("#timeline1")
               .call(chart);
 }
 
+function plotGraph(formattedData, endpoint) {
+  // configure the timeline
+  var width = 1000;
+  var date = new Date(endpoint.searchParams.get('date') + " 00:00:00");
+  var chart = d3.timeline()
+              .showTimeAxisTick()
+              .width(width*3)
+              //   .rowSeparators("yellow")
+              .display("rect")
+              //   .background('silver')
+              .beginning(date.valueOf())
+              .itemHeight(30)
+              //   .itemMargin(15)
+              .ending(date.valueOf() + 86400000)
+              .rotateTicks(45)
+              .stack()
+              .tickFormat( //
+                  {format: d3.time.format("%H:%M"),
+                  tickTime: d3.time.minutes,
+                  tickInterval: 30,
+                  tickSize: 6});
+
+  // Create the timeline using d3
+  var svg = d3.select("#timeline1")
+              .append("svg")
+              .attr("id", "sony")     //  replace the hardcoding
+              .attr("width", width)
+              .datum(formattedData)
+              .call(chart);
+
+  // setInterval(function() {
+  //               updateTimeline(chart, "#sony");
+  // }, 10000);
+}
+
 function main(rawData, endpoint) {
 
   //  fill in data according 
@@ -114,37 +149,7 @@ function main(rawData, endpoint) {
   globalRawData = rawData;
   
   // configure the timeline
-  var width = 1000;
-  var date = new Date(endpoint.searchParams.get('date') + " 00:00:00");
-  var chart = d3.timeline()
-                .showTimeAxisTick()
-                .width(width*3)
-              //   .rowSeparators("yellow")
-                .display("rect")
-              //   .background('silver')
-                .beginning(date.valueOf())
-                .itemHeight(30)
-              //   .itemMargin(15)
-                .ending(date.valueOf() + 86400000)
-                .rotateTicks(45)
-                .stack()
-                .tickFormat( //
-                  {format: d3.time.format("%H:%M"),
-                  tickTime: d3.time.minutes,
-                  tickInterval: 30,
-                  tickSize: 6});
-
-    // Create the timeline using d3
-    var svg = d3.select("#timeline1")
-                .append("svg")
-                .attr("id", "sony")     //  replace the hardcoding
-                .attr("width", width)
-                .datum(formattedData)
-                .call(chart);
-  
-  // setInterval(function() {
-  //               updateTimeline(chart, "#sony");
-  // }, 10000);
+  plotGraph(formattedData, endpoint);
 }
 
 function getData(endpoint) {

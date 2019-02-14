@@ -1,0 +1,5 @@
+#chart_wrapper {
+    overflow-x: scroll;
+    overflow-y: hidden;
+    width: 1000px;
+  }

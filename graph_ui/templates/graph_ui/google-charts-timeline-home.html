@@ -4,12 +4,15 @@
 {% block head %}
     <!-- For Google Charts -->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-
+    <link rel="stylesheet" href="{% static "graph_ui/css/google-chart-timeline-main.css" %}"/>
 {% endblock %}
 
 
 {% block content %}
-      <div id="timeline" style="height: 180px;"></div>
+      <img src="{% static "graph_ui/img/sony.png" %}" style="height: 50px; width: 50px">
+      <!-- <div id="chart_wrapper"> -->
+        <div id="timeline"></div>
+    <!-- </div> -->
 {% endblock %}
 
 
