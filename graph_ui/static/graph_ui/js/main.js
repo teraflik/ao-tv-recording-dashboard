@@ -35,14 +35,19 @@ var globalRawData;
 function formatData(rawData, endpoint) {
   
   //  get row corresponding to "stage number": [1, 6]
-  startRecordingRow = rawData.filter(function(row) { return row["stage_number"] == 1; });
-  stopRecordingRow = rawData.filter(function(row) { return row["stage_number"] == 6; });
+  startRecordingRows = rawData.filter(function(row) { return row["stage_number"] == 1; });
+  stopRecordingRows = rawData.filter(function(row) { return row["stage_number"] == 6; });
   
   
-  //  extract time of the start and stop.
-  var startRecordingTime = new Date(startRecordingRow[0]["timestamp"]).valueOf();
-  var stopRecordingTime = new Date(stopRecordingRow[0]["timestamp"]).valueOf();
+  //  extract time of the start and stop. Make this flexible for multiple start and stop recording
+  var recordingArray = [];
+  for(i = 0; i < startRecordingRows.length; i++) {
+    recordingArray.push({"starting_time": new Date(startRecordingRows[i]["timestamp"]).valueOf(), "display": "circle", "color": "green"});
+  }
 
+  for(i = 0; i < stopRecordingRows.length; i++) {
+    recordingArray.push({"starting_time": new Date(stopRecordingRows[i]["timestamp"]).valueOf(), "display": "circle", "color": "red"});
+  }
   
   //  filter out the processing rows
   processingRows = rawData.filter(function(row) { return (row["stage_number"] != 1 && row["stage_number"] != 6); })
@@ -66,12 +71,12 @@ function formatData(rawData, endpoint) {
 
 
   // var date = new Date(endpoint.searchParams.get('date') + " 00:00:00");
-  var array = [];
+  var processingArray = [];
   for (var key in hashMap) {
     var color = stageToColor[hashMap[key]];
     var time = key.split("_")[2];
     time = new Date(today + " " + time[0] + time[1] + ":" + time[2] + time[3] + ":" + time[4] + time[5]).valueOf();
-    array.push({
+    processingArray.push({
                   "color": color,
                   "starting_time": time + 2 * 60 * 1000,
                   "ending_time": time + 1800000 - 2 * 60 * 1000,
@@ -79,14 +84,13 @@ function formatData(rawData, endpoint) {
     });
   }
 
-  console.log(array);
+  console.log(processingArray);
   
   
   //  create data with entry
   var formattedData = [
-    {label: "Recording", times: [{"starting_time": startRecordingTime, "display": "circle", "color": "green"}, 
-                                 {"starting_time": stopRecordingTime, "display": "circle", "color": "red"}]},
-    {label: "Processing", times: array}
+    {label: "Recording", times: recordingArray},
+    {label: "Processing", times: processingArray}
   ];
 
 
