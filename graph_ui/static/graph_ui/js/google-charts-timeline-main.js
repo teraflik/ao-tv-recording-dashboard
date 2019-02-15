@@ -98,10 +98,6 @@ var globalLatestEntries;
 
 function getHighestStageNumberEntries(rawData) {
 
-    if (!rawData) {
-        return [];
-    }
-
     //  1. sort by stage_number (desc)
     rawData.sort( (r1, r2) => {
         if (r1.stage_number < r2.stage_number) return 1;
@@ -132,15 +128,73 @@ function getHighestStageNumberEntries(rawData) {
     return highestStageNumberEntries;
 }
 
-function prepareDataForGoogleChartTimeline(rawData) {
+function timeFromProcessingRequestID(request_id, endpoint) {
+    var today = endpoint.searchParams.get('date');
+    var time = request_id.split("_")[2];
+    return new Date(today + " " + time[0] + time[1] + ":" + time[2] + time[3] + ":" + time[4] + time[5]);
+}
+
+function prepareDataForGoogleChartTimeline(rawData, endpoint) {
+
+    if (!rawData) {
+        return null;
+    }
+
+    if (rawData.length == 0) {
+        return null;
+    }
 
     //  1. for each request_id, get single entry having the maximum stage_number
-    var latestEntries = getHighestStageNumberEntries(rawData);
+    var highestStageNumberEntries = getHighestStageNumberEntries(rawData);
 
     //  2. map each entry in this new list to required dataTable format.
+    var stageToColor = {
+        1:  'green',
+        2:  'yellow',
+        3:  'orange',
+        4:  'brown',
+        5:  'blue',
+        6:  'red'
+    }
+
+    var dataTableContents = [];
+    // console.log("Highest stage number entries are :-");
+    // console.log(highestStageNumberEntries);
+    // console.log("");
+
+    for(var i = 0; i < highestStageNumberEntries.length; i++) {
+        var entry = highestStageNumberEntries[i];
+        
+        var category;
+        var label;
+        var color;
+        var startTime;
+        var endTime;
+
+        label = entry['stage_message'];
+        color = stageToColor[entry['stage_number']];
+
+        if (entry['stage_number'] == 1 || entry['stage_number'] == 6) {
+            category = 'Recording';
+            startTime = new Date(entry['timestamp']);
+
+            endTime = new Date(entry['timestamp']);
+            endTime.setMinutes(endTime.getMinutes() + 2);
+        }
+        else {
+            category = 'Processing';
+            startTime = timeFromProcessingRequestID(entry['request_id'], endpoint);
+            startTime.setMinutes(startTime.getMinutes() + 2);
+            
+            endTime = timeFromProcessingRequestID(entry['request_id'], endpoint);
+            endTime.setMinutes(endTime.getMinutes() + 30 - 2 - 2);
+        }
+
+        dataTableContents.push([category, label, color, startTime, endTime]);
+    }
 
     //  3. return it.
-    return latestEntries;
+    return dataTableContents;
 }
 
 function createLiveTimeline(baseEndPoint, getParams) {
@@ -157,7 +211,7 @@ function createLiveTimeline(baseEndPoint, getParams) {
     var rawData = getData(specificEndPoint);
 
     //  4. prepare data in the format to be feeded to the visualisation library.
-    var formattedData = prepareDataForGoogleChartTimeline(rawData);
+    var formattedData = prepareDataForGoogleChartTimeline(rawData, specificEndPoint);
 
     //  5. send this data to the drawChart function
 
