@@ -36,6 +36,10 @@ function getData(endpoint) {
     return toBeReturned;
 }
 
+var globalDataTable;
+var globalChart;
+var globalOptions;
+
 function formatData(rawData, endpoint) {
 }
 
@@ -43,9 +47,6 @@ function plotGraph(formattedData, endpoint) {
     // configure the timeline
     google.charts.load('current', {'packages':['timeline']});
     google.charts.setOnLoadCallback(drawChart);
-
-    var globalData;
-    var globalChart;
 
     function drawChart() {
         var container = document.getElementById('timeline');
@@ -65,17 +66,18 @@ function plotGraph(formattedData, endpoint) {
             [ 'Processing', 'Uploaded', 'Yellow', 'work', new Date("2019-01-01 17:30"), new Date("2019-01-01 18:00")],
             [ 'Processing', 'Clipping', 'Orange', 'please!!', new Date("2019-01-01 18:00"), new Date("2019-01-01 18:30")]]);
         
-        globalData = dataTable;
+        globalDataTable = dataTable;
 
         var options = {
             timeline: { showRowLabels: false },
             tooltip: { isHtml: false },
             width: 1200
         };
+        globalOptions = options;
 
         chart.draw(dataTable, options);
         
-        var globalChart = chart;
+        globalChart = chart;
     }
 
     // setInterval(function() {
