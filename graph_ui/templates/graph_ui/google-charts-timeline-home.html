@@ -9,19 +9,29 @@
 
 
 {% block content %}
-    {% for channel in channels %}
-        <div class="border border-primary rounded">
-          <h3><img src='{{ channel.logo_url }}' style="height: 100px; width: 100px"> - {{ channel.channel_name}}</h3>
-          <h5>Device A</h5>
-          <div id="a_{{channel.channel_value}}"></div>
+    <div id="main">
+      {% for channel in channels %}
+          <div id="{{ channel.channel_value }}">
+            <div class="border border-primary rounded">
+              <h3><img src='{{ channel.logo_url }}' style="height: 100px; width: 100px"> - {{ channel.channel_name}}</h3>
+              <h5>Device A</h5>
+              <div id="a_{{channel.channel_value}}"></div>
 
-          <h5>Device B</h5>
-          <div id="b_{{channel.channel_value}}"></div>
-        </div>
+              <h5>Device B</h5>
+              <div id="b_{{channel.channel_value}}"></div>
+            </div>
+          </div>
       {% endfor %}
+    </div>
 {% endblock %}
 
 
 {% block footer %}
+  <script type="text/javascript">
+  var channelValues = [];
+  {% for channel in channels %}
+    channelValues.push({{channel.channel_value}});
+  {% endfor %}
+  </script>
   <script src="{% static "graph_ui/js/google-charts-timeline-main.js" %}"></script>
 {% endblock %}
