@@ -71,7 +71,7 @@ function plotGraph(formattedData, endpoint) {
         var options = {
             timeline: { showRowLabels: false },
             tooltip: { isHtml: false },
-            width: 1200
+            width: '100%'
         };
         globalOptions = options;
 
