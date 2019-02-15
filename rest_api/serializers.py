@@ -24,7 +24,7 @@ class RecordingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recording
-        fields = ('request_id', 'device_id', 'timestamp', 'channel_name', 'stage_message', 'stage_number', 'logo_url')
+        fields = ('request_id', 'device_id', 'timestamp', 'channel_name', 'stage_message', 'stage_number')
         # depth = 1
 
 class RecordingTrackingSerializer(serializers.ModelSerializer):
