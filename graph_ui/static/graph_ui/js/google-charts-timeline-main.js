@@ -49,7 +49,7 @@ function plotGraph(formattedData, endpoint) {
     google.charts.setOnLoadCallback(drawChart);
 
     function drawChart() {
-        var container = document.getElementById('timeline');
+        var container = document.getElementById('a_1');
         var chart = new google.visualization.Timeline(container);
         var dataTable = new google.visualization.DataTable();
 
