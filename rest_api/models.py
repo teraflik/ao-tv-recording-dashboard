@@ -19,6 +19,7 @@ class ChannelInfo(models.Model):
     parent_network = models.CharField(max_length=255, blank=True, null=True)
     market = models.CharField(max_length=255, blank=True, null=True)
     channel_id = models.CharField(max_length=255, blank=True, null=True)
+    logo_url = models.CharField(max_length=2000, blank=True, null=True)
 
     def __str__(self):
         return self.channel_name
