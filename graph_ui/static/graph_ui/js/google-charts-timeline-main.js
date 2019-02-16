@@ -1,3 +1,6 @@
+google.charts.load('current', {'packages':['timeline']});
+
+
 function yyyy_mm_dd(date) {
     var curr_date = date.getDate();
     var curr_month = date.getMonth() + 1; //Months are zero based
@@ -6,95 +9,11 @@ function yyyy_mm_dd(date) {
   
   }
 
-var globalDataTable;
-var globalChart;
-var globalOptions;
-
-// function formatData(rawData, endpoint) {
-// }
-
-// function plotGraph(formattedData, endpoint) {
-//     // configure the timeline
-//     google.charts.load('current', {'packages':['timeline']});
-//     google.charts.setOnLoadCallback(drawChart);
-
-//     function drawChart() {
-//         var container = document.getElementById('a_1');
-//         var chart = new google.visualization.Timeline(container);
-//         var dataTable = new google.visualization.DataTable();
-
-//         dataTable.addColumn({ type: 'string', id: 'category' });
-//         dataTable.addColumn({ type: 'string', id: 'Name' });
-//         dataTable.addColumn({ type: 'string', id: 'style', role: 'style' });
-//         dataTable.addColumn({ type: 'string', role: 'tooltip' });
-//         dataTable.addColumn({ type: 'date', id: 'Start' });
-//         dataTable.addColumn({ type: 'date', id: 'End' });
-//         dataTable.addRows([
-//             ['Marker', '2019-01-01', 'blue', 'hello', new Date("2019-01-01 00:00"), new Date("2019-01-02 00:00")],
-//             [ 'Recording', 'Start Recording', 'green', 'world', new Date("2019-01-01 17:30"), new Date("2019-01-01 17:31")],
-//             [ 'Recording', 'Stop Recording', 'red', 'please', new Date("2019-01-01 23:30"),  new Date("2019-01-01 23:31")],
-//             [ 'Processing', 'Uploaded', 'Yellow', 'work', new Date("2019-01-01 17:30"), new Date("2019-01-01 18:00")],
-//             [ 'Processing', 'Clipping', 'Orange', 'please!!', new Date("2019-01-01 18:00"), new Date("2019-01-01 18:30")]]);
-        
-//         globalDataTable = dataTable;
-
-//         var options = {
-//             timeline: { showRowLabels: false },
-//             tooltip: { isHtml: false },
-//             width: '100%'
-//         };
-//         globalOptions = options;
-
-//         chart.draw(dataTable, options);
-        
-//         globalChart = chart;
-//     }
-
-//     // setInterval(function() {
-//     //               updateTimeline(chart, "#sony");
-//     // }, 10000);
-// }
-
-// function main(rawData, endpoint) {
-//     //  fill in data according 
-//     var formattedData = formatData(rawData, endpoint);
-//     globalRawData = rawData;
-//     plotGraph(formattedData, endpoint);
-// }
-
-var globalRawData;
-
-function getData(endpoint) {
-    var toBeReturned;
-    
-    $.ajax({
-        type: 'GET',
-        url: endpoint,
-        async: false,
-        dataType: 'json',
-        success: function(rawData){
-                    toBeReturned = rawData;
-                }
-    });
-    
-    globalRawData = toBeReturned;
-    return toBeReturned;
+function timeFromProcessingRequestID(request_id, endpoint) {
+    var today = endpoint.searchParams.get('date');
+    var time = request_id.split("_")[2];
+    return new Date(today + " " + time[0] + time[1] + ":" + time[2] + time[3] + ":" + time[4] + time[5]);
 }
-
-function getBaseEndPoint() {
-
-    //  Get the REST API endpoint to hit from current URL.
-    var baseEndPoint = new URL(document.URL.replace('graph_ui/google-charts-timeline', 'api/get'));
-  
-    //  If no date passed, add today's date
-    if (!baseEndPoint.searchParams.get('date')) {
-        baseEndPoint.searchParams.set('date', yyyy_mm_dd(new Date()));
-    }
-
-    return baseEndPoint;
-}
-
-var globalLatestEntries;
 
 function getHighestStageNumberEntries(rawData) {
 
@@ -128,10 +47,18 @@ function getHighestStageNumberEntries(rawData) {
     return highestStageNumberEntries;
 }
 
-function timeFromProcessingRequestID(request_id, endpoint) {
-    var today = endpoint.searchParams.get('date');
-    var time = request_id.split("_")[2];
-    return new Date(today + " " + time[0] + time[1] + ":" + time[2] + time[3] + ":" + time[4] + time[5]);
+function initializeDataTable(endpoint) {
+    var todayDate = endpoint.searchParams.get('date');
+
+    var dataTable = new google.visualization.DataTable();
+    dataTable.addColumn({ type: 'string', id: 'category' });
+    dataTable.addColumn({ type: 'string', id: 'Name' });
+    dataTable.addColumn({ type: 'string', id: 'color', role: 'style' });
+    dataTable.addColumn({ type: 'date', id: 'Start' });
+    dataTable.addColumn({ type: 'date', id: 'End' });
+    dataTable.addRows([['Marker', todayDate, 'grey', new Date(todayDate + " 00:00:00"), new Date(todayDate + " 23:59:59.999")]]);
+    
+    return dataTable;
 }
 
 function prepareDataForGoogleChartTimeline(rawData, endpoint) {
@@ -179,15 +106,15 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
             startTime = new Date(entry['timestamp']);
 
             endTime = new Date(entry['timestamp']);
-            endTime.setMinutes(endTime.getMinutes() + 2);
+            endTime.setMinutes(endTime.getMinutes() + 1);
         }
         else {
             category = 'Processing';
             startTime = timeFromProcessingRequestID(entry['request_id'], endpoint);
-            startTime.setMinutes(startTime.getMinutes() + 2);
+            startTime.setMinutes(startTime.getMinutes() + 1);
             
             endTime = timeFromProcessingRequestID(entry['request_id'], endpoint);
-            endTime.setMinutes(endTime.getMinutes() + 30 - 2 - 2);
+            endTime.setMinutes(endTime.getMinutes() + 30 - 1 - 1);
         }
 
         dataTableContents.push([category, label, color, startTime, endTime]);
@@ -197,48 +124,105 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
     return dataTableContents;
 }
 
-function createLiveTimeline(baseEndPoint, GETParams) {
+function populateTimeline(timeline, endpoint) {
     
-    //  1. create a new URL object.
+    //  1. get data via ajax call
+    $.ajax({
+        type: 'GET',
+        url: endpoint,
+        async: true,
+        dataType: 'json',
+        success: function(rawData){
+                
+                //  1. debugging purpose
+                console.log("Raw Data");
+                console.log(rawData);
+
+                //  2. prepare data in the format to be feeded to the visualisation library.
+                var formattedData = prepareDataForGoogleChartTimeline(rawData, endpoint);
+
+                //  3. create dataTable object
+                var dataTable = initializeDataTable(endpoint);
+
+                //  4. add the data to the dataTable object
+                if (formattedData) {
+                    dataTable.addRows(formattedData);
+                }
+
+                //  5. define options.
+                var options = {
+                    // timeline: { showRowLabels: false },
+                    tooltip: { isHtml: false },
+                    width: '100%'
+                };
+        
+                //  6. feed data to the timeline.
+                timeline.draw(dataTable, options);
+            }
+    });
+}
+
+function initializeTimeline(endpoint) {
+    var deviceID = endpoint.searchParams.get('device_id');
+    var channelValue = endpoint.searchParams.get('channel_values');
+    
+    var divID = deviceID + "_" + channelValue;
+    var container = document.getElementById(divID);
+    return new google.visualization.Timeline(container);
+}
+
+function addGETParameters(baseEndPoint, GETParams) {
+
     var specificEndPoint = new URL(baseEndPoint);
     
-    //  2. add the get params to the baseEndPoint
     for (var key in GETParams) {
         specificEndPoint.searchParams.set(key, GETParams[key]);
     }
-    
-    //  3. hit the endpoint and get the RAW data
-    var rawData = getData(specificEndPoint);
 
-    //  4. prepare data in the format to be feeded to the visualisation library.
-    var formattedData = prepareDataForGoogleChartTimeline(rawData, specificEndPoint);
-
-    //  5. send this data to the drawChart function
-
-    //  6. enclose 3, 4, 5 in a single function and call it in regular intervals.
-
-
-
-
-    console.log("Endpoint:--> " + specificEndPoint.href);
-    
-    console.log("Raw Data");
-    console.log(rawData);
-    
-    console.log("formattedData");
-    console.log(formattedData);
+    return specificEndPoint;
 }
 
-$(document).ready(function(){
+function getBaseEndPoint() {
 
-    //  1. get base endpoint
-    var baseEndPoint = getBaseEndPoint();
-
-    //  2. call the create timeline for each channel
-    // channelValues is global variable injected by the django-templates
-    for(var i = 0; i < channelValues.length; i++) {
-        createLiveTimeline(baseEndPoint.href, {"device_id": 'a', 'channel_values': channelValues[i]});
-        createLiveTimeline(baseEndPoint.href, {"device_id": 'b', 'channel_values': channelValues[i]});    
+    //  Get the REST API endpoint to hit from current URL.
+    var baseEndPoint = new URL(document.URL.replace('graph_ui/google-charts-timeline', 'api/get'));
+  
+    //  If no date passed, add today's date
+    if (!baseEndPoint.searchParams.get('date')) {
+        baseEndPoint.searchParams.set('date', yyyy_mm_dd(new Date()));
     }
 
+    return baseEndPoint;
+}
+
+google.charts.setOnLoadCallback(function() {
+    
+    //  1. get baseEndPoint
+    var baseEndPoint = getBaseEndPoint();
+
+    //  2. make specificEndPoints array
+    var specificEndPoints = [];
+    for (var i = 0; i < channelValues.length; i++) {
+        specificEndPoints.push(addGETParameters(baseEndPoint.href, {"device_id": 'a', 'channel_values': channelValues[i]}));
+        specificEndPoints.push(addGETParameters(baseEndPoint.href, {"device_id": 'b', 'channel_values': channelValues[i]}));   
+    }
+
+    //  3. initialize timeline
+    var timelines = [];
+    for (var i = 0; i < specificEndPoints.length; i++) {
+        timelines.push(initializeTimeline(specificEndPoints[i]));
+    }
+
+    //  4. populate charts with periodic refreshing
+    for (var i = 0; i < timelines.length; i++) {
+        
+        var timeline = timelines[i];
+        var specificEndPoint = specificEndPoints[i];
+        
+        populateTimeline(timeline, specificEndPoint);
+        
+        setInterval(function() {
+            populateTimeline(timeline, specificEndPoint);
+        }, 10000);
+    }
 });
