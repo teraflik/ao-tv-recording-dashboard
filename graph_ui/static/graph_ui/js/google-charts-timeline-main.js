@@ -197,14 +197,14 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
     return dataTableContents;
 }
 
-function createLiveTimeline(baseEndPoint, getParams) {
+function createLiveTimeline(baseEndPoint, GETParams) {
     
     //  1. create a new URL object.
     var specificEndPoint = new URL(baseEndPoint);
     
     //  2. add the get params to the baseEndPoint
-    for (var key in getParams) {
-        specificEndPoint.searchParams.set(key, getParams[key]);
+    for (var key in GETParams) {
+        specificEndPoint.searchParams.set(key, GETParams[key]);
     }
     
     //  3. hit the endpoint and get the RAW data
@@ -234,8 +234,8 @@ $(document).ready(function(){
     //  1. get base endpoint
     var baseEndPoint = getBaseEndPoint();
 
-    // channelValues = [1];
     //  2. call the create timeline for each channel
+    // channelValues is global variable injected by the django-templates
     for(var i = 0; i < channelValues.length; i++) {
         createLiveTimeline(baseEndPoint.href, {"device_id": 'a', 'channel_values': channelValues[i]});
         createLiveTimeline(baseEndPoint.href, {"device_id": 'b', 'channel_values': channelValues[i]});    
