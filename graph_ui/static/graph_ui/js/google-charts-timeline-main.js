@@ -215,7 +215,7 @@ google.charts.setOnLoadCallback(function() {
 
     //  4. populate charts with periodic refreshing
     for (var i = 0; i < timelines.length; i++) {
-        populateTimeline(timeline, specificEndPoint);
+        populateTimeline(timelines[i], specificEndPoints[i]);
         setInterval(populateTimeline, 10000, timelines[i], specificEndPoints[i]);
     }
 });
