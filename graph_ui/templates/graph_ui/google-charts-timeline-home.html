@@ -9,6 +9,15 @@
 
 
 {% block content %}
+      
+      <form class="form-inline">
+          <div class="form-group mx-sm-3 mb-2">
+            <input type="date" class="form-control" id="date" name='date' placeholder="Password">
+          </div>
+          <button type="submit" class="btn btn-primary mb-2">Submit</button>
+      </form>
+    <br>
+    <br>
     <div id="main">
       {% for channel in channels %}
           <div id="{{ channel.channel_value }}">
@@ -21,6 +30,7 @@
               <div id="b_{{channel.channel_value}}"></div>
             </div>
           </div>
+          <br>
       {% endfor %}
     </div>
 {% endblock %}
