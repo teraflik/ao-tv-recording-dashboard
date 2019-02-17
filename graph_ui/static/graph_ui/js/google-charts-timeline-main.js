@@ -2,10 +2,19 @@ google.charts.load('current', {'packages':['timeline']});
 
 
 function yyyy_mm_dd(date) {
-    var curr_date = date.getDate();
-    var curr_month = date.getMonth() + 1; //Months are zero based
-    var curr_year = date.getFullYear();
-    return curr_year + "-" + curr_month + "-" + curr_date;
+    var dd = date.getDate();
+    var mm = date.getMonth() + 1; //Months are zero based
+    var yyyy = date.getFullYear();
+
+    if (dd < 10) {
+        dd = '0' + dd;
+    }
+
+    if (mm < 10) {
+        mm = '0' + mm;
+    }
+
+    return yyyy + "-" + mm + "-" + dd;
   
   }
 
@@ -195,10 +204,19 @@ function getBaseEndPoint() {
     return baseEndPoint;
 }
 
+function setDateInDatePicker(ID, endpoint) {
+    var dateValue = endpoint.searchParams.get('date');
+    var dateElement = document.getElementById(ID);
+    dateElement.value = dateValue;
+}
+
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
     var baseEndPoint = getBaseEndPoint();
+
+    //  patch: set the date in the datepicker
+    setDateInDatePicker('date', baseEndPoint);
 
     //  2. make specificEndPoints array
     var specificEndPoints = [];
@@ -216,6 +234,6 @@ google.charts.setOnLoadCallback(function() {
     //  4. populate charts with periodic refreshing
     for (var i = 0; i < timelines.length; i++) {
         populateTimeline(timelines[i], specificEndPoints[i]);
-        setInterval(populateTimeline, 10000, timelines[i], specificEndPoints[i]);
+        setInterval(populateTimeline, 300000, timelines[i], specificEndPoints[i]);
     }
 });
