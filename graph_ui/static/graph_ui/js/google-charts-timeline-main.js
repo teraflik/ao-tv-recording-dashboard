@@ -10,6 +10,8 @@ var stageToColor = {
 }
 
 function yyyy_mm_dd(date) {
+
+    var date = new Date(date);
     var dd = date.getDate();
     var mm = date.getMonth() + 1; //Months are zero based
     var yyyy = date.getFullYear();
@@ -196,7 +198,7 @@ function populateTimeline(timeline, endpoint) {
 
                 //  5. define options.
                 var options = {
-                    // timeline: { showRowLabels: false },
+                    timeline: { showRowLabels: false, showBarLabels: false},
                     tooltip: { isHtml: false },
                     width: '100%'
                 };
@@ -205,8 +207,8 @@ function populateTimeline(timeline, endpoint) {
                 timeline.draw(dataTable, options);
 
                 //  7. debugging
-                console.log("Endpoint is :- " + endpoint.href);
-                console.log(formattedData);
+                // console.log("Endpoint is :- " + endpoint.href);
+                // console.log(formattedData);
 
             }
     });
