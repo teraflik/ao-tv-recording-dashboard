@@ -1,5 +1,13 @@
 google.charts.load('current', {'packages':['timeline']});
 
+var stageToColor = {
+    "Start Recording":  'green',
+    "Clipping Started":  'yellow',
+    "Clipping Done":  'orange',
+    "Uploading start":  'brown',
+    "Uploading done":  'blue',
+    "Stop Recording":  'red'
+}
 
 function yyyy_mm_dd(date) {
     var dd = date.getDate();
@@ -117,16 +125,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
 
     //  1. for each request_id, get single entry having the maximum stage_number
     var highestStageNumberEntries = getHighestStageNumberEntries(rawData);
-
-     //  2. map each entry in this new list to required dataTable format.
-     var stageToColor = {
-        1:  'green',
-        2:  'yellow',
-        3:  'orange',
-        4:  'brown',
-        5:  'blue',
-        6:  'red'
-    }
+    
 
     var dataTableContents = [];
     // console.log("Highest stage number entries are :-");
@@ -143,7 +142,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         var endTime;
 
         label = entry['stage_message'];
-        color = stageToColor[entry['stage_number']];
+        color = stageToColor[entry['stage_message']];
 
         if (entry['stage_number'] == 1 || entry['stage_number'] == 6) {
             category = 'Recording';
@@ -181,8 +180,8 @@ function populateTimeline(timeline, endpoint) {
         success: function(rawData){
                 
                 //  1. debugging purpose
-                console.log("Raw Data");
-                console.log(rawData);
+                // console.log("Raw Data");
+                // console.log(rawData);
 
                 //  2. prepare data in the format to be feeded to the visualisation library.
                 var formattedData = prepareDataForGoogleChartTimeline(rawData, endpoint);
@@ -204,6 +203,11 @@ function populateTimeline(timeline, endpoint) {
         
                 //  6. feed data to the timeline.
                 timeline.draw(dataTable, options);
+
+                //  7. debugging
+                console.log("Endpoint is :- " + endpoint.href);
+                console.log(formattedData);
+
             }
     });
 }
@@ -274,3 +278,4 @@ google.charts.setOnLoadCallback(function() {
         setInterval(populateTimeline, 300000, timelines[i], specificEndPoints[i]);
     }
 });
+
