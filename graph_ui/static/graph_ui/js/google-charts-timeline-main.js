@@ -18,10 +18,45 @@ function yyyy_mm_dd(date) {
   
   }
 
-function timeFromProcessingRequestID(request_id, endpoint) {
-    var today = endpoint.searchParams.get('date');
+function getClipNumber(timeString) {
+
+    var hours = parseInt(timeString.split(":")[0]);
+    var minutes = parseInt(timeString.split(":")[1]);
+
+    var clipNumber = 2 * hours + 1;
+
+    if (minutes >= 29) {
+        clipNumber += 1;
+    }
+
+    if (minutes >= 59) {
+        clipNumber += 1;
+    }
+
+    return clipNumber;
+}
+
+function dateTimeFromProcessingRequestID(request_id) {
+    
+    var date = request_id.split("_")[0];
+    var formattedDate = date[0] + date[1] + date[2] + date[3] + "-" + date[4] + date[5] + '-' + date[6] + date[7];
     var time = request_id.split("_")[2];
-    return new Date(today + " " + time[0] + time[1] + ":" + time[2] + time[3] + ":" + time[4] + time[5]);
+    var formattedTime = time[0] + time[1] + ":" + time[2] + time[3] + ":" + time[4] + time[5];
+
+    var clipNumber = getClipNumber(formattedTime);
+    var nextTimeSeconds = clipNumber * 1800;
+
+    //  creating startTime object
+    var startTime = new Date(formattedDate + " " + formattedTime);
+
+    //  creating endTime object
+    var endTime = new Date(formattedDate + " " + "00:00:00");
+    endTime.setSeconds(nextTimeSeconds);
+    
+    return {
+        'start_time': startTime,
+        'end_time': endTime
+    }
 }
 
 function getHighestStageNumberEntries(rawData) {
@@ -83,8 +118,8 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
     //  1. for each request_id, get single entry having the maximum stage_number
     var highestStageNumberEntries = getHighestStageNumberEntries(rawData);
 
-    //  2. map each entry in this new list to required dataTable format.
-    var stageToColor = {
+     //  2. map each entry in this new list to required dataTable format.
+     var stageToColor = {
         1:  'green',
         2:  'yellow',
         3:  'orange',
@@ -119,11 +154,13 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         }
         else {
             category = 'Processing';
-            startTime = timeFromProcessingRequestID(entry['request_id'], endpoint);
-            startTime.setMinutes(startTime.getMinutes() + 1);
+
+            times = dateTimeFromProcessingRequestID(entry['request_id']);
+            startTime = times['start_time'];
+            startTime.setMinutes(startTime.getMinutes() + 2);
             
-            endTime = timeFromProcessingRequestID(entry['request_id'], endpoint);
-            endTime.setMinutes(endTime.getMinutes() + 30 - 1 - 1);
+            endTime = times['end_time'];
+            endTime.setMinutes(endTime.getMinutes() - 2);
         }
 
         dataTableContents.push([category, label, color, startTime, endTime]);
