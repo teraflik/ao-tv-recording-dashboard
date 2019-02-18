@@ -144,8 +144,26 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         var endTime;
 
         label = entry['stage_message'];
-        color = stageToColor[entry['stage_message']];
 
+        //  color
+        if (entry['stage_number'] == 1 || entry['stage_number'] == 6 || entry['stage_number'] == 5) {
+            color = stageToColor[entry['stage_message']];
+        }
+        else {
+
+            var entryTime = new Date(entry['timestamp']);
+            var now = new Date();
+            var hoursElapsed = (now.valueOf() - entryTime.valueOf()) / (1000 * 60 * 60);
+
+            if (hoursElapsed > 24) {
+                color = 'red';
+            }
+            else {
+                color = stageToColor[entry['stage_message']];
+            }
+        }
+
+        //  start & end times.
         if (entry['stage_number'] == 1 || entry['stage_number'] == 6) {
             category = 'Recording';
             startTime = new Date(entry['timestamp']);
