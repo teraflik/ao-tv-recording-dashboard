@@ -2,7 +2,7 @@
 var endpoint = document.URL.replace('ui', 'api');
 console.log("inside datatable!!!");
 
-dropdown_cols = [1, 3, 4];
+dropdown_cols = [1, 3, 4, 5];
 searchbar_cols = [0, 2];
 
 function setColumns(columnNames) {
