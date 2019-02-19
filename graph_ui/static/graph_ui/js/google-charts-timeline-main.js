@@ -280,8 +280,19 @@ function setDateInDatePicker(ID, endpoint) {
     dateElement.value = dateValue;
 }
 
+var globalTimeline;
+var globalIndex;
+
 function selectHandler(timeline, index) {
-    alert("The index selected is :--> " + index);
+
+    var selectedDataTable = globalDataTable[index];
+    var selection = timeline.getSelection()[0];
+    var rowNo = selection.row;
+    var request_id = selectedDataTable.getValue(rowNo, 1);
+    
+    var redirectURL = new URL(window.location.origin + "/ui/request_id_filter");
+    redirectURL.searchParams.set("request_id", request_id);
+    window.open(redirectURL);
 }
 
 google.charts.setOnLoadCallback(function() {
