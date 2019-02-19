@@ -328,6 +328,25 @@ function selectHandler(timeline, index) {
     window.open(redirectURL);
 }
 
+function setColorLabels() {
+    var table = document.getElementById("color-labels");
+    var trElement = table.childNodes[1].childNodes[1];
+
+    for (key in stageToColor) {
+        if (stageToColor.hasOwnProperty(key)) {
+            
+            var stage = document.createElement("th");
+            stage.innerText = key;
+
+            var color = document.createElement("th");
+            color.setAttribute("bgcolor", stageToColor[key]);
+
+            trElement.appendChild(stage);
+            trElement.appendChild(color);
+        }
+    }
+}
+
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
@@ -336,11 +355,14 @@ google.charts.setOnLoadCallback(function() {
     //  patch: set the date in the datepicker
     setDateInDatePicker('date', baseEndPoint);
 
+    //  patch:  add color labels to page top
+    setColorLabels();
+
     //  2. make specificEndPoints array
     var specificEndPoints = [];
     for (var i = 0; i < channelValues.length; i++) {
         specificEndPoints.push(addGETParameters(baseEndPoint.href, {"device_id": 'a', 'channel_values': channelValues[i]}));
-        specificEndPoints.push(addGETParameters(baseEndPoint.href, {"device_id": 'b', 'channel_values': channelValues[i]}));   
+        specificEndPoints.push(addGETParameters(baseEndPoint.href, {"device_id": 'b', 'channel_values': channelValues[i]}));
     }
 
     //  3. initialize timeline
@@ -358,4 +380,3 @@ google.charts.setOnLoadCallback(function() {
         setInterval(populateTimeline, 300000, timelines[i], specificEndPoints[i], i);
     }
 });
-
