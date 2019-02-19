@@ -11,12 +11,11 @@ var stageToColor = {
     "Stop Recording":  'red'
 }
 
-function yyyy_mm_dd(date) {
+function yyyy_mm_dd(dateObject) {
 
-    var date = new Date(date);
-    var dd = date.getDate();
-    var mm = date.getMonth() + 1; //Months are zero based
-    var yyyy = date.getFullYear();
+    var dd = dateObject.getDate();
+    var mm = dateObject.getMonth() + 1; //Months are zero based
+    var yyyy = dateObject.getFullYear();
 
     if (dd < 10) {
         dd = '0' + dd;
@@ -26,9 +25,29 @@ function yyyy_mm_dd(date) {
         mm = '0' + mm;
     }
 
-    return yyyy + "-" + mm + "-" + dd;
-  
-  }
+    return [yyyy, mm, dd].join("-");
+}
+
+function hh_mm_ss(dateObject) {
+
+    var hh = dateObject.getHours();
+    var mm = dateObject.getMinutes();
+    var ss = dateObject.getSeconds();
+
+    if (hh < 10) {
+        hh = '0' + hh;
+    }
+
+    if (mm < 10) {
+        mm = '0' + mm;
+    }
+
+    if (ss < 10) {
+        ss = '0' + ss;
+    }
+
+    return [hh, mm, ss].join(":")
+}
 
 function getClipNumber(timeString) {
 
@@ -144,12 +163,14 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         var label;
         var tooltip;
         var color;
-        var startTime;
-        var endTime;
+        var startTimeTimeline;
+        var endTimeTimeline;
+        
+        var safeTyMargin = 2;
 
         label = entry['request_id'];
-        tooltip = entry['stage_message'];
 
+        
         //  color
         if (entry['stage_number'] == 1 || entry['stage_number'] == 6 || entry['stage_number'] == 5) {
             color = stageToColor[entry['stage_message']];
@@ -168,26 +189,39 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
             }
         }
 
-        //  start & end times.
-        if (entry['stage_number'] == 1 || entry['stage_number'] == 6) {
-            category = 'Recording';
-            startTime = new Date(entry['timestamp']);
 
-            endTime = new Date(entry['timestamp']);
-            endTime.setMinutes(endTime.getMinutes() + 1);
+        //  start & end times and tooltip.
+        if (entry['stage_number'] == 1 || entry['stage_number'] == 6) {
+            
+            category = 'Recording';
+            startTimeTimeline = new Date(entry['timestamp']);
+
+            endTimeTimeline = new Date(entry['timestamp']);
+            endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
+            
+            var startTimeString = hh_mm_ss(startTimeTimeline);
+            tooltip = entry['stage_message'] + ' ' + startTimeString;
         }
         else {
+
             category = 'Processing';
 
             times = dateTimeFromProcessingRequestID(entry['request_id']);
-            startTime = times['start_time'];
-            startTime.setMinutes(startTime.getMinutes() + 2);
             
-            endTime = times['end_time'];
-            endTime.setMinutes(endTime.getMinutes() - 2);
+            var startTime = times['start_time'];
+            startTimeTimeline = new Date(startTime);
+            startTimeTimeline.setMinutes(startTimeTimeline.getMinutes() + safeTyMargin);
+            
+            var endTime = times['end_time'];
+            endTimeTimeline = new Date(endTime);
+            endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
+
+            var startTimeString = hh_mm_ss(startTime);
+            var endTimeString = hh_mm_ss(endTime);
+            tooltip = entry['stage_message'] + ' ' + startTimeString + ' - ' + endTimeString;
         }
 
-        dataTableContents.push([category, label, tooltip, color, startTime, endTime]);
+        dataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
     }
 
     //  3. return it.
@@ -279,9 +313,6 @@ function setDateInDatePicker(ID, endpoint) {
     var dateElement = document.getElementById(ID);
     dateElement.value = dateValue;
 }
-
-var globalTimeline;
-var globalIndex;
 
 function selectHandler(timeline, index) {
 
