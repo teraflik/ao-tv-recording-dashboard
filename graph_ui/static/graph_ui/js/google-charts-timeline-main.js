@@ -1,5 +1,7 @@
 google.charts.load('current', {'packages':['timeline']});
 
+var globalDataTable = {};
+
 var stageToColor = {
     "Start Recording":  'green',
     "Clipping Started":  'yellow',
@@ -189,7 +191,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
     return dataTableContents;
 }
 
-function populateTimeline(timeline, endpoint) {
+function populateTimeline(timeline, endpoint, index) {
     
     //  1. get data via ajax call
     $.ajax({
@@ -224,9 +226,13 @@ function populateTimeline(timeline, endpoint) {
                 //  6. feed data to the timeline.
                 timeline.draw(dataTable, options);
 
-                //  7. debugging
+                //  7. updating the globalDataTable lookup
+                globalDataTable[index] = dataTable;
+
+                //  8. debugging
                 // console.log("Endpoint is :- " + endpoint.href);
                 // console.log(formattedData);
+                // console.log("Value of index is :- " + index);
 
             }
     });
@@ -294,8 +300,8 @@ google.charts.setOnLoadCallback(function() {
 
     //  4. populate charts with periodic refreshing
     for (var i = 0; i < timelines.length; i++) {
-        populateTimeline(timelines[i], specificEndPoints[i]);
-        setInterval(populateTimeline, 300000, timelines[i], specificEndPoints[i]);
+        populateTimeline(timelines[i], specificEndPoints[i], i);
+        setInterval(populateTimeline, 300000, timelines[i], specificEndPoints[i], i);
     }
 });
 
