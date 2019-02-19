@@ -109,10 +109,11 @@ function initializeDataTable(endpoint) {
     var dataTable = new google.visualization.DataTable();
     dataTable.addColumn({ type: 'string', id: 'category' });
     dataTable.addColumn({ type: 'string', id: 'Name' });
+    dataTable.addColumn({ type: 'string', id: 'color', role: 'tooltip' });
     dataTable.addColumn({ type: 'string', id: 'color', role: 'style' });
     dataTable.addColumn({ type: 'date', id: 'Start' });
     dataTable.addColumn({ type: 'date', id: 'End' });
-    dataTable.addRows([['Marker', todayDate, 'grey', new Date(todayDate + " 00:00:00"), new Date(todayDate + " 23:59:59.999")]]);
+    dataTable.addRows([['Marker', todayDate, todayDate, 'grey', new Date(todayDate + " 00:00:00"), new Date(todayDate + " 23:59:59.999")]]);
     
     return dataTable;
 }
@@ -141,11 +142,13 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         
         var category;
         var label;
+        var tooltip;
         var color;
         var startTime;
         var endTime;
 
-        label = entry['stage_message'];
+        label = entry['request_id'];
+        tooltip = entry['stage_message'];
 
         //  color
         if (entry['stage_number'] == 1 || entry['stage_number'] == 6 || entry['stage_number'] == 5) {
@@ -184,7 +187,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
             endTime.setMinutes(endTime.getMinutes() - 2);
         }
 
-        dataTableContents.push([category, label, color, startTime, endTime]);
+        dataTableContents.push([category, label, tooltip, color, startTime, endTime]);
     }
 
     //  3. return it.
