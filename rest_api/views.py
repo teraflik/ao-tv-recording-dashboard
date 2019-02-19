@@ -60,7 +60,7 @@ class FilterRecordingTrackingView(APIView):
     def post(self, request):
         pass
 
-class RequestIDView(APIView):
+class RequestIDFilterView(APIView):
     
     def get(self, request):
         request_id = request.GET.get('request_id')
