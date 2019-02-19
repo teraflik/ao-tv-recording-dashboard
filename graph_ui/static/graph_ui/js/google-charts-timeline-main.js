@@ -168,7 +168,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         
         var safeTyMargin = 2;
 
-        label = entry['request_id'];
+        label = entry['request_id'] + ":" + entry['device_id'];
 
         
         //  color
@@ -319,10 +319,12 @@ function selectHandler(timeline, index) {
     var selectedDataTable = globalDataTable[index];
     var selection = timeline.getSelection()[0];
     var rowNo = selection.row;
-    var request_id = selectedDataTable.getValue(rowNo, 1);
-    
-    var redirectURL = new URL(window.location.origin + "/ui/request_id_filter");
+    var label = selectedDataTable.getValue(rowNo, 1);
+    var [request_id, device_id] = label.split(":")
+
+    var redirectURL = new URL(window.location.origin + "/ui/graph_ui_redirect");
     redirectURL.searchParams.set("request_id", request_id);
+    redirectURL.searchParams.set("device_id", device_id);
     window.open(redirectURL);
 }
 

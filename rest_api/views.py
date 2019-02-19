@@ -60,11 +60,12 @@ class FilterRecordingTrackingView(APIView):
     def post(self, request):
         pass
 
-class RequestIDFilterView(APIView):
+class GraphUIRedirectView(APIView):
     
     def get(self, request):
         request_id = request.GET.get('request_id')
-        recordings = Recording.objects.filter(request_id = request_id)
+        device_id = request.GET.get('device_id')
+        recordings = Recording.objects.filter(request_id = request_id, device_id = device_id)
         serializer = RecordingSerializer(recordings, many=True)
         return Response(serializer.data)
     
