@@ -277,6 +277,10 @@ function setDateInDatePicker(ID, endpoint) {
     dateElement.value = dateValue;
 }
 
+function selectHandler(timeline, index) {
+    alert("The index selected is :--> " + index);
+}
+
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
@@ -294,8 +298,11 @@ google.charts.setOnLoadCallback(function() {
 
     //  3. initialize timeline
     var timelines = [];
-    for (var i = 0; i < specificEndPoints.length; i++) {
+    for (let i = 0; i < specificEndPoints.length; i++) {
         timelines.push(initializeTimeline(specificEndPoints[i]));
+        google.visualization.events.addListener(timelines[i], 'select', function() {
+            selectHandler(timelines[i], i);
+        });
     }
 
     //  4. populate charts with periodic refreshing
