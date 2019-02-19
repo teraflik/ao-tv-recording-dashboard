@@ -132,20 +132,26 @@ function initializeDataTable(endpoint) {
     dataTable.addColumn({ type: 'string', id: 'color', role: 'style' });
     dataTable.addColumn({ type: 'date', id: 'Start' });
     dataTable.addColumn({ type: 'date', id: 'End' });
-    dataTable.addRows([['Marker', todayDate, todayDate, 'grey', new Date(todayDate + " 00:00:00"), new Date(todayDate + " 23:59:59.999")]]);
+    // dataTable.addRows([['Marker', todayDate, todayDate, 'grey', new Date(todayDate + " 00:00:00"), new Date(todayDate + " 23:59:59.999")]]);
     
     return dataTable;
 }
 
 function prepareDataForGoogleChartTimeline(rawData, endpoint) {
 
-    if (!rawData) {
-        return null;
+    var date = endpoint.searchParams.get('date');
+    var startDate = new Date(date + " 00:00:00");
+    
+    var endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+
+    if (!rawData || rawData.length == 0) {
+        return [['Recording', '', 'No recordings available', 'grey', startDate, endDate]];
     }
 
-    if (rawData.length == 0) {
-        return null;
-    }
+    // if (rawData.length == 0) {
+    //     return [['Recording', '', 'No recordings available', 'grey', startDate, endDate]];
+    // }
 
     //  1. for each request_id, get single entry having the maximum stage_number
     var highestStageNumberEntries = getHighestStageNumberEntries(rawData);
@@ -254,9 +260,19 @@ function populateTimeline(timeline, endpoint, index) {
                 }
 
                 //  5. define options.
+                var date = endpoint.searchParams.get('date');
+                var startDate = new Date(date + " 00:00:00");
+                
+                var endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + 1);
+
                 var options = {
                     timeline: { showRowLabels: false, showBarLabels: false},
                     tooltip: { isHtml: false },
+                    hAxis: {
+                        minValue: startDate,
+                        maxValue: endDate
+                      },
                     width: '100%'
                 };
         
