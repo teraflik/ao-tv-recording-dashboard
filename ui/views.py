@@ -13,7 +13,7 @@ channels = models.ChannelInfo.objects.values('channel_name', 'channel_value')
 # Create your views here.
 
 def tables(request):
-    return render(request, 'ui/tabulator.html', {'models': model_names})
+    return render(request, 'ui/datatable.html')
 
 def home(request):
     return render(request, 'ui/home.html', {'channels': channels})
