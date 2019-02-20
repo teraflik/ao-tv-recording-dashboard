@@ -8,7 +8,8 @@ var stageToColor = {
     "Clipping Done":  'orange',
     "Uploading start":  'brown',
     "Uploading done":  'blue',
-    "Stop Recording":  'red'
+    "Stop Recording":  'black',
+    'blank':    'grey'
 }
 
 function yyyy_mm_dd(dateObject) {
@@ -149,10 +150,6 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         return [['Recording', '', 'No recordings available', 'grey', startDate, endDate]];
     }
 
-    // if (rawData.length == 0) {
-    //     return [['Recording', '', 'No recordings available', 'grey', startDate, endDate]];
-    // }
-
     //  1. for each request_id, get single entry having the maximum stage_number
     var highestStageNumberEntries = getHighestStageNumberEntries(rawData);
     
@@ -234,6 +231,76 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
     return dataTableContents;
 }
 
+function reverseJsonMapper(originalMapping) {
+    var reverseMapping = {};
+
+    for (key in originalMapping) {
+        if (originalMapping.hasOwnProperty(key)) {
+            reverseMapping[originalMapping[key]] = key;
+        }
+    }
+
+    return reverseMapping;
+}
+
+function updateSummaryTable(formattedData, endpoint) {
+    
+    //  create a colorToStage mapping
+    var colorToStage = reverseJsonMapper(stageToColor);
+
+    //  check status
+    var statusEnum  = Object.freeze({
+                                        "ok"    :   1, 
+                                        "blank"   :   2, 
+                                        "error" :   3
+                                    });
+    
+    var status = statusEnum.ok;
+    var colorColumn = 3;
+
+    for(var i = 0; i < formattedData.length; i++) {
+        var color = formattedData[i][colorColumn];
+        var stage = colorToStage[color];
+
+        if (stage == 'blank') {
+            status = statusEnum.blank;
+            break;
+        }
+        else if (stage == "Start Recording" || stage == "Stop Recording") {
+            continue;
+        }
+        else if (stage != 'Uploading done') {
+            status = statusEnum.error;
+            break;
+        }
+    }
+
+    var innerHTML;
+    var bgcolor;
+
+    if (status == statusEnum.ok) {
+        innerHTML = '&#10004;';     //  tick sign
+        bgcolor = 'green';
+    }
+    else if (status == statusEnum.error) {
+        innerHTML = '&#10008;';     //  cross sign
+        bgcolor = 'red';
+    }
+    else if (status == statusEnum.blank) {
+        innerHTML = '&#10067;';     //  question mark
+        bgcolor = 'grey';
+    }
+
+    var deviceID = endpoint.searchParams.get('device_id');
+    var channelValue = endpoint.searchParams.get('channel_values');
+
+    var summaryBoxID = ['s', deviceID, channelValue].join("_");
+    var summaryBox = document.getElementById(summaryBoxID);
+
+    summaryBox.innerHTML = innerHTML;
+    summaryBox.setAttribute('bgcolor', bgcolor);
+}
+
 function populateTimeline(timeline, endpoint, index) {
     
     //  1. get data via ajax call
@@ -255,9 +322,8 @@ function populateTimeline(timeline, endpoint, index) {
                 var dataTable = initializeDataTable(endpoint);
 
                 //  4. add the data to the dataTable object
-                if (formattedData) {
-                    dataTable.addRows(formattedData);
-                }
+                dataTable.addRows(formattedData);
+
 
                 //  5. define options.
                 var date = endpoint.searchParams.get('date');
@@ -270,9 +336,12 @@ function populateTimeline(timeline, endpoint, index) {
                     timeline: { showRowLabels: false, showBarLabels: false},
                     tooltip: { isHtml: false },
                     hAxis: {
-                        minValue: startDate,
-                        maxValue: endDate
-                      },
+                            minValue: startDate,
+                            maxValue: endDate,
+                            gridlines: {color: 'pink', count: 4},
+                            // ticks: [startDate, endDate]
+                            // ticks: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+                        },
                     width: '100%'
                 };
         
@@ -282,10 +351,14 @@ function populateTimeline(timeline, endpoint, index) {
                 //  7. updating the globalDataTable lookup
                 globalDataTable[index] = dataTable;
 
+                //  8. update the summary table
+                updateSummaryTable(formattedData, endpoint);
+
                 //  8. debugging
                 // console.log("Endpoint is :- " + endpoint.href);
                 // console.log(formattedData);
                 // console.log("Value of index is :- " + index);
+                console.log(formattedData);
 
             }
     });
@@ -363,16 +436,48 @@ function setColorLabels() {
     }
 }
 
+function attachSummaryToTimeline() {
+    
+    for(var i = 0; i < channelValues.length; i++) {
+
+        //  self invoking function to make a local scope for the index value which'll be used during callback.
+        (function(i){
+
+            var summaryBoxIDA = "#s_a_" + channelValues[i];
+            var timelineIDA = "#a_" + channelValues[i];
+    
+            $(summaryBoxIDA).click(function() {
+                $('html,body').animate({
+                    scrollTop: $(timelineIDA).offset().top},
+                    'slow');
+            });
+    
+            var summaryBoxIDB = "#s_b_" + channelValues[i];
+            var timelineIDB = "#b_" + channelValues[i];
+    
+            $(summaryBoxIDB).click(function() {
+                $('html,body').animate({
+                    scrollTop: $(timelineIDB).offset().top},
+                    'slow');
+            });
+    
+        })(i);
+    }
+}
+
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
     var baseEndPoint = getBaseEndPoint();
 
-    //  patch: set the date in the datepicker
+    //  patch:  set the date in the datepicker
     setDateInDatePicker('date', baseEndPoint);
 
     //  patch:  add color labels to page top
     setColorLabels();
+
+    //  patch:  attach summaryTable to timelines
+    attachSummaryToTimeline();
 
     //  2. make specificEndPoints array
     var specificEndPoints = [];
@@ -383,11 +488,16 @@ google.charts.setOnLoadCallback(function() {
 
     //  3. initialize timeline
     var timelines = [];
-    for (let i = 0; i < specificEndPoints.length; i++) {
-        timelines.push(initializeTimeline(specificEndPoints[i]));
-        google.visualization.events.addListener(timelines[i], 'select', function() {
-            selectHandler(timelines[i], i);
-        });
+    for (var i = 0; i < specificEndPoints.length; i++) {
+        //  self invoking function to make a local scope for the index value which'll be used during callback.
+        (function(i){
+            
+            timelines.push(initializeTimeline(specificEndPoints[i]));
+            google.visualization.events.addListener(timelines[i], 'select', function() {
+                selectHandler(timelines[i], i);
+            });
+        
+        })(i);
     }
 
     //  4. populate charts with periodic refreshing

@@ -17,14 +17,40 @@
           <button type="submit" class="btn btn-primary mb-2">Submit</button>
       </form>
     <br>
-      <table class="table table-bordered" id="color-labels" style="font-size: 12px">
-        <tbody>
-          <tr>
-            
-          </tr>
-        </tbody>
-      </table>
-    
+      
+    <table class="table table-bordered table-hover" id="summary" style="font-size: 12px">
+      <tbody>
+        <tr>
+          <th>Channel Name:</th>
+          {% for channel in channels %}
+            <td>{{ channel.channel_name }}</td>
+          {% endfor %}
+        </tr>
+        
+        <tr>
+          <th>Device A:</th>
+          {% for channel in channels %}
+            <td id="s_a_{{channel.channel_value}}" style="font-size: 15px"></td>
+          {% endfor %}
+        </tr>
+        
+        <tr>
+          <th>Device B:</th>
+          {% for channel in channels %}
+            <td id="s_b_{{channel.channel_value}}" style="font-size: 15px"></td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="table table-bordered table-hover" id="color-labels" style="font-size: 12px">
+      <tbody>
+        <tr>
+          
+        </tr>
+      </tbody>
+    </table>
+  
     <div id="main">
       {% for channel in channels %}
           <div id="{{ channel.channel_value }}">
