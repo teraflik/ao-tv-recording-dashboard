@@ -5,6 +5,28 @@
     <!-- For Google Charts -->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <link rel="stylesheet" href="{% static "graph_ui/css/google-chart-timeline-main.css" %}"/>
+    <style>
+        .channel {
+          height: 100%;
+          width: 100%;
+        }
+      
+        .channel-metadata {
+          float:left;
+          display:inline-block;
+          width: 100px;
+          height: 100%;
+        }
+      
+        .channel-timeline {
+          float:left;
+          display:inline-block;
+          width: -moz-calc(100% - 100px);
+          width: -webkit-calc(100% - 100px);
+          width: calc(100% - 100px);
+          height: 100%;
+        }
+      </style>
 {% endblock %}
 
 
@@ -16,7 +38,6 @@
           </div>
           <button type="submit" class="btn btn-primary mb-2">Submit</button>
       </form>
-    <br>
       
     <table class="table table-bordered table-hover" id="summary" style="font-size: 12px">
       <tbody>
@@ -53,17 +74,24 @@
   
     <div id="main">
       {% for channel in channels %}
-          <div id="{{ channel.channel_value }}">
-            <div class="border border-primary rounded">
-              <h4><img src='{{ channel.logo_url }}' style="height: 100px; width: 100px"> - {{ channel.channel_name}}</h4>
-              <h5>Device A</h5>
-              <div id="a_{{channel.channel_value}}"></div>
+            <div>
+              <div class="channel" id="{{ channel.channel_value }}">
+                <div class="channel-metadata">
+                  <br>
+                  <br>                  
+                    <img src='{{ channel.logo_url }}' style="height: 75%; width: 75%">
+                    <strong>{{channel.channel_name}}</strong>
+                </div>
 
-              <h5>Device B</h5>
-              <div id="b_{{channel.channel_value}}"></div>
+                <div class="channel-timeline">
+                    <strong>Device A</strong>
+                    <div id="a_{{channel.channel_value}}"></div>
+                    
+                    <strong>Device B</strong>
+                    <div id="b_{{channel.channel_value}}"></div>
+                </div>
             </div>
-          </div>
-          <br>
+            </div>
       {% endfor %}
     </div>
 {% endblock %}
