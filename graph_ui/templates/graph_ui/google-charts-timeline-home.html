@@ -19,12 +19,31 @@
         }
       
         .channel-timeline {
-          float:left;
-          display:inline-block;
-          width: -moz-calc(100% - 100px);
-          width: -webkit-calc(100% - 100px);
-          width: calc(100% - 100px);
+            float:left;
+            display:inline-block;
+            width: -moz-calc(100% - 100px);
+            width: -webkit-calc(100% - 100px);
+            width: calc(100% - 100px);
+            height: 100%;
+          }
+
+        hr { 
+            display: block;
+            margin-before: 0.5em;
+            margin-after: 0.5em;
+            margin-start: auto;
+            margin-end: auto;
+            overflow: hidden;
+            border-style: inset;
+            border-width: 5px;
+            background-color: black;
+        }
+        main {
           height: 100%;
+          width: 100%;
+          margin: 5%;
+          display: inline-block;
+          vertical-align: top
         }
       </style>
 {% endblock %}
@@ -75,6 +94,7 @@
     <div id="main">
       {% for channel in channels %}
             <div>
+              <hr>
               <div class="channel" id="{{ channel.channel_value }}">
                 <div class="channel-metadata">
                   <br>
