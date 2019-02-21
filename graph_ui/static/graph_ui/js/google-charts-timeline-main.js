@@ -9,7 +9,8 @@ var stageToColor = {
     "Uploading start":  'brown',
     "Uploading done":  'blue',
     "Stop Recording":  'black',
-    'blank':    'grey'
+    'blank':    'grey',
+    'Now Recording': 'lightblue'
 }
 
 function yyyy_mm_dd(dateObject) {
@@ -207,6 +208,8 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
             
             var startTimeString = hh_mm_ss(startTimeTimeline);
             tooltip = entry['stage_message'] + ' ' + startTimeString;
+            
+            // console.log("Clipnumber for start/stop entries is " + entry['clip_number']);
         }
         else {
 
@@ -225,6 +228,10 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
             var startTimeString = hh_mm_ss(startTime);
             var endTimeString = hh_mm_ss(endTime);
             tooltip = entry['stage_message'] + ' ' + startTimeString + ' - ' + endTimeString;
+            
+            // console.log("Clipnumber from database is " + entry['clip_number']);
+            // console.log("Clipnumber calculated in JS is " + getClipNumber(startTimeString));
+            // console.log(entry['clip_number'] == getClipNumber(startTimeString));
         }
 
         dataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
@@ -304,46 +311,140 @@ function updateSummaryTable(formattedData, endpoint) {
     summaryBox.setAttribute('bgcolor', bgcolor);
 }
 
+function clipNoToInterval(dateString, clipNumber) {
+    var startTime = new Date(dateString + " 00:00:00");
+    var endTime = new Date(dateString + " 00:00:00");
+
+    startTime.setMinutes((clipNumber - 1) * 30);
+    endTime.setMinutes(clipNumber * 30);
+
+    return [startTime, endTime];
+}
+
 function getCurrentRecordingEntries(formattedData) {
 
-    //  IF NO ENTRIES
+    //  lots of redundancies just to make bug-free.
+    //  Easily could be made more efficient.
+
+    //  IF NO ENTRIES (will not hit this case as of now)
     if (!formattedData) {
         return [];
     }
 
-    //  get only start/stop entries
-    var startStopEntries = formattedData.filter(function(entry) { return entry[0] == "Recording" && entry[1] != '';});
-
-    //  IF NO START/STOP ENTRIES
-    if (!startStopEntries || startStopEntries.length == 0) {
+    //  blank entry.
+    if (formattedData[0][1] == '') {
         return [];
     }
 
+    var dataTableEnum  = Object.freeze({
+        "category"    :   0, 
+        "label"   :   1, 
+        "tooltip" :   2,
+        "color" :   3,
+        "startTime" :   4,
+        "endTime" :   5,
+    });
+
     //  sort by starting timestamp (desc)
     var startTimeFieldNumber = 4;
-    startStopEntries.sort( (r1, r2) => {
-        if (r1[startTimeFieldNumber] < r2[startTimeFieldNumber]) return 1;
-        if (r1[startTimeFieldNumber] > r2[startTimeFieldNumber]) return -1;
+    formattedData.sort( (r1, r2) => {
+        if (r1[dataTableEnum.startTime] < r2[dataTableEnum.startTime]) return 1;
+        if (r1[dataTableEnum.startTime] > r2[dataTableEnum.startTime]) return -1;
         return 0;
     });
-    
-    var lastEntry = startStopEntries[0];
-    var colorFieldNumber = 3;
-    var colorToStage = reverseJsonMapper(stageToColor);
 
-    var lastEntryColor = lastEntry[colorFieldNumber];
-    var lastEntryStage = colorToStage[lastEntryColor];
+    //  get the last recording & processing entries.
+    var lastRecordingEntry = null;
+    var lastProcessingEntry = null;
+    for (var i = 0; i < formattedData.length; i++) {
+        var entry = formattedData[i];
+        //  if entry is of category Recording and its the first of this kind.
+        if (!lastRecordingEntry && entry[dataTableEnum.category] == "Recording") {
+            lastRecordingEntry = entry;
+        }
+        else if (!lastProcessingEntry && entry[dataTableEnum.category] == "Processing") {
+            lastProcessingEntry = entry;
+        }
+
+        if (lastRecordingEntry && lastProcessingEntry) {
+            break;
+        }
+    }
+
+    //  if no recording entry found
+    if (!lastRecordingEntry) {
+        return [];
+    }
+
+    //  check whether last entry is start / stop recording
+    var colorToStage = reverseJsonMapper(stageToColor);
+    var lastRecordingEntryColor = lastRecordingEntry[dataTableEnum.color];
+    var lastRecordingEntryStage = colorToStage[lastRecordingEntryColor];
 
     //  IF LAST ENTRY IS "STOP RECORDING"
-    if (lastEntryStage == "Stop Recording") {
+    if (lastRecordingEntryStage == "Stop Recording") {
         return [];
     }
 
     //  magic happens here.......
     var currentRecordingEntries = [];
 
+    //  1. get the latest clip number out of the formattedData entries
+    var lastProcessingClipNumber = 0;
+    if (!lastProcessingEntry) {
+        lastProcessingClipNumber = 0;
+    }
+    else {
+        lastProcessingClipNumber = getClipNumber(hh_mm_ss(lastProcessingEntry[dataTableEnum.startTime])) + 1;
+    }
 
-    console.log("Last Entry is start recording...");
+    //  2. find clip number corresponding to the latest start recording 
+    var lastRecordingClipNumber = getClipNumber(hh_mm_ss(lastRecordingEntry[dataTableEnum.startTime]));
+
+    //  3. take maximum of the above two
+    var startingClipNumber = max(lastProcessingClipNumber, lastRecordingClipNumber);
+
+    //  4. find clip number corresponding to current time
+    var currentTimeClipNumber = getClipNumber(hh_mm_ss(new Date()));
+
+    //  5. make entries for the missing clip numbers
+    var safeTyMargin = 2;
+    var stageMessage = 'Now Recording';
+    for (var i = startingClipNumber; i <= currentTimeClipNumber; i++) {
+        //  category
+        var category = 'Processing';
+
+        //  label
+        var label = stageMessage;
+        
+        //  color
+        var color = stageToColor[stageMessage];
+
+        var [startTime, endTime] = clipNoToInterval(yyyy_mm_dd(new Date()), i);
+
+        var startTimeString = hh_mm_ss(startTime);
+        var endTimeString = hh_mm_ss(endTime);
+        
+        //  startTimeTimeline
+        var startTimeTimeline = new Date(startTime);
+        startTimeTimeline.setMinutes(startTimeTimeline.getMinutes() + safeTyMargin);
+
+        //  endTimeTimeline
+        var endTimeTimeline = new Date(endTime);
+        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
+        
+        //  tooltip
+        var tooltip = stageMessage + ' ' + startTimeString + ' - ' + endTimeString;
+        
+        currentRecordingEntries.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+    }
+
+    /*
+    TODO:
+    1.  Complete the clipNoToInterval Function
+    2.  Add a manual start recording entry in today's date to database for a channel.
+    3.  Check if it works.
+    */
     return currentRecordingEntries;
 }
 
@@ -370,11 +471,11 @@ function populateTimeline(timeline, endpoint, index) {
                 var currentRecordingEntries = [];
                 var today = yyyy_mm_dd(new Date());
                 
-                // if (date == today) {
-                //     currentRecordingEntries = getCurrentRecordingEntries(formattedData);
-                // }
+                if (date == today) {
+                    currentRecordingEntries = getCurrentRecordingEntries(formattedData);
+                }
 
-                currentRecordingEntries = getCurrentRecordingEntries(formattedData);
+                // currentRecordingEntries = getCurrentRecordingEntries(formattedData);
 
                 var totalFormattedData = formattedData.concat(currentRecordingEntries);
                 
