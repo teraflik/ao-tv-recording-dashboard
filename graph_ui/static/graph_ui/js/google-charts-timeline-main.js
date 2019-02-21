@@ -342,8 +342,6 @@ function populateTimeline(timeline, endpoint, index) {
                             minValue: startDate,
                             maxValue: endDate,
                             gridlines: {color: 'pink', count: 4},
-                            // ticks: [startDate, endDate]
-                            // ticks: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
                         },
                     width: '100%',
                     height: '105'
@@ -440,8 +438,8 @@ function setColorLabels() {
             var color = document.createElement("th");
             color.setAttribute("bgcolor", stageToColor[key]);
 
-            trElement.appendChild(stage);
             trElement.appendChild(color);
+            trElement.appendChild(stage);
         }
     }
 }
