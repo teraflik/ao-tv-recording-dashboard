@@ -171,7 +171,10 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         
         var safeTyMargin = 2;
 
-        label = entry['request_id'] + ":" + entry['device_id'];
+        // label = entry['request_id'] + ":" + entry['device_id'];
+
+        label = '{"request_id": "' + entry['request_id'] + '", "device_id": "' + entry['device_id'] +'"}';
+        console.log("Label is " + label);
 
         
         //  color
@@ -359,7 +362,7 @@ function populateTimeline(timeline, endpoint, index) {
                 // console.log("Endpoint is :- " + endpoint.href);
                 // console.log(formattedData);
                 // console.log("Value of index is :- " + index);
-                console.log(formattedData);
+                // console.log(formattedData);
 
             }
     });
@@ -410,11 +413,17 @@ function selectHandler(timeline, index) {
     var selection = timeline.getSelection()[0];
     var rowNo = selection.row;
     var label = selectedDataTable.getValue(rowNo, 1);
-    var [request_id, device_id] = label.split(":")
-
+    var GETparams = JSON.parse(label);
+    
+    console.log("GETparams is --->");
+    console.log(GETparams);
+    
     var redirectURL = new URL(window.location.origin + "/ui/graph_ui_redirect");
-    redirectURL.searchParams.set("request_id", request_id);
-    redirectURL.searchParams.set("device_id", device_id);
+
+    for (key in GETparams) {
+        redirectURL.searchParams.set(key, GETparams[key]);
+    }
+
     window.open(redirectURL);
 }
 
