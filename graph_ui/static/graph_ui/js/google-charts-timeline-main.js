@@ -174,7 +174,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         // label = entry['request_id'] + ":" + entry['device_id'];
 
         label = '{"request_id": "' + entry['request_id'] + '", "device_id": "' + entry['device_id'] +'"}';
-        console.log("Label is " + label);
+        // console.log("Label is " + label);
 
         
         //  color
@@ -304,6 +304,49 @@ function updateSummaryTable(formattedData, endpoint) {
     summaryBox.setAttribute('bgcolor', bgcolor);
 }
 
+function getCurrentRecordingEntries(formattedData) {
+
+    //  IF NO ENTRIES
+    if (!formattedData) {
+        return [];
+    }
+
+    //  get only start/stop entries
+    var startStopEntries = formattedData.filter(function(entry) { return entry[0] == "Recording" && entry[1] != '';});
+
+    //  IF NO START/STOP ENTRIES
+    if (!startStopEntries || startStopEntries.length == 0) {
+        return [];
+    }
+
+    //  sort by starting timestamp (desc)
+    var startTimeFieldNumber = 4;
+    startStopEntries.sort( (r1, r2) => {
+        if (r1[startTimeFieldNumber] < r2[startTimeFieldNumber]) return 1;
+        if (r1[startTimeFieldNumber] > r2[startTimeFieldNumber]) return -1;
+        return 0;
+    });
+    
+    var lastEntry = startStopEntries[0];
+    var colorFieldNumber = 3;
+    var colorToStage = reverseJsonMapper(stageToColor);
+
+    var lastEntryColor = lastEntry[colorFieldNumber];
+    var lastEntryStage = colorToStage[lastEntryColor];
+
+    //  IF LAST ENTRY IS "STOP RECORDING"
+    if (lastEntryStage == "Stop Recording") {
+        return [];
+    }
+
+    //  magic happens here.......
+    var currentRecordingEntries = [];
+
+
+    console.log("Last Entry is start recording...");
+    return currentRecordingEntries;
+}
+
 function populateTimeline(timeline, endpoint, index) {
     
     //  1. get data via ajax call
@@ -318,18 +361,32 @@ function populateTimeline(timeline, endpoint, index) {
                 // console.log("Raw Data");
                 // console.log(rawData);
 
+                
                 //  2. prepare data in the format to be feeded to the visualisation library.
                 var formattedData = prepareDataForGoogleChartTimeline(rawData, endpoint);
+                
+                //  3. If its today's date, then add current recordings
+                var date = endpoint.searchParams.get('date');
+                var currentRecordingEntries = [];
+                var today = yyyy_mm_dd(new Date());
+                
+                // if (date == today) {
+                //     currentRecordingEntries = getCurrentRecordingEntries(formattedData);
+                // }
 
+                currentRecordingEntries = getCurrentRecordingEntries(formattedData);
+
+                var totalFormattedData = formattedData.concat(currentRecordingEntries);
+                
                 //  3. create dataTable object
                 var dataTable = initializeDataTable(endpoint);
 
+                
                 //  4. add the data to the dataTable object
-                dataTable.addRows(formattedData);
+                dataTable.addRows(totalFormattedData);
 
-
+                
                 //  5. define options.
-                var date = endpoint.searchParams.get('date');
                 var startDate = new Date(date + " 00:00:00");
                 
                 var endDate = new Date(startDate);
@@ -346,20 +403,25 @@ function populateTimeline(timeline, endpoint, index) {
                     width: '100%',
                     height: '105'
                 };
-        
+
+                
                 //  6. feed data to the timeline.
                 timeline.draw(dataTable, options);
 
+                
                 //  7. updating the globalDataTable lookup
                 globalDataTable[index] = dataTable;
 
-                //  8. update the summary table
+                
+                //  8. update the summary table : 
+                //  NOTE :--> this takes formattedData and not totalFormattedData.
                 updateSummaryTable(formattedData, endpoint);
 
+                
                 //  8. debugging
                 // console.log("Endpoint is :- " + endpoint.href);
                 // console.log(formattedData);
-                // console.log("Value of index is :- " + index);
+                // console.log("formattedData is ");
                 // console.log(formattedData);
 
             }
@@ -413,8 +475,8 @@ function selectHandler(timeline, index) {
     var label = selectedDataTable.getValue(rowNo, 1);
     var GETparams = JSON.parse(label);
     
-    console.log("GETparams is --->");
-    console.log(GETparams);
+    // console.log("GETparams is --->");
+    // console.log(GETparams);
     
     var redirectURL = new URL(window.location.origin + "/ui/graph_ui_redirect");
 
