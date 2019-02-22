@@ -402,7 +402,7 @@ function getCurrentRecordingEntries(formattedData) {
     var lastRecordingClipNumber = getClipNumber(hh_mm_ss(lastRecordingEntry[dataTableEnum.startTime]));
 
     //  3. take maximum of the above two
-    var startingClipNumber = max(lastProcessingClipNumber, lastRecordingClipNumber);
+    var startingClipNumber = Math.max(lastProcessingClipNumber, lastRecordingClipNumber);
 
     //  4. find clip number corresponding to current time
     var currentTimeClipNumber = getClipNumber(hh_mm_ss(new Date()));
@@ -441,9 +441,10 @@ function getCurrentRecordingEntries(formattedData) {
 
     /*
     TODO:
-    1.  Complete the clipNoToInterval Function
+    1.  Complete the clipNoToInterval Function (DONE)
     2.  Add a manual start recording entry in today's date to database for a channel.
-    3.  Check if it works.
+    3.  Change color of entries beyond 1hr to dark red.
+    4.  Check if it works.
     */
     return currentRecordingEntries;
 }
