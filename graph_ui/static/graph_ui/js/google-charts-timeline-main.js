@@ -586,10 +586,16 @@ function selectHandler(timeline, index) {
     var selection = timeline.getSelection()[0];
     var rowNo = selection.row;
     var label = selectedDataTable.getValue(rowNo, 1);
-    var GETparams = JSON.parse(label);
     
-    // console.log("GETparams is --->");
-    // console.log(GETparams);
+    var GETparams;
+    
+    //  if label isn't a JSON dump, then simply skip.
+    try {
+        GETparams = JSON.parse(label);
+    }
+    catch(err) {
+        return;
+    }
     
     var redirectURL = new URL(window.location.origin + "/ui/graph_ui_redirect");
 
