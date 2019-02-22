@@ -10,7 +10,8 @@ var stageToColor = {
     "Uploading done":  'blue',
     "Stop Recording":  'black',
     'blank':    'grey',
-    'Now Recording': 'lightblue'
+    'Now Recording': 'lightblue',
+    'Failed':   'red'
 }
 
 function yyyy_mm_dd(dateObject) {
@@ -405,20 +406,19 @@ function getCurrentRecordingEntries(formattedData) {
     var startingClipNumber = Math.max(lastProcessingClipNumber, lastRecordingClipNumber);
 
     //  4. find clip number corresponding to current time
-    var currentTimeClipNumber = getClipNumber(hh_mm_ss(new Date()));
+    var currentTime = new Date();
+    var currentTimeClipNumber = getClipNumber(hh_mm_ss(currentTime));
 
     //  5. make entries for the missing clip numbers
     var safeTyMargin = 2;
-    var stageMessage = 'Now Recording';
     for (var i = startingClipNumber; i <= currentTimeClipNumber; i++) {
+        
+        var stageMessage = 'Now Recording';
         //  category
         var category = 'Processing';
 
         //  label
         var label = stageMessage;
-        
-        //  color
-        var color = stageToColor[stageMessage];
 
         var [startTime, endTime] = clipNoToInterval(yyyy_mm_dd(new Date()), i);
 
@@ -433,16 +433,27 @@ function getCurrentRecordingEntries(formattedData) {
         var endTimeTimeline = new Date(endTime);
         endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
         
+        //  color
+        //  see if difference between current_time and the startTime of this entry is more than 1hr, then make this "Failure", else use original stageMessage
+        var color;
+        var hoursElapsed = (currentTime - startTime) / (60 * 60 * 1000)
+        
+        if (hoursElapsed > 1) {
+            stageMessage = 'Failed';
+        }
+
+        color = stageToColor[stageMessage];
+
         //  tooltip
         var tooltip = stageMessage + ' ' + startTimeString + ' - ' + endTimeString;
         
+        //  add entry
         currentRecordingEntries.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
     }
-
     /*
     TODO:
     1.  Complete the clipNoToInterval Function (DONE)
-    2.  Add a manual start recording entry in today's date to database for a channel.
+    2.  Add a manual start recording entry in today's date to database for a channel. (DONE)
     3.  Change color of entries beyond 1hr to dark red.
     4.  Check if it works.
     */
