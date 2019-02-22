@@ -14,6 +14,15 @@ var stageToColor = {
     'Failed':   'red'
 }
 
+var dataTableEnum  = Object.freeze({
+    "category"    :   0, 
+    "label"   :   1, 
+    "tooltip" :   2,
+    "color" :   3,
+    "startTime" :   4,
+    "endTime" :   5,
+});
+
 function yyyy_mm_dd(dateObject) {
 
     var dd = dateObject.getDate();
@@ -149,7 +158,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
     endDate.setDate(endDate.getDate() + 1);
 
     if (!rawData || rawData.length == 0) {
-        return [['Recording', '', 'No recordings available', 'grey', startDate, endDate]];
+        return [['Recording', '', 'No recordings available', stageToColor['blank'], startDate, endDate]];
     }
 
     //  1. for each request_id, get single entry having the maximum stage_number
@@ -295,11 +304,11 @@ function updateSummaryTable(formattedData, endpoint) {
     }
     else if (status == statusEnum.error) {
         innerHTML = '&#10008;';     //  cross sign
-        bgcolor = 'red';
+        bgcolor = stageToColor['Failed'];
     }
     else if (status == statusEnum.blank) {
         innerHTML = '&#10067;';     //  question mark
-        bgcolor = 'grey';
+        bgcolor = stageToColor['blank'];
     }
 
     var deviceID = endpoint.searchParams.get('device_id');
@@ -336,15 +345,6 @@ function getCurrentRecordingEntries(formattedData) {
     if (formattedData[0][1] == '') {
         return [];
     }
-
-    var dataTableEnum  = Object.freeze({
-        "category"    :   0, 
-        "label"   :   1, 
-        "tooltip" :   2,
-        "color" :   3,
-        "startTime" :   4,
-        "endTime" :   5,
-    });
 
     //  sort by starting timestamp (desc)
     var startTimeFieldNumber = 4;
@@ -512,6 +512,7 @@ function populateTimeline(timeline, endpoint, index) {
                             minValue: startDate,
                             maxValue: endDate,
                             gridlines: {color: 'pink', count: 4},
+                            // format: 'HH'
                         },
                     width: '100%',
                     height: '105'
