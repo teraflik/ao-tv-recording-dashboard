@@ -199,7 +199,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
             var hoursElapsed = (now.valueOf() - entryTime.valueOf()) / (1000 * 60 * 60);
 
             if (hoursElapsed > 24) {
-                color = 'red';
+                color = stageToColor['Failed'];
             }
             else {
                 color = stageToColor[entry['stage_message']];
@@ -272,7 +272,8 @@ function updateSummaryTable(formattedData, endpoint) {
     var statusEnum  = Object.freeze({
                                         "ok"    :   1, 
                                         "blank"   :   2, 
-                                        "error" :   3
+                                        "error" :   3,
+                                        "inprogress":   4
                                     });
     
     var status = statusEnum.ok;
@@ -289,26 +290,35 @@ function updateSummaryTable(formattedData, endpoint) {
         else if (stage == "Start Recording" || stage == "Stop Recording") {
             continue;
         }
-        else if (stage != 'Uploading done') {
+        else if (stage == 'Failed') {
             status = statusEnum.error;
             break;
+        }
+        else if (stage == 'Now Recording') {
+            console.log("Now Recording Hitted!!");
+            status = statusEnum.inprogress;
         }
     }
 
     var innerHTML;
     var bgcolor;
 
-    if (status == statusEnum.ok) {
-        innerHTML = '&#10004;';     //  tick sign
-        bgcolor = 'green';
-    }
-    else if (status == statusEnum.error) {
+    
+    if (status == statusEnum.error) {
         innerHTML = '&#10008;';     //  cross sign
         bgcolor = stageToColor['Failed'];
     }
     else if (status == statusEnum.blank) {
         innerHTML = '&#10067;';     //  question mark
         bgcolor = stageToColor['blank'];
+    }
+    else if (status == statusEnum.inprogress) {
+        innerHTML = '&#10017;';     // STAR OF DAVID
+        bgcolor = stageToColor['Now Recording'];
+    }
+    else if (status == statusEnum.ok) {
+        innerHTML = '&#10004;';     //  tick sign
+        bgcolor = 'green';
     }
 
     var deviceID = endpoint.searchParams.get('device_id');
@@ -529,7 +539,8 @@ function populateTimeline(timeline, endpoint, index) {
                 
                 //  8. update the summary table : 
                 //  NOTE :--> this takes formattedData and not totalFormattedData.
-                updateSummaryTable(formattedData, endpoint);
+                // updateSummaryTable(formattedData, endpoint);
+                updateSummaryTable(totalFormattedData, endpoint);
 
                 
                 //  8. debugging
