@@ -294,10 +294,13 @@ function updateSummaryTable(formattedData, endpoint) {
             status = statusEnum.error;
             break;
         }
-        else if (stage == 'Now Recording') {
-            console.log("Now Recording Hitted!!");
+        else if (stage != 'Uploading done') {
             status = statusEnum.inprogress;
         }
+        // else if (stage == 'Now Recording') {
+        //     console.log("Now Recording Hitted!!");
+        //     status = statusEnum.inprogress;
+        // }
     }
 
     var innerHTML;
@@ -343,6 +346,7 @@ function clipNoToInterval(dateString, clipNumber) {
 
 function getCurrentRecordingEntries(formattedData) {
 
+    // console.log("Inside getCurrentRecordingEntries");
     //  lots of redundancies just to make bug-free.
     //  Easily could be made more efficient.
 
@@ -387,6 +391,7 @@ function getCurrentRecordingEntries(formattedData) {
         return [];
     }
 
+    console.log("Cleared all filters");
     //  check whether last entry is start / stop recording
     var colorToStage = reverseJsonMapper(stageToColor);
     var lastRecordingEntryColor = lastRecordingEntry[dataTableEnum.color];
@@ -467,7 +472,10 @@ function getCurrentRecordingEntries(formattedData) {
     3.  Change color of entries beyond 1hr to dark red.
     4.  Check if it works.
     */
+   console.log("Current Recording entries is .....");
+   console.log(currentRecordingEntries);
     return currentRecordingEntries;
+     
 }
 
 function populateTimeline(timeline, endpoint, index) {
