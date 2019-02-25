@@ -346,9 +346,8 @@ function clipNoToInterval(dateString, clipNumber) {
 
 function getCurrentRecordingEntries(formattedData) {
 
-    // console.log("Inside getCurrentRecordingEntries");
-    //  lots of redundancies just to make bug-free.
-    //  Easily could be made more efficient.
+    // Ref:- https://stackoverflow.com/questions/7486085/copy-array-by-value
+    var formattedData = formattedData.slice();
 
     //  IF NO ENTRIES (will not hit this case as of now)
     if (!formattedData) {
@@ -361,7 +360,6 @@ function getCurrentRecordingEntries(formattedData) {
     }
 
     //  sort by starting timestamp (desc)
-    var startTimeFieldNumber = 4;
     formattedData.sort( (r1, r2) => {
         if (r1[dataTableEnum.startTime] < r2[dataTableEnum.startTime]) return 1;
         if (r1[dataTableEnum.startTime] > r2[dataTableEnum.startTime]) return -1;
@@ -391,7 +389,6 @@ function getCurrentRecordingEntries(formattedData) {
         return [];
     }
 
-    console.log("Cleared all filters");
     //  check whether last entry is start / stop recording
     var colorToStage = reverseJsonMapper(stageToColor);
     var lastRecordingEntryColor = lastRecordingEntry[dataTableEnum.color];
@@ -472,8 +469,6 @@ function getCurrentRecordingEntries(formattedData) {
     3.  Change color of entries beyond 1hr to dark red.
     4.  Check if it works.
     */
-   console.log("Current Recording entries is .....");
-   console.log(currentRecordingEntries);
     return currentRecordingEntries;
      
 }
@@ -509,6 +504,19 @@ function populateTimeline(timeline, endpoint, index) {
 
                 var totalFormattedData = formattedData.concat(currentRecordingEntries);
                 
+                if (endpoint.searchParams.get('channel_values') == '1' && endpoint.searchParams.get('device_id') == 'a') {
+                    // debugger;
+
+                    console.log("formattedData is ---");
+                    console.log(formattedData);
+    
+                    console.log("currentRecordingEntries is ---");
+                    console.log(currentRecordingEntries);
+    
+                    console.log("totalFormattedData is ---");
+                    console.log(totalFormattedData);    
+                }
+
                 //  3. create dataTable object
                 var dataTable = initializeDataTable(endpoint);
 
