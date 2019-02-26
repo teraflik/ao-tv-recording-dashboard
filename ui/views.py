@@ -51,10 +51,6 @@ def make_table_html(myDict):
     return tableHTML
 
 # Create your views here.
-
-def tables(request):
-    return render(request, 'ui/datatable.html')
-
 def home(request):
     return render(request, 'ui/home.html', {'channels': channels})
 

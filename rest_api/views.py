@@ -10,56 +10,6 @@ from .models import ChannelInfo, FilterRecordingTracking, InvalidFrameTracking, 
 from .serializers import ChannelInfoSerializer, FilterRecordingTrackingSerializer, InvalidFrameTrackingSerializer, RecordingSerializer, RecordingTrackingSerializer
 # Create your views here.
 
-class ChannelInfoView(APIView):
-    
-    def get(self, request):
-        channel_infos = ChannelInfo.objects.all()
-        serializer = ChannelInfoSerializer(channel_infos, many=True)
-        return Response(serializer.data)
-    
-    def post(self, request):
-        pass
-
-class RecordingView(APIView):
-    
-    def get(self, request):
-        recordings = Recording.objects.all()[:20]
-        serializer = RecordingSerializer(recordings, many=True)
-        return Response(serializer.data)
-    
-    def post(self, request):
-        pass
-
-class RecordingTrackingView(APIView):
-    
-    def get(self, request):
-        recording_trackings = RecordingTracking.objects.all()[:20]
-        serializer = RecordingTrackingSerializer(recording_trackings, many=True)
-        return Response(serializer.data)
-    
-    def post(self, request):
-        pass
-
-class InvalidFrameTrackingView(APIView):
-    
-    def get(self, request):
-        invalid_frame_trackings = InvalidFrameTracking.objects.all()[:20]
-        serializer = InvalidFrameTrackingSerializer(invalid_frame_trackings, many=True)
-        return Response(serializer.data)
-    
-    def post(self, request):
-        pass
-
-class FilterRecordingTrackingView(APIView):
-    
-    def get(self, request):
-        filter_recording_trackings = FilterRecordingTracking.objects.all()[:20]
-        serializer = FilterRecordingTrackingSerializer(filter_recording_trackings, many=True)
-        return Response(serializer.data)
-    
-    def post(self, request):
-        pass
-
 class GraphUIRedirectView(APIView):
     
     def get(self, request):
@@ -94,15 +44,6 @@ class GeneralView(APIView):
         input_timezone = request.GET.get('timezone') or 'Asia/Kolkata'
         channel_values = request.GET.getlist('channel_values') or list(map(str, ChannelInfo.objects.values_list('channel_value', flat=True)))
         device_id = request.GET.get('device_id') or 'both'
-
-        # temp_json = {
-        #                 "input_date": input_date,
-        #                 "input_start_time": input_start_time,
-        #                 "input_finish_time": input_finish_time,
-        #                 "input_timezone": input_timezone,
-        #                 "channel_values": channel_values,
-        #                 "device_id": device_id
-        #             }
 
         input_timezone = pytz.timezone(input_timezone)
         ist_timezone = pytz.timezone('Asia/Kolkata')
