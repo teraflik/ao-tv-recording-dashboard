@@ -612,7 +612,7 @@ function selectHandler(timeline, index) {
         return;
     }
     
-    var redirectURL = new URL(window.location.origin + "/ui/graph_ui_redirect");
+    var redirectURL = new URL(window.location.origin + "/ui/recording_graph_ui_redirect");
 
     for (key in GETparams) {
         redirectURL.searchParams.set(key, GETparams[key]);
