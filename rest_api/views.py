@@ -33,7 +33,7 @@ def handle_buggy_time(input_time):
     else:
         return input_time + ':00.000'
 
-class GeneralView(APIView):
+class RecordingView(APIView):
     
     def get(self, request):
 
