@@ -503,19 +503,6 @@ function populateTimeline(timeline, endpoint, index) {
                 // currentRecordingEntries = getCurrentRecordingEntries(formattedData);
 
                 var totalFormattedData = formattedData.concat(currentRecordingEntries);
-                
-                if (endpoint.searchParams.get('channel_values') == '1' && endpoint.searchParams.get('device_id') == 'a') {
-                    // debugger;
-
-                    console.log("formattedData is ---");
-                    console.log(formattedData);
-    
-                    console.log("currentRecordingEntries is ---");
-                    console.log(currentRecordingEntries);
-    
-                    console.log("totalFormattedData is ---");
-                    console.log(totalFormattedData);    
-                }
 
                 //  3. create dataTable object
                 var dataTable = initializeDataTable(endpoint);
@@ -592,7 +579,7 @@ function addGETParameters(baseEndPoint, GETParams) {
 function getBaseEndPoint() {
 
     //  Get the REST API endpoint to hit from current URL.
-    var baseEndPoint = new URL(document.URL.replace('graph_ui/google-charts-timeline', 'api/get'));
+    var baseEndPoint = new URL(document.URL.replace('graph_ui', 'api'));
   
     //  If no date passed, add today's date
     if (!baseEndPoint.searchParams.get('date')) {
