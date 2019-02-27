@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.apps import apps
 from django.http import JsonResponse
+from django.urls import resolve
+
 from rest_api import models
 
 # Getting the list of model names in a given app
@@ -18,6 +20,10 @@ def make_table_html(myDict):
     
     tableHeadHTML = ''
     tableBodyHTML = ''
+
+    if myDict.get('table'):
+        tableHeadHTML += '<th>Table</th>'
+        tableBodyHTML += '<td>' + myDict.get('table') + '</td>'
 
     if myDict.get('date'):
         tableHeadHTML += '<th>Date</th>'
@@ -55,6 +61,9 @@ def home(request):
     return render(request, 'ui/home.html', {'channels': channels})
 
 def general(request):
+
+    current_url = resolve(request.path_info).url_name
+
     myDict = dict(request.GET._iterlists())
     
     for key, value in myDict.items():
@@ -67,6 +76,12 @@ def general(request):
         channel_names = [t['channel_name'] for t in channels.filter(channel_value__in=channel_values)]
         myDict['channel_names'] = channel_names
         myDict.pop("channel_values", None)
+    
+    # Adding table information to dictionary
+    if current_url == 'ui-recording':
+        myDict['table'] =  'Recording'
+    elif current_url == 'ui-blank':
+        myDict['table'] =  'Invalid Frame Tracking'
 
     return render(request, 'ui/datatable.html', {'tableHTML': make_table_html(myDict)})
     # return JsonResponse(request.GET)
