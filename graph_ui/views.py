@@ -5,4 +5,7 @@ from rest_api import models
 channels = models.ChannelInfo.objects.all()
 
 def recording(request):
-    return render(request, 'graph_ui/index.html', {'channels': channels})
+    return render(request, 'graph_ui/recording.html', {'channels': channels})
+
+def blank(request):
+    return render(request, 'graph_ui/blank.html', {'channels': channels})

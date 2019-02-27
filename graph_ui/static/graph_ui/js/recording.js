@@ -134,8 +134,7 @@ function getHighestStageNumberEntries(rawData) {
     return highestStageNumberEntries;
 }
 
-function initializeDataTable(endpoint) {
-    var todayDate = endpoint.searchParams.get('date');
+function initializeDataTable() {
 
     var dataTable = new google.visualization.DataTable();
     dataTable.addColumn({ type: 'string', id: 'category' });
@@ -504,8 +503,11 @@ function populateTimeline(timeline, endpoint, index) {
 
                 var totalFormattedData = formattedData.concat(currentRecordingEntries);
 
+                console.log("totalFormattedData is ....");
+                console.log(totalFormattedData);
+
                 //  3. create dataTable object
-                var dataTable = initializeDataTable(endpoint);
+                var dataTable = initializeDataTable();
 
                 
                 //  4. add the data to the dataTable object

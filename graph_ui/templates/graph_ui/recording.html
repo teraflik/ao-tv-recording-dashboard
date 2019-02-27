@@ -1,0 +1,139 @@
+{% extends 'ui/base.html' %}
+{% load static %}
+
+{% block head %}
+    <!-- For Google Charts -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <link rel="stylesheet" href="{% static "graph_ui/css/google-chart-timeline-main.css" %}"/>
+    <style>
+        .channel {
+          height: 100%;
+          width: 100%;
+        }
+      
+        .channel-metadata {
+          float:left;
+          display:inline-block;
+          width: 100px;
+          height: 100%;
+        }
+      
+        .channel-timeline {
+            float:left;
+            display:inline-block;
+            width: -moz-calc(100% - 100px);
+            width: -webkit-calc(100% - 100px);
+            width: calc(100% - 100px);
+            height: 100%;
+          }
+
+        hr { 
+            display: block;
+            margin-before: 0.5em;
+            margin-after: 0.5em;
+            margin-start: auto;
+            margin-end: auto;
+            overflow: hidden;
+            border-style: inset;
+            border-width: 5px;
+            background-color: black;
+        }
+        /* body {
+          /* display: flex; */
+          justify-content: center;
+          align-items: center;
+          margin: 0 auto;
+        } */
+        main {
+          height: 100%;
+          width: 100%;
+          margin: 5%;
+          /* display: inline-block; */
+          vertical-align: top
+        }
+        @media (min-width: 1400px){
+          .container {
+            max-width: 1350px;
+          }
+        }
+      </style>
+{% endblock %}
+
+
+{% block content %}
+      
+      <form class="form-inline">
+          <div class="form-group mx-sm-3 mb-2">
+            <input type="date" class="form-control" id="date" name='date' placeholder="Password">
+          </div>
+          <button type="submit" class="btn btn-primary mb-2">Submit</button>
+      </form>
+      
+    <table class="table table-bordered table-hover" id="summary" style="font-size: 12px">
+      <tbody>
+        <tr>
+          <th>Channel Name:</th>
+          {% for channel in channels %}
+            <td>{{ channel.channel_name }}</td>
+          {% endfor %}
+        </tr>
+        
+        <tr>
+          <th>Device A:</th>
+          {% for channel in channels %}
+            <td id="s_a_{{channel.channel_value}}" style="font-size: 15px"></td>
+          {% endfor %}
+        </tr>
+        
+        <tr>
+          <th>Device B:</th>
+          {% for channel in channels %}
+            <td id="s_b_{{channel.channel_value}}" style="font-size: 15px"></td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="table table-bordered table-hover" id="color-labels" style="font-size: 12px">
+      <tbody>
+        <tr>
+          
+        </tr>
+      </tbody>
+    </table>
+  
+    <div id="main">
+      {% for channel in channels %}
+            <div>
+              <hr>
+              <div class="channel" id="{{ channel.channel_value }}">
+                <div class="channel-metadata">
+                  <br>
+                  <br>                  
+                    <img src='{{ channel.logo_url }}' style="height: 75%; width: 75%">
+                    <strong>{{channel.channel_name}}</strong>
+                </div>
+
+                <div class="channel-timeline">
+                    <strong>Device A</strong>
+                    <div id="a_{{channel.channel_value}}"></div>
+                    
+                    <strong>Device B</strong>
+                    <div id="b_{{channel.channel_value}}"></div>
+                </div>
+            </div>
+            </div>
+      {% endfor %}
+    </div>
+{% endblock %}
+
+
+{% block footer %}
+  <script type="text/javascript">
+  var channelValues = [];
+  {% for channel in channels %}
+    channelValues.push({{channel.channel_value}});
+  {% endfor %}
+  </script>
+  <script src="{% static "graph_ui/js/recording.js" %}"></script>
+{% endblock %}
