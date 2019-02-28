@@ -18,9 +18,9 @@ var globalStore = {};
 
 var stageToColor = {
     "Start Recording":  'green',
-    "Stop Recording":  'black',
+    "Stop Recording":  'red',
     "Normal Frame": 'grey',
-    "Blank Frame": 'brown',
+    "Blank Frame": 'black',
     "Empty": "lightblue"
 }
 
@@ -128,6 +128,66 @@ function initializeDataTable() {
     return dataTable;
 }
 
+function removeDuplicateObjects(objectArray) {
+    
+    var uniqueStringArray = new Set(objectArray.map(e => JSON.stringify(e)));
+    var uniqueObjectArray = Array.from(uniqueStringArray).map(e => JSON.parse(e));
+    return uniqueObjectArray;
+}
+
+function createBlankDateRangeEntries(uniqueBlankRawData) {
+
+    var blankDateRangeEntries = [];
+
+    for(var i = 0; i < uniqueBlankRawData.length; i++) {
+        entry = uniqueBlankRawData[i];
+
+        var startTime = dateTimeFromProcessingRequestID(entry['request_id'])['start_time'];
+        
+        var fromMilliseconds = parseFloat(entry['invalid_frame_from']) * 1000;
+        var toMilliseconds = parseFloat(entry['invalid_frame_to']) * 1000;
+
+        var invalidFrameStartTime = new Date(startTime);
+        invalidFrameStartTime.setMilliseconds(fromMilliseconds);
+
+        var invalidFrameEndTime = new Date(startTime);
+        invalidFrameEndTime.setMilliseconds(toMilliseconds);
+
+        blankDateRangeEntries.push({"startTime": invalidFrameStartTime, "endTime": invalidFrameEndTime});
+    }
+    return blankDateRangeEntries;
+}
+
+function prepareRecordingSlots(startStopEntries, blankDateRangeEntries) {
+
+    var recordingSlots = [];
+
+    var j = 0;
+    for(var i = 0; i < startStopEntries.length; i += 2) {
+        
+        var startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
+        var stopRecordingDateTime = new Date(startStopEntries[i+1]['timestamp']);
+
+        var entry = {
+            'startRecordingTime' : startRecordingDateTime,
+            'stopRecordingTime' : stopRecordingDateTime,
+            'blankEntries' : []
+        }
+
+        for(; j < blankDateRangeEntries.length; j++) {
+
+            //  if the entry is beyond the current stopping time
+            if (blankDateRangeEntries[j]['startTime'] > entry['stopRecordingTime']) {
+                break;
+            }
+
+            entry['blankEntries'].push(blankDateRangeEntries[j]);
+        }
+        recordingSlots.push(entry);
+    }
+    return recordingSlots;
+}
+
 function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpoint) {
 
     var date = endpoint.searchParams.get('date');
@@ -152,7 +212,7 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
     }
 
 
-    // 4. sort startStopEntries according to timestamp
+    // 4. sort startStopEntries according to timestamp (asc order)
     startStopEntries.sort( (r1, r2) => {
         if (r1.timestamp < r2.timestamp) return -1;
         if (r1.timestamp > r2.timestamp) return 1;
@@ -191,94 +251,96 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
     }
 
     dataTableContents = dataTableContents.concat(recordingDataTableContents);
-    //  3. for each pair of start-stop entries, make a stretch in the timeline in "Blank" category
-    //     also make entries for start/stop in "Recording" category
     
-    for(var i = 0; i < startStopEntries.length; i += 2) {
-        var startEntry = startStopEntries[i];
-        var stopEntry = startStopEntries[i+1];
+    //  6. remove duplicates from blankRawData
 
-        dataTableContents.push(["Blank", "", "sample", "grey", new Date(startEntry['timestamp']), new Date(stopEntry['timestamp'])]);
+    uniqueBlankRawData = removeDuplicateObjects(blankRawData);
+
+    //  7. convert each entry of uniqueBlankRawData into blankDateRangeEntries
+    console.log("uniqueBlankRawData is....");
+    console.log(uniqueBlankRawData);
+
+    blankDateRangeEntries = createBlankDateRangeEntries(uniqueBlankRawData);
+
+    //  8. sort blankDateRangeEntries in order of startTime. (asc)
+    blankDateRangeEntries.sort( (r1, r2) => {
+        if (r1.startTime < r2.startTime) return -1;
+        if (r1.startTime > r2.startTime) return 1;
+        return 0;
+    });
+
+    console.log("blankDateRangeEntries ascending sorted is....");
+    console.log(blankDateRangeEntries);
+
+    //  9. prepare recording slots
+
+    var recordingSlots = prepareRecordingSlots(startStopEntries, blankDateRangeEntries);
+
+    console.log("recordingSlots is..........");
+    console.log(recordingSlots);
+
+    //  10. create dataTable entries of "Blank" category
+    var category;
+    var label;
+    var tooltip;
+    var color;
+    var startTimeTimeline;
+    var endTimeTimeline;
+
+    category = 'Blank';
+    label = '';
+
+    var blankDataTableContents = [];
+    for(var i = 0; i < recordingSlots.length; i++) {
+
+        lastEndTime = recordingSlots[i]['startRecordingTime'];
+        blankEntries = recordingSlots[i]['blankEntries'];
+        stopRecordingTime = recordingSlots[i]['stopRecordingTime'];
+
+        for(var j = 0; j < blankEntries.length; j++) {
+            
+            var currentStartTime = blankEntries[j]['startTime'];
+            var currentEndTime = blankEntries[j]['endTime'];
+
+            //  1. make grey entry from lastEndTime - currentStartTime
+            color = stageToColor["Normal Frame"];
+            startTimeTimeline = lastEndTime;
+            endTimeTimeline = currentStartTime;
+            tooltip = 'Normal Frame ' + hh_mm_ss(startTimeTimeline) + ' - ' + hh_mm_ss(endTimeTimeline); 
+
+            if (startTimeTimeline < endTimeTimeline) {
+                blankDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+            }
+
+            //  2. make blank entry from currentStartTime - currentEndTime
+            color = stageToColor['Blank Frame'];
+            startTimeTimeline = currentStartTime;
+            endTimeTimeline = currentEndTime;
+            tooltip = 'Blank Frame ' + hh_mm_ss(startTimeTimeline) + ' - ' + hh_mm_ss(endTimeTimeline);
+
+            if (startTimeTimeline < endTimeTimeline) {
+                blankDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+            }
+            
+            lastEndTime = currentEndTime;
+        }
+        
+        //  make grey entry from lastEndTime - stopRecordingTime
+        color = stageToColor['Normal Frame'];
+        startTimeTimeline = lastEndTime;
+        endTimeTimeline = stopRecordingTime;
+        tooltip = 'Normal Frame ' + hh_mm_ss(startTimeTimeline) + ' - ' + hh_mm_ss(endTimeTimeline);
+
+        if (startTimeTimeline < endTimeTimeline) {
+            blankDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+        }
+        
     }
+    console.log("blankDataTableContents is........");
+    console.log(blankDataTableContents);
 
+    dataTableContents = dataTableContents.concat(blankDataTableContents);
     return dataTableContents;
-
-    // for(var i = 0; i < highestStageNumberEntries.length; i++) {
-    //     var entry = highestStageNumberEntries[i];
-        
-    //     var category;
-    //     var label;
-    //     var tooltip;
-    //     var color;
-    //     var startTimeTimeline;
-    //     var endTimeTimeline;
-        
-    //     var safeTyMargin = 2;
-
-    //     // label = entry['request_id'] + ":" + entry['device_id'];
-
-    //     label = '{"request_id": "' + entry['request_id'] + '", "device_id": "' + entry['device_id'] +'"}';
-    //     // console.log("Label is " + label);
-
-        
-    //     //  color
-    //     if (entry['stage_number'] == 1 || entry['stage_number'] == 6 || entry['stage_number'] == 5) {
-    //         color = stageToColor[entry['stage_message']];
-    //     }
-    //     else {
-
-    //         var entryTime = new Date(entry['timestamp']);
-    //         var now = new Date();
-    //         var hoursElapsed = (now.valueOf() - entryTime.valueOf()) / (1000 * 60 * 60);
-
-    //         if (hoursElapsed > 24) {
-    //             color = stageToColor['Failed'];
-    //         }
-    //         else {
-    //             color = stageToColor[entry['stage_message']];
-    //         }
-    //     }
-
-
-    //     //  start & end times and tooltip.
-    //     if (entry['stage_number'] == 1 || entry['stage_number'] == 6) {
-            
-    //         category = 'Recording';
-    //         startTimeTimeline = new Date(entry['timestamp']);
-
-    //         endTimeTimeline = new Date(entry['timestamp']);
-    //         endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
-            
-    //         var startTimeString = hh_mm_ss(startTimeTimeline);
-    //         tooltip = entry['stage_message'] + ' ' + startTimeString;
-            
-    //         // console.log("Clipnumber for start/stop entries is " + entry['clip_number']);
-    //     }
-    //     else {
-
-    //         category = 'Processing';
-
-    //         times = dateTimeFromProcessingRequestID(entry['request_id']);
-            
-    //         var startTime = times['start_time'];
-    //         startTimeTimeline = new Date(startTime);
-    //         startTimeTimeline.setMinutes(startTimeTimeline.getMinutes() + safeTyMargin);
-            
-    //         var endTime = times['end_time'];
-    //         endTimeTimeline = new Date(endTime);
-    //         endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
-
-    //         var startTimeString = hh_mm_ss(startTime);
-    //         var endTimeString = hh_mm_ss(endTime);
-    //         tooltip = entry['stage_message'] + ' ' + startTimeString + ' - ' + endTimeString;
-            
-    //         // console.log("Clipnumber from database is " + entry['clip_number']);
-    //         // console.log("Clipnumber calculated in JS is " + getClipNumber(startTimeString));
-    //         // console.log(entry['clip_number'] == getClipNumber(startTimeString));
-    //     }
-
-    //     dataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
-    // }
 }
 
 function reverseJsonMapper(originalMapping) {
