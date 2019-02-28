@@ -302,6 +302,12 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
             var currentStartTime = blankEntries[j]['startTime'];
             var currentEndTime = blankEntries[j]['endTime'];
 
+            //  patch: timeline cluttering issue
+            if ((currentStartTime - lastEndTime) / 1000 < 1) {
+                // console.log(currentStartTime);
+                currentStartTime.setSeconds(currentStartTime.getSeconds() + 1);
+            }
+
             //  1. make grey entry from lastEndTime - currentStartTime
             color = stageToColor["Normal Frame"];
             startTimeTimeline = lastEndTime;
@@ -505,6 +511,7 @@ function populateTimeline(timeline, endpoint, index) {
                     gridlines: {color: 'pink', count: 4},
                     // format: 'HH'
                 },
+            avoidOverlappingGridLines: false,
             width: '100%',
             height: '105'
         };
