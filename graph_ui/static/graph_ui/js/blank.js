@@ -113,37 +113,6 @@ function dateTimeFromProcessingRequestID(request_id) {
     }
 }
 
-function getHighestStageNumberEntries(rawData) {
-
-    //  1. sort by stage_number (desc)
-    rawData.sort( (r1, r2) => {
-        if (r1.stage_number < r2.stage_number) return 1;
-        if (r1.stage_number > r2.stage_number) return -1;
-        return 0;
-    });
-
-    //  2. sort by request_id(asc)
-    rawData.sort( (r1, r2) => {
-        if (r1.request_id < r2.request_id) return -1;
-        if (r1.request_id > r2.request_id) return 1;
-        return 0;
-    });
-
-    var highestStageNumberEntries = [rawData[0]];
-    for(var i = 1; i < rawData.length; i++) {
-
-        if (rawData[i]['stage_message'] == "Stop Recording" || rawData[i]['stage_message'] == "Start Recording") {
-            highestStageNumberEntries.push(rawData[i]);
-        }
-        else {
-            var lastIndex = highestStageNumberEntries.length - 1;
-            if (highestStageNumberEntries[lastIndex]['request_id'] != rawData[i]['request_id']) {
-                highestStageNumberEntries.push(rawData[i]);
-            }
-        }
-    }
-    return highestStageNumberEntries;
-}
 
 function initializeDataTable() {
 
@@ -161,39 +130,70 @@ function initializeDataTable() {
 
 function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpoint) {
 
-    //  0. if no data, then return an empty grey entry
     var date = endpoint.searchParams.get('date');
     var startDate = new Date(date + " 00:00:00");
     
     var endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 1);
 
+    //  1. if no data, then return an empty grey entry
     if (!recordingRawData || recordingRawData.length == 0) {
         return [['Recording', '', 'No recordings available', stageToColor['Empty'], startDate, endDate]];
     }
 
-    // 1.  filter startStopRecordings from recordingRawData
+    //  2. filter startStopRecordings from recordingRawData
     var startStopEntries = recordingRawData.filter(function(entry) {
         return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
     })
 
-    //  if empty, return an empty grey entry.
+    //  3. if empty, return an empty grey entry.
     if (!startStopEntries || startStopEntries.length == 0) {
         return [['Recording', '', 'No recordings available', stageToColor['Empty'], startDate, endDate]];
     }
 
 
-    // 2.  sort startStopEntries according to timestamp
+    // 4. sort startStopEntries according to timestamp
     startStopEntries.sort( (r1, r2) => {
         if (r1.timestamp < r2.timestamp) return -1;
         if (r1.timestamp > r2.timestamp) return 1;
         return 0;
     });
 
+    //  5. make entries of "Recording" category.
+    var dataTableContents = [];
+
+    var recordingDataTableContents = [];
+    for(var i = 0; i < startStopEntries.length; i++) {
+        
+        var entry = startStopEntries[i];
+        
+        //  dataTable fields
+        var category;
+        var label;
+        var tooltip;
+        var color;
+        var startTimeTimeline;
+        var endTimeTimeline;
+
+        category = 'Recording';
+        label = '';
+        color = stageToColor[entry['stage_message']];
+
+        startTimeTimeline = new Date(entry['timestamp']);
+
+        endTimeTimeline = new Date(entry['timestamp']);
+        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
+
+        var startTimeString = hh_mm_ss(startTimeTimeline);
+        tooltip = entry['stage_message'] + ' ' + startTimeString;
+
+        recordingDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+    }
+
+    dataTableContents = dataTableContents.concat(recordingDataTableContents);
     //  3. for each pair of start-stop entries, make a stretch in the timeline in "Blank" category
     //     also make entries for start/stop in "Recording" category
     
-    var dataTableContents = [];
     for(var i = 0; i < startStopEntries.length; i += 2) {
         var startEntry = startStopEntries[i];
         var stopEntry = startStopEntries[i+1];
