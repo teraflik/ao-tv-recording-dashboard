@@ -17,7 +17,7 @@ class InvalidFrameTrackingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InvalidFrameTracking
-        fields = '__all__'
+        fields = ('device_id', 'request_id', 'invalid_frame_from', 'invalid_frame_to')
 
 class RecordingSerializer(serializers.ModelSerializer):
     channel_name = serializers.ReadOnlyField(source='channel_value.channel_name')
