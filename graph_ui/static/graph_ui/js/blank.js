@@ -19,9 +19,10 @@ var globalStore = {};
 var stageToColor = {
     "Start Recording":  'green',
     "Stop Recording":  'red',
-    "Normal Frame": 'grey',
-    "Blank Frame": 'black',
-    "Empty": "lightblue"
+    "Normal Frame": 'lightgrey',
+    "Blank Frame": 'brown',
+    "Empty": "lightblue",
+    // "Failed": "red"
 }
 
 
@@ -196,9 +197,9 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
     var endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 1);
 
-    //  1. if no data, then return an empty grey entry
+    //  1. if no recordingData, then return an empty grey entry
     if (!recordingRawData || recordingRawData.length == 0) {
-        return [['Recording', '', 'No recordings available', stageToColor['Empty'], startDate, endDate]];
+        return [['Empty', '', 'No recordings available', stageToColor['Empty'], startDate, endDate]];
     }
 
     //  2. filter startStopRecordings from recordingRawData
@@ -206,9 +207,9 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
         return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
     })
 
-    //  3. if empty, return an empty grey entry.
+    //  3. if no startStopEntries, return an empty grey entry.
     if (!startStopEntries || startStopEntries.length == 0) {
-        return [['Recording', '', 'No recordings available', stageToColor['Empty'], startDate, endDate]];
+        return [['Empty', '', 'No recordings available', stageToColor['Empty'], startDate, endDate]];
     }
 
 
@@ -253,6 +254,8 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
     dataTableContents = dataTableContents.concat(recordingDataTableContents);
     
     //  6. remove duplicates from blankRawData
+    console.log("blankRawData is....");
+    console.log(blankRawData);
 
     uniqueBlankRawData = removeDuplicateObjects(blankRawData);
 
@@ -269,15 +272,15 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
         return 0;
     });
 
-    console.log("blankDateRangeEntries ascending sorted is....");
-    console.log(blankDateRangeEntries);
+    // console.log("blankDateRangeEntries ascending sorted is....");
+    // console.log(blankDateRangeEntries);
 
     //  9. prepare recording slots
 
     var recordingSlots = prepareRecordingSlots(startStopEntries, blankDateRangeEntries);
 
-    console.log("recordingSlots is..........");
-    console.log(recordingSlots);
+    // console.log("recordingSlots is..........");
+    // console.log(recordingSlots);
 
     //  10. create dataTable entries of "Blank" category
     var category;
@@ -370,52 +373,39 @@ function updateSummaryTable(formattedData, endpoint) {
     var statusEnum  = Object.freeze({
                                         "ok"    :   1, 
                                         "blank"   :   2, 
-                                        "error" :   3,
-                                        "inprogress":   4
+                                        "empty" :   3
                                     });
     
     var status = statusEnum.ok;
-    var colorColumn = 3;
 
     for(var i = 0; i < formattedData.length; i++) {
-        var color = formattedData[i][colorColumn];
+        var color = formattedData[i][dataTableEnum.color];
         var stage = colorToStage[color];
 
-        if (stage == 'blank') {
-            status = statusEnum.blank;
+        if (stage == 'Empty') {
+            status = statusEnum.empty;
             break;
         }
         else if (stage == "Start Recording" || stage == "Stop Recording") {
             continue;
         }
-        else if (stage == 'Failed') {
-            status = statusEnum.error;
+        else if (stage == 'Blank Frame') {
+            status = statusEnum.blank;
             break;
         }
-        else if (stage != 'Uploading done') {
-            status = statusEnum.inprogress;
-        }
-        // else if (stage == 'Now Recording') {
-        //     console.log("Now Recording Hitted!!");
-        //     status = statusEnum.inprogress;
-        // }
     }
 
     var innerHTML;
     var bgcolor;
 
     
-    if (status == statusEnum.error) {
+    if (status == statusEnum.blank) {
         innerHTML = '&#10008;';     //  cross sign
-        bgcolor = stageToColor['Failed'];
+        bgcolor = stageToColor['Blank Frame'];
     }
-    else if (status == statusEnum.blank) {
+    else if (status == statusEnum.empty) {
         innerHTML = '&#10067;';     //  question mark
-        bgcolor = stageToColor['blank'];
-    }
-    else if (status == statusEnum.inprogress) {
-        innerHTML = '&#10017;';     // STAR OF DAVID
-        bgcolor = stageToColor['Now Recording'];
+        bgcolor = stageToColor['Empty'];
     }
     else if (status == statusEnum.ok) {
         innerHTML = '&#10004;';     //  tick sign
@@ -525,9 +515,7 @@ function populateTimeline(timeline, endpoint, index) {
 
         
         //  8. update the summary table : 
-        //  NOTE :--> this takes formattedData and not totalFormattedData.
-        // updateSummaryTable(formattedData, endpoint);
-        // updateSummaryTable(totalFormattedData, endpoint);
+        updateSummaryTable(formattedData, endpoint);
 
         
         //  8. debugging
