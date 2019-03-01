@@ -2,6 +2,8 @@ google.charts.load('current', {'packages':['timeline']});
 
 var globalDataTable = {};
 
+var globalStore = {};
+
 var stageToColor = {
     "Start Recording":  'green',
     "Clipping Started":  'yellow',
@@ -472,89 +474,149 @@ function getCurrentRecordingEntries(formattedData) {
      
 }
 
+function removeDuplicateObjects(objectArray) {
+    
+    var uniqueStringArray = new Set(objectArray.map(e => JSON.stringify(e)));
+    var uniqueObjectArray = Array.from(uniqueStringArray).map(e => JSON.parse(e));
+    return uniqueObjectArray;
+}
+
+function updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint) {
+
+    //  get the HTML DOM element where this is going to happen
+    var channelValue = endpoint.searchParams.get('channel_values');
+    var deviceID = endpoint.searchParams.get('device_id');
+    var divID = [deviceID, channelValue, "blank"].join("_");
+    var DOMElement = document.getElementById(divID);
+    
+    if (!recordingRawData || recordingRawData.length == 0) {
+        DOMElement.innerHTML = "No recordings available.";
+        DOMElement.setAttribute('style', 'color: blue');
+    }
+    else if (!blankRawData || blankRawData.length == 0) {
+        DOMElement.innerHTML = "No blank frames.";
+        DOMElement.setAttribute('style', 'color: green');
+    }
+    else {
+        var uniqueBlankRawData = removeDuplicateObjects(blankRawData);
+        var totalBlankSeconds = 0;
+        for(var i = 0; i < uniqueBlankRawData.length; i++) {
+            var entry = uniqueBlankRawData[i];
+            totalBlankSeconds += parseFloat(entry['invalid_frame_to']) - parseFloat(entry['invalid_frame_from']);
+        }
+        DOMElement.innerHTML = "" + Math.round(totalBlankSeconds / 60) + " minutes of Blank Frames.";
+        DOMElement.setAttribute('style', 'color: red');
+    }
+}
+
 function populateTimeline(timeline, endpoint, index) {
     
     //  1. get data via ajax call
-    $.ajax({
-        type: 'GET',
-        url: endpoint,
-        async: true,
-        dataType: 'json',
-        success: function(rawData){
-                
-                //  1. debugging purpose
-                // console.log("Raw Data");
-                // console.log(rawData);
+    var recordingEndPoint = new URL(endpoint.href);
+    var blankEndPoint = new URL(endpoint.href.replace('recording', 'blank'));
 
-                
-                //  2. prepare data in the format to be feeded to the visualisation library.
-                var formattedData = prepareDataForGoogleChartTimeline(rawData, endpoint);
-                
-                //  3. If its today's date, then add current recordings
-                var date = endpoint.searchParams.get('date');
-                var currentRecordingEntries = [];
-                var today = yyyy_mm_dd(new Date());
-                
-                if (date == today) {
-                    currentRecordingEntries = getCurrentRecordingEntries(formattedData);
-                }
 
-                // currentRecordingEntries = getCurrentRecordingEntries(formattedData);
+    $.when(
 
-                var totalFormattedData = formattedData.concat(currentRecordingEntries);
-
-                console.log("totalFormattedData is ....");
-                console.log(totalFormattedData);
-
-                //  3. create dataTable object
-                var dataTable = initializeDataTable();
-
-                
-                //  4. add the data to the dataTable object
-                dataTable.addRows(totalFormattedData);
-
-                
-                //  5. define options.
-                var startDate = new Date(date + " 00:00:00");
-                
-                var endDate = new Date(startDate);
-                endDate.setDate(endDate.getDate() + 1);
-
-                var options = {
-                    timeline: { showRowLabels: false, showBarLabels: false, barLabelStyle: { fontSize: 8 } },
-                    tooltip: { isHtml: false },
-                    hAxis: {
-                            minValue: startDate,
-                            maxValue: endDate,
-                            gridlines: {color: 'pink', count: 4},
-                            // format: 'HH'
-                        },
-                    width: '100%',
-                    height: '105'
-                };
-
-                
-                //  6. feed data to the timeline.
-                timeline.draw(dataTable, options);
-
-                
-                //  7. updating the globalDataTable lookup
-                globalDataTable[index] = dataTable;
-
-                
-                //  8. update the summary table : 
-                //  NOTE :--> this takes formattedData and not totalFormattedData.
-                // updateSummaryTable(formattedData, endpoint);
-                updateSummaryTable(totalFormattedData, endpoint);
-
-                
-                //  8. debugging
-                // console.log("Endpoint is :- " + endpoint.href);
-                // console.log(formattedData);
-                // console.log("formattedData is ");
-                // console.log(formattedData);
-
+        //  1. get data from recordingEndPoint
+        $.get(recordingEndPoint, function(recordingRawData) {
+            
+            if (!globalStore[endpoint.href]) {
+                globalStore[endpoint.href] = {};
             }
+            
+            globalStore[endpoint.href]['recordingRawData'] = recordingRawData;
+        }),
+
+        //  2. get data from blankEndPoint
+        $.get(blankEndPoint, function(blankRawData) {
+            
+            if (!globalStore[endpoint.href]) {
+                globalStore[endpoint.href] = {};
+            }
+            
+            globalStore[endpoint.href]['blankRawData'] = blankRawData;
+        })
+    ).then(function() {
+                        
+
+        var rawData = globalStore[endpoint.href]['recordingRawData'];
+
+        var recordingRawData = globalStore[endpoint.href]['recordingRawData'];
+        var blankRawData = globalStore[endpoint.href]['blankRawData'];
+
+        console.log("blankRawData is.......");
+        console.log(blankRawData);
+
+        //  2. prepare data in the format to be feeded to the visualisation library.
+        var formattedData = prepareDataForGoogleChartTimeline(recordingRawData, endpoint);
+        
+        //  3. If its today's date, then add current recordings
+        var date = endpoint.searchParams.get('date');
+        var currentRecordingEntries = [];
+        var today = yyyy_mm_dd(new Date());
+        
+        if (date == today) {
+            currentRecordingEntries = getCurrentRecordingEntries(formattedData);
+        }
+
+        // currentRecordingEntries = getCurrentRecordingEntries(formattedData);
+
+        var totalFormattedData = formattedData.concat(currentRecordingEntries);
+
+        console.log("totalFormattedData is ....");
+        console.log(totalFormattedData);
+
+        //  3. create dataTable object
+        var dataTable = initializeDataTable();
+
+        
+        //  4. add the data to the dataTable object
+        dataTable.addRows(totalFormattedData);
+
+        
+        //  5. define options.
+        var startDate = new Date(date + " 00:00:00");
+        
+        var endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 1);
+
+        var options = {
+            timeline: { showRowLabels: false, showBarLabels: false, barLabelStyle: { fontSize: 8 } },
+            tooltip: { isHtml: false },
+            hAxis: {
+                    minValue: startDate,
+                    maxValue: endDate,
+                    gridlines: {color: 'pink', count: 4},
+                    // format: 'HH'
+                },
+            width: '100%',
+            height: '105'
+        };
+
+        
+        //  6. feed data to the timeline.
+        timeline.draw(dataTable, options);
+
+        
+        //  7. updating the globalDataTable lookup
+        globalDataTable[index] = dataTable;
+
+        
+        //  8. update the summary table : 
+        //  NOTE :--> this takes formattedData and not totalFormattedData.
+        // updateSummaryTable(formattedData, endpoint);
+        updateSummaryTable(totalFormattedData, endpoint);
+
+        //  9. add total blank minutes
+        updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint);
+
+        
+        //  8. debugging
+        // console.log("Endpoint is :- " + endpoint.href);
+        // console.log(formattedData);
+        // console.log("formattedData is ");
+        // console.log(formattedData);
     });
 }
 

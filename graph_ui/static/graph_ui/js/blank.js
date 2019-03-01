@@ -432,6 +432,34 @@ function clipNoToInterval(dateString, clipNumber) {
     return [startTime, endTime];
 }
 
+function updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint) {
+
+    //  get the HTML DOM element where this is going to happen
+    var channelValue = endpoint.searchParams.get('channel_values');
+    var deviceID = endpoint.searchParams.get('device_id');
+    var divID = [deviceID, channelValue, "blank"].join("_");
+    var DOMElement = document.getElementById(divID);
+    
+    if (!recordingRawData || recordingRawData.length == 0) {
+        DOMElement.innerHTML = "No recordings available.";
+        DOMElement.setAttribute('style', 'color: blue');
+    }
+    else if (!blankRawData || blankRawData.length == 0) {
+        DOMElement.innerHTML = "No blank frames.";
+        DOMElement.setAttribute('style', 'color: green');
+    }
+    else {
+        var uniqueBlankRawData = removeDuplicateObjects(blankRawData);
+        var totalBlankSeconds = 0;
+        for(var i = 0; i < uniqueBlankRawData.length; i++) {
+            var entry = uniqueBlankRawData[i];
+            totalBlankSeconds += parseFloat(entry['invalid_frame_to']) - parseFloat(entry['invalid_frame_from']);
+        }
+        DOMElement.innerHTML = "" + Math.round(totalBlankSeconds / 60) + " minutes of Blank Frames.";
+        DOMElement.setAttribute('style', 'color: red');
+    }
+}
+
 function populateTimeline(timeline, endpoint, index) {
 
     var blankEndPoint = new URL(endpoint.href);
@@ -516,6 +544,9 @@ function populateTimeline(timeline, endpoint, index) {
         
         //  8. update the summary table : 
         updateSummaryTable(formattedData, endpoint);
+
+        //  9. add total blank minutes
+        updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint);
 
         
         //  8. debugging
