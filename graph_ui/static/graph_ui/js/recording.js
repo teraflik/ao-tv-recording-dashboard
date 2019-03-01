@@ -650,7 +650,7 @@ function attachSummaryToTimeline() {
         (function(i){
 
             var summaryBoxIDA = "#s_a_" + channelValues[i];
-            var timelineIDA = "#a_" + channelValues[i];
+            var timelineIDA = "#a_" + channelValues[i] + "_blank";
     
             $(summaryBoxIDA).click(function() {
                 $('html,body').animate({
@@ -659,7 +659,7 @@ function attachSummaryToTimeline() {
             });
     
             var summaryBoxIDB = "#s_b_" + channelValues[i];
-            var timelineIDB = "#b_" + channelValues[i];
+            var timelineIDB = "#b_" + channelValues[i] + "_blank";
     
             $(summaryBoxIDB).click(function() {
                 $('html,body').animate({
@@ -668,6 +668,29 @@ function attachSummaryToTimeline() {
             });
     
         })(i);
+    }
+}
+
+function linkToBlankFramesUI() {
+    
+    //  get the current URL & change it to get the URL for blank UI
+    var baseURL = new URL(document.URL.replace('recording', 'blank'));
+
+    //  loop for generating specific URLs
+    for(var i = 0; i < channelValues.length; i++) {
+        //  device_id = 'a'
+        //  get the corresponding anchor tag and set its href to the specific URL.
+        var aID = document.getElementById('a_' + channelValues[i] + '_blank');
+        var specificURLA = new URL(baseURL.href);
+        specificURLA.searchParams.set('scroll_to', '#a_' + channelValues[i] + "_blank");
+        aID.setAttribute("href", specificURLA.href);
+
+        //  device_id = 'b'
+        //  get the corresponding anchor tag and set its href to the specific URL.
+        var bID = document.getElementById('b_' + channelValues[i] + '_blank');
+        var specificURLB = new URL(baseURL.href);
+        specificURLB.searchParams.set('scroll_to', '#b_' + channelValues[i] + "_blank");
+        bID.setAttribute("href", specificURLB.href);
     }
 }
 
@@ -684,6 +707,9 @@ google.charts.setOnLoadCallback(function() {
 
     //  patch:  attach summaryTable to timelines
     attachSummaryToTimeline();
+
+    //  patch: link to blankFrames UI
+    linkToBlankFramesUI();
 
     //  2. make specificEndPoints array
     var specificEndPoints = [];

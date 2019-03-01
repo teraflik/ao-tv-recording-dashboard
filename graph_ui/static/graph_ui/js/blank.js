@@ -594,7 +594,7 @@ function attachSummaryToTimeline() {
         (function(i){
 
             var summaryBoxIDA = "#s_a_" + channelValues[i];
-            var timelineIDA = "#a_" + channelValues[i];
+            var timelineIDA = "#a_" + channelValues[i] + "_blank";
     
             $(summaryBoxIDA).click(function() {
                 $('html,body').animate({
@@ -603,7 +603,7 @@ function attachSummaryToTimeline() {
             });
     
             var summaryBoxIDB = "#s_b_" + channelValues[i];
-            var timelineIDB = "#b_" + channelValues[i];
+            var timelineIDB = "#b_" + channelValues[i] + "_blank";
     
             $(summaryBoxIDB).click(function() {
                 $('html,body').animate({
@@ -613,6 +613,19 @@ function attachSummaryToTimeline() {
     
         })(i);
     }
+}
+
+function scrollToGivenID() {
+    var currentURL = new URL(document.URL);
+    var idToScroll = currentURL.searchParams.get('scroll_to');
+
+    if (!idToScroll) {
+        return;
+    }
+
+    $('html,body').animate({
+        scrollTop: $(idToScroll).offset().top},
+        'slow');
 }
 
 google.charts.setOnLoadCallback(function() {
@@ -656,4 +669,7 @@ google.charts.setOnLoadCallback(function() {
         populateTimeline(timelines[i], specificEndPoints[i], i);
         setInterval(populateTimeline, 300000, timelines[i], specificEndPoints[i], i);
     }
+
+    //  5. scroll to given ID if specified
+    setTimeout(scrollToGivenID, 2000);
 });
