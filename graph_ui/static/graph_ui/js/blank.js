@@ -19,7 +19,7 @@ var globalStore = {};
 var stageToColor = {
     "Start Recording":  'green',
     "Stop Recording":  'red',
-    "Normal Frame": 'lightgrey',
+    "Normal Frame": 'grey',
     "Blank Frame": 'brown',
     "Empty": "lightblue",
     // "Failed": "red"
@@ -159,21 +159,58 @@ function createBlankDateRangeEntries(uniqueBlankRawData) {
     return blankDateRangeEntries;
 }
 
-function prepareRecordingSlots(startStopEntries, blankDateRangeEntries) {
+function prepareRecordingSlots(startStopEntries, blankDateRangeEntries, endpoint) {
+    
+    //  extract date from endpoint and get today's date
+    var date = endpoint.searchParams.get('date');
+    var today = yyyy_mm_dd(new Date());
 
     var recordingSlots = [];
 
     var j = 0;
-    for(var i = 0; i < startStopEntries.length; i += 2) {
+    for(var i = 0; i < startStopEntries.length; ) {
         
-        var startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
-        var stopRecordingDateTime = new Date(startStopEntries[i+1]['timestamp']);
+        var entry = {};
+        var startRecordingDateTime;
+        var stopRecordingDateTime;
+        //  1. if the first entry is stop recording,
+        //     then the slot will be from 
+        //     dayStart - stopRecording
+        if (startStopEntries[i]['stage_message'] == 'Stop Recording') {
+            startRecordingDateTime = new Date(date + " 00:00:00");
+            stopRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
 
-        var entry = {
-            'startRecordingTime' : startRecordingDateTime,
-            'stopRecordingTime' : stopRecordingDateTime,
-            'blankEntries' : []
+            i++;
         }
+        //  2. if this entry is the last entry and its start recording,
+        else if (i == startStopEntries.length - 1) {
+            //  a. if its today, then the slot will be from
+            //  startRecording - currentTime
+            if (date == today) {
+                startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
+                stopRecordingDateTime = new Date();
+            }
+
+            //  b. if its not today, then the slot will be from
+            //  startRecording - dayEnd
+            else {
+                startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
+                stopRecordingDateTime = new Date(date + " 00:00:00");
+                stopRecordingDateTime.setDate(stopRecordingDateTime.getDate() + 1);
+            }
+            
+            i++;
+        }
+        else {
+            startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
+            stopRecordingDateTime = new Date(startStopEntries[i+1]['timestamp']);
+
+            i += 2;
+        }
+
+        entry['startRecordingTime'] = startRecordingDateTime;
+        entry['stopRecordingTime'] = stopRecordingDateTime;
+        entry['blankEntries'] = [];
 
         for(; j < blankDateRangeEntries.length; j++) {
 
@@ -211,7 +248,6 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
     if (!startStopEntries || startStopEntries.length == 0) {
         return [['Empty', '', 'No recordings available', stageToColor['Empty'], startDate, endDate]];
     }
-
 
     // 4. sort startStopEntries according to timestamp (asc order)
     startStopEntries.sort( (r1, r2) => {
@@ -254,8 +290,8 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
     dataTableContents = dataTableContents.concat(recordingDataTableContents);
     
     //  6. remove duplicates from blankRawData
-    console.log("blankRawData is....");
-    console.log(blankRawData);
+    // console.log("blankRawData is....");
+    // console.log(blankRawData);
 
     uniqueBlankRawData = removeDuplicateObjects(blankRawData);
 
@@ -277,10 +313,10 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
 
     //  9. prepare recording slots
 
-    var recordingSlots = prepareRecordingSlots(startStopEntries, blankDateRangeEntries);
+    var recordingSlots = prepareRecordingSlots(startStopEntries, blankDateRangeEntries, endpoint);
 
-    // console.log("recordingSlots is..........");
-    // console.log(recordingSlots);
+    console.log("recordingSlots is..........");
+    console.log(recordingSlots);
 
     //  10. create dataTable entries of "Blank" category
     var category;
@@ -345,8 +381,8 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
         }
         
     }
-    console.log("blankDataTableContents is........");
-    console.log(blankDataTableContents);
+    // console.log("blankDataTableContents is........");
+    // console.log(blankDataTableContents);
 
     dataTableContents = dataTableContents.concat(blankDataTableContents);
     return dataTableContents;
