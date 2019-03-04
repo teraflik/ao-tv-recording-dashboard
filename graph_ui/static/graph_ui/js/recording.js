@@ -1,4 +1,4 @@
-google.charts.load('current', {'packages':['timeline']});
+google.charts.load('46', {'packages':['timeline']});
 
 var globalDataTable = {};
 
