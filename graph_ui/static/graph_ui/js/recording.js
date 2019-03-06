@@ -278,10 +278,9 @@ function updateSummaryTable(formattedData, endpoint) {
                                     });
     
     var status = statusEnum.ok;
-    var colorColumn = 3;
 
     for(var i = 0; i < formattedData.length; i++) {
-        var color = formattedData[i][colorColumn];
+        var color = formattedData[i][dataTableEnum.color];
         var stage = colorToStage[color];
 
         if (stage == 'blank') {
