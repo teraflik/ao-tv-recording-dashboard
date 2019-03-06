@@ -11,7 +11,7 @@ var stageToColor = {
     "Uploading start":  'brown',
     "Uploading done":  'blue',
     "Stop Recording":  'black',
-    'blank':    'grey',
+    'empty':    'grey',
     'Now Recording': 'lightblue',
     'Failed':   'red'
 }
@@ -159,7 +159,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
     endDate.setDate(endDate.getDate() + 1);
 
     if (!rawData || rawData.length == 0) {
-        return [['Recording', '', 'No recordings available', stageToColor['blank'], startDate, endDate]];
+        return [['Recording', '', 'No recordings available', stageToColor['empty'], startDate, endDate]];
     }
 
     //  1. for each request_id, get single entry having the maximum stage_number
@@ -266,7 +266,7 @@ function reverseJsonMapper(originalMapping) {
 
 var summaryStatusEnum  = Object.freeze({
     "ok"    :   1, 
-    "blank"   :   2, 
+    "empty"   :   2, 
     "error" :   3,
     "inprogress":   4
 });
@@ -277,7 +277,7 @@ var summaryStatusToGraphic = {
                             "bgcolor" : "lightgreen",
                             "innerHTML" : "&#10004;",
                             },
-    [summaryStatusEnum.blank] : {
+    [summaryStatusEnum.empty] : {
                             "bgcolor" : "lightgrey",
                             "innerHTML" : "&#10067;",
                             },
@@ -305,8 +305,8 @@ function updateSummaryTable(formattedData, endpoint) {
         var color = formattedData[i][dataTableEnum.color];
         var stage = colorToStage[color];
 
-        if (stage == 'blank') {
-            status = summaryStatusEnum.blank;
+        if (stage == 'empty') {
+            status = summaryStatusEnum.empty;
             break;
         }
         else if (stage == "Start Recording" || stage == "Stop Recording") {
