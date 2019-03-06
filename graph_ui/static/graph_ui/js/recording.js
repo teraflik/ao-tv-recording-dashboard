@@ -264,72 +264,77 @@ function reverseJsonMapper(originalMapping) {
     return reverseMapping;
 }
 
+var summaryStatusEnum  = Object.freeze({
+    "ok"    :   1, 
+    "blank"   :   2, 
+    "error" :   3,
+    "inprogress":   4
+});
+
+// Ref:- https://stackoverflow.com/questions/21346967/using-value-of-enum-as-key-in-another-enum-in-javascript
+var summaryStatusToGraphic = {
+    [summaryStatusEnum.ok] : {
+                            "bgcolor" : "lightgreen",
+                            "innerHTML" : "&#10004;",
+                            },
+    [summaryStatusEnum.blank] : {
+                            "bgcolor" : "lightgrey",
+                            "innerHTML" : "&#10067;",
+                            },
+    [summaryStatusEnum.error] : {
+                            "bgcolor" : "red",
+                            "innerHTML" : "&#10008;",
+                            },
+    [summaryStatusEnum.inprogress] : {
+                            "bgcolor" : "lightblue",
+                            "innerHTML" : "&#10017;",
+                            }
+};
+
+
 function updateSummaryTable(formattedData, endpoint) {
     
     //  create a colorToStage mapping
     var colorToStage = reverseJsonMapper(stageToColor);
 
     //  check status
-    var statusEnum  = Object.freeze({
-                                        "ok"    :   1, 
-                                        "blank"   :   2, 
-                                        "error" :   3,
-                                        "inprogress":   4
-                                    });
     
-    var status = statusEnum.ok;
+    var status = summaryStatusEnum.ok;
 
     for(var i = 0; i < formattedData.length; i++) {
         var color = formattedData[i][dataTableEnum.color];
         var stage = colorToStage[color];
 
         if (stage == 'blank') {
-            status = statusEnum.blank;
+            status = summaryStatusEnum.blank;
             break;
         }
         else if (stage == "Start Recording" || stage == "Stop Recording") {
             continue;
         }
         else if (stage == 'Failed') {
-            status = statusEnum.error;
+            status = summaryStatusEnum.error;
             break;
         }
         else if (stage != 'Uploading done') {
-            status = statusEnum.inprogress;
+            status = summaryStatusEnum.inprogress;
         }
         // else if (stage == 'Now Recording') {
         //     console.log("Now Recording Hitted!!");
-        //     status = statusEnum.inprogress;
+        //     status = summaryStatusEnum.inprogress;
         // }
     }
 
-    var innerHTML;
-    var bgcolor;
+    var innerHTML = summaryStatusToGraphic[status].innerHTML;
+    var bgcolor = summaryStatusToGraphic[status].bgcolor;
 
-    
-    if (status == statusEnum.error) {
-        innerHTML = '&#10008;';     //  cross sign
-        bgcolor = stageToColor['Failed'];
-    }
-    else if (status == statusEnum.blank) {
-        innerHTML = '&#10067;';     //  question mark
-        bgcolor = stageToColor['blank'];
-    }
-    else if (status == statusEnum.inprogress) {
-        innerHTML = '&#10017;';     // STAR OF DAVID
-        bgcolor = stageToColor['Now Recording'];
-    }
-    else if (status == statusEnum.ok) {
-        innerHTML = '&#10004;';     //  tick sign
-        bgcolor = 'green';
-    }
-
+    // select the DOM element corresponding to summaryBox of this channel.
     var deviceID = endpoint.searchParams.get('device_id');
     var channelValue = endpoint.searchParams.get('channel_values');
-
     var summaryBoxID = ['s', deviceID, channelValue].join("_");
     var summaryBox = document.getElementById(summaryBoxID);
 
+    // fill the DOM Element with the details.
     summaryBox.innerHTML = innerHTML;
     summaryBox.setAttribute('bgcolor', bgcolor);
 }
@@ -730,7 +735,7 @@ function selectHandler(timeline, index) {
 }
 
 function setColorLabels() {
-    var table = document.getElementById("color-labels");
+    var table = document.getElementById("timeline-color-labels");
     var trElement = table.childNodes[1].childNodes[1];
 
     for (key in stageToColor) {
@@ -741,6 +746,28 @@ function setColorLabels() {
 
             var color = document.createElement("th");
             color.setAttribute("bgcolor", stageToColor[key]);
+
+            trElement.appendChild(color);
+            trElement.appendChild(stage);
+        }
+    }
+}
+
+function setSummaryColorLabels() {
+    var table = document.getElementById("summary-color-labels");
+    var trElement = table.childNodes[1].childNodes[1];
+
+    var summaryReverseEnum = reverseJsonMapper(summaryStatusEnum)
+
+    for (key in summaryStatusToGraphic) {
+        if (summaryStatusToGraphic.hasOwnProperty(key)) {
+            
+            var stage = document.createElement("th");
+            stage.innerText = summaryReverseEnum[key];
+
+            var color = document.createElement("th");
+            color.setAttribute("bgcolor", summaryStatusToGraphic[key].bgcolor);
+            color.innerHTML = summaryStatusToGraphic[key].innerHTML;
 
             trElement.appendChild(color);
             trElement.appendChild(stage);
@@ -810,6 +837,9 @@ google.charts.setOnLoadCallback(function() {
 
     //  patch:  add color labels to page top
     setColorLabels();
+
+    //  patch:  add summaryColorLabels at top of summaryTable.
+    setSummaryColorLabels();
 
     //  patch:  attach summaryTable to timelines
     attachSummaryToTimeline();
