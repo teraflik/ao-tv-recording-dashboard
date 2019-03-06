@@ -242,7 +242,7 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
     //  2. filter startStopRecordings from recordingRawData
     var startStopEntries = recordingRawData.filter(function(entry) {
         return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
-    })
+    });
 
     //  3. if no startStopEntries, return an empty grey entry.
     if (!startStopEntries || startStopEntries.length == 0) {

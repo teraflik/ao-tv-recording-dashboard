@@ -649,18 +649,23 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
 
         console.log("startClipNumber is........ " + startClipNumber);
 
+        var safeTyMargin = 2;
         for (var j = startClipNumber; j <= stopClipNumber; j++) {
             if (!clipNoToProcessingEntry[j]) {
                 console.log("clipNumber " + j + " is missing.");
 
                 var [startTime, endTime] = clipNoToInterval(date, j);
                 var startTimeString = hh_mm_ss(startTime);
+                var endTimeString = hh_mm_ss(endTime);
+
+                startTime.setMinutes(startTime.getMinutes() + 2);
+                endTime.setMinutes(endTime.getMinutes() - 2);
 
                 var stage = 'Failed';
 
                 var category = 'Processing';
-                var label = '';
-                var tooltip = stage + " - " + startTimeString;
+                var label = stage;
+                var tooltip = stage + " - " + startTimeString + " - " + endTimeString;
                 var color = stageToColor[stage];
                 dummyEntries.push([category, label, tooltip, color, startTime, endTime]);
             }
@@ -755,18 +760,18 @@ function populateTimeline(timeline, endpoint, index) {
 
         //  3. If its today's date, then add current recordings
         var date = endpoint.searchParams.get('date');
-        var currentRecordingEntries = [];
-        var today = yyyy_mm_dd(new Date());
+        // var currentRecordingEntries = [];
+        // var today = yyyy_mm_dd(new Date());
         
-        if (date == today) {
-            currentRecordingEntries = getCurrentRecordingEntries(formattedData);
-        }
+        // if (date == today) {
+        //     currentRecordingEntries = getCurrentRecordingEntries(formattedData);
+        // }
 
-        // currentRecordingEntries = getCurrentRecordingEntries(formattedData);
+        // // currentRecordingEntries = getCurrentRecordingEntries(formattedData);
 
-        var totalFormattedData = formattedData.concat(currentRecordingEntries);
+        // var totalFormattedData = formattedData.concat(currentRecordingEntries);
 
-        // var totalFormattedData = formattedData.concat(dummyEntries);
+        var totalFormattedData = formattedData.concat(dummyEntries);
 
         // console.log("totalFormattedData is ....");
         // console.log(totalFormattedData);
