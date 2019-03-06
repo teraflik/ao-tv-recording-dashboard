@@ -159,7 +159,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
     endDate.setDate(endDate.getDate() + 1);
 
     if (!rawData || rawData.length == 0) {
-        return [['Recording', '', 'No recordings available', stageToColor['empty'], startDate, endDate]];
+        return [['Empty', '', 'No recordings available', stageToColor['empty'], startDate, endDate]];
     }
 
     //  1. for each request_id, get single entry having the maximum stage_number
@@ -558,6 +558,120 @@ function updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint) {
     }
 }
 
+function makeClipNoToProcessingEntry(processingEntries) {
+    
+    var clipNoToProcessingEntry = {};
+    
+    for(var i = 0; i < processingEntries.length; i++) {
+        var entry = processingEntries[i];
+        var startTime = entry[dataTableEnum.startTime];
+
+        var clipNumber = getClipNumber(hh_mm_ss(startTime));
+        clipNoToProcessingEntry[clipNumber] = entry;
+    }
+
+    return clipNoToProcessingEntry;
+}
+
+function createRecordingSlots(startStopEntries, endpoint) {
+    
+    //  extract date from endpoint and get today's date
+    var date = endpoint.searchParams.get('date');
+    var today = yyyy_mm_dd(new Date());
+
+    var recordingSlots = [];
+
+    var j = 0;
+    for(var i = 0; i < startStopEntries.length; ) {
+        
+        var entry = {};
+        var startRecordingDateTime;
+        var stopRecordingDateTime;
+        //  1. if the first entry is stop recording,
+        //     then the slot will be from 
+        //     dayStart - stopRecording
+        if (startStopEntries[i]['stage_message'] == 'Stop Recording') {
+            startRecordingDateTime = new Date(date + " 00:00:00");
+            stopRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
+
+            i++;
+        }
+        //  2. if this entry is the last entry and its start recording,
+        else if (i == startStopEntries.length - 1) {
+            //  a. if its today, then the slot will be from
+            //  startRecording - currentTime
+            if (date == today) {
+                startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
+                stopRecordingDateTime = new Date();
+            }
+
+            //  b. if its not today, then the slot will be from
+            //  startRecording - dayEnd
+            else {
+                startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
+                stopRecordingDateTime = new Date(date + " 00:00:00");
+                stopRecordingDateTime.setDate(stopRecordingDateTime.getDate() + 1);
+            }
+            
+            i++;
+        }
+        else {
+            startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
+            stopRecordingDateTime = new Date(startStopEntries[i+1]['timestamp']);
+
+            i += 2;
+        }
+
+        entry['startRecordingTime'] = startRecordingDateTime;
+        entry['stopRecordingTime'] = stopRecordingDateTime;
+
+        recordingSlots.push(entry);
+    }
+    return recordingSlots;
+}
+
+function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
+    
+    var dummyEntries = [];
+    var date = endpoint.searchParams.get('date');
+
+    for(var i = 0; i < recordingSlots.length; i++) {
+        
+        var startRecordingTime = recordingSlots[i]['startRecordingTime'];
+        var stopRecordingTime = recordingSlots[i]['stopRecordingTime'];
+
+        var startClipNumber = getClipNumber(hh_mm_ss(startRecordingTime));
+        var stopClipNumber = getClipNumber(hh_mm_ss(stopRecordingTime)) - 1;
+
+        if (stopClipNumber == 0) {
+            stopClipNumber = 48;
+        }
+
+        console.log("startClipNumber is........ " + startClipNumber);
+
+        for (var j = startClipNumber; j <= stopClipNumber; j++) {
+            if (!clipNoToProcessingEntry[j]) {
+                console.log("clipNumber " + j + " is missing.");
+
+                var [startTime, endTime] = clipNoToInterval(date, j);
+                var startTimeString = hh_mm_ss(startTime);
+
+                var stage = 'Failed';
+
+                var category = 'Processing';
+                var label = '';
+                var tooltip = stage + " - " + startTimeString;
+                var color = stageToColor[stage];
+                dummyEntries.push([category, label, tooltip, color, startTime, endTime]);
+            }
+        }
+
+        console.log("stopClipNumber is........ " + stopClipNumber);
+    }
+
+    return dummyEntries;
+}
+
 function populateTimeline(timeline, endpoint, index) {
     
     //  1. get data via ajax call
@@ -587,19 +701,58 @@ function populateTimeline(timeline, endpoint, index) {
             globalStore[endpoint.href]['blankRawData'] = blankRawData;
         })
     ).then(function() {
-                        
-
-        var rawData = globalStore[endpoint.href]['recordingRawData'];
 
         var recordingRawData = globalStore[endpoint.href]['recordingRawData'];
         var blankRawData = globalStore[endpoint.href]['blankRawData'];
 
-        console.log("blankRawData is.......");
-        console.log(blankRawData);
+        // console.log("blankRawData is.......");
+        // console.log(blankRawData);
 
         //  2. prepare data in the format to be feeded to the visualisation library.
         var formattedData = prepareDataForGoogleChartTimeline(recordingRawData, endpoint);
-        
+
+        console.log("formattedData is.......");
+        console.log(formattedData);
+
+        //  2.1 filter out recordingEntries and processingEntries
+        var startStopEntries = recordingRawData.filter(function(entry) {
+            return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
+        });
+
+        //  2.2 sort these according to their timestamp (asc)
+        startStopEntries.sort( (r1, r2) => {
+            if (r1.timestamp < r2.timestamp) return -1;
+            if (r1.timestamp > r2.timestamp) return 1;
+            return 0;
+        });
+
+        console.log("startStopEntries sorted are.........");
+        console.log(startStopEntries);
+
+        //  2.3 filter the processing entries
+        var processingEntries = formattedData.filter(function(dataTableEntry) {
+            return dataTableEntry[dataTableEnum.category] == 'Processing';
+        });
+
+        console.log("processingEntries are.........");
+        console.log(processingEntries);
+
+        //  2.4 create a mapping of clipNumber --> processingEntry
+        var clipNoToProcessingEntry = makeClipNoToProcessingEntry(processingEntries);
+        console.log("clipNoToProcessingEntry is........");
+        console.log(clipNoToProcessingEntry);
+
+        //  2.5 make recording slots
+        var recordingSlots = createRecordingSlots(startStopEntries, endpoint);
+        console.log("Recording Slots are......");
+        console.log(recordingSlots);
+
+
+        var dummyEntries = getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint);
+        console.log("dummyEntries are.......");
+        console.log(dummyEntries);
+
+
         //  3. If its today's date, then add current recordings
         var date = endpoint.searchParams.get('date');
         var currentRecordingEntries = [];
@@ -613,8 +766,10 @@ function populateTimeline(timeline, endpoint, index) {
 
         var totalFormattedData = formattedData.concat(currentRecordingEntries);
 
-        console.log("totalFormattedData is ....");
-        console.log(totalFormattedData);
+        // var totalFormattedData = formattedData.concat(dummyEntries);
+
+        // console.log("totalFormattedData is ....");
+        // console.log(totalFormattedData);
 
         //  3. create dataTable object
         var dataTable = initializeDataTable();
@@ -659,7 +814,6 @@ function populateTimeline(timeline, endpoint, index) {
 
         //  9. add total blank minutes
         updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint);
-
         
         //  8. debugging
         // console.log("Endpoint is :- " + endpoint.href);
