@@ -368,37 +368,67 @@ function getCurrentRecordingEntries(formattedData) {
     });
 
     //  get the last recording & processing entries.
+    // var lastRecordingEntry = null;
+    // var lastProcessingEntry = null;
+    // for (var i = 0; i < formattedData.length; i++) {
+    //     var entry = formattedData[i];
+    //     //  if entry is of category Recording and its the first of this kind.
+    //     if (!lastRecordingEntry && entry[dataTableEnum.category] == "Recording") {
+    //         lastRecordingEntry = entry;
+    //     }
+    //     else if (!lastProcessingEntry && entry[dataTableEnum.category] == "Processing") {
+    //         lastProcessingEntry = entry;
+    //     }
+
+    //     if (lastRecordingEntry && lastProcessingEntry) {
+    //         break;
+    //     }
+    // }
+    var colorToStage = reverseJsonMapper(stageToColor);
+
     var lastRecordingEntry = null;
+    var lastStartRecordingEntry = null;
     var lastProcessingEntry = null;
     for (var i = 0; i < formattedData.length; i++) {
+
         var entry = formattedData[i];
+        
         //  if entry is of category Recording and its the first of this kind.
         if (!lastRecordingEntry && entry[dataTableEnum.category] == "Recording") {
             lastRecordingEntry = entry;
         }
-        else if (!lastProcessingEntry && entry[dataTableEnum.category] == "Processing") {
+        
+        if (!lastStartRecordingEntry && colorToStage[entry[dataTableEnum.color]] == "Start Recording") {
+            lastStartRecordingEntry = entry;
+        }
+
+        if (!lastProcessingEntry && entry[dataTableEnum.category] == "Processing") {
             lastProcessingEntry = entry;
         }
 
-        if (lastRecordingEntry && lastProcessingEntry) {
+        if (lastRecordingEntry && lastStartRecordingEntry && lastProcessingEntry) {
             break;
         }
     }
 
-    //  if no recording entry found
-    if (!lastRecordingEntry) {
+    // //  if no recording entry found
+    // if (!lastRecordingEntry) {
+    //     return [];
+    // }
+
+    //  if no startRecordingEntry found
+    if (!lastStartRecordingEntry) {
         return [];
     }
 
-    //  check whether last entry is start / stop recording
-    var colorToStage = reverseJsonMapper(stageToColor);
-    var lastRecordingEntryColor = lastRecordingEntry[dataTableEnum.color];
-    var lastRecordingEntryStage = colorToStage[lastRecordingEntryColor];
+    // //  check whether last entry is start / stop recording
+    // var lastRecordingEntryColor = lastRecordingEntry[dataTableEnum.color];
+    // var lastRecordingEntryStage = colorToStage[lastRecordingEntryColor];
 
-    //  IF LAST ENTRY IS "STOP RECORDING"
-    if (lastRecordingEntryStage == "Stop Recording") {
-        return [];
-    }
+    // //  IF LAST ENTRY IS "STOP RECORDING"
+    // if (lastRecordingEntryStage == "Stop Recording") {
+    //     return [];
+    // }
 
     //  magic happens here.......
     var currentRecordingEntries = [];
@@ -412,19 +442,34 @@ function getCurrentRecordingEntries(formattedData) {
         lastProcessingClipNumber = getClipNumber(hh_mm_ss(lastProcessingEntry[dataTableEnum.startTime])) + 1;
     }
 
+    // //  2. find clip number corresponding to the latest start recording 
+    // var lastRecordingClipNumber = getClipNumber(hh_mm_ss(lastRecordingEntry[dataTableEnum.startTime]));
+
     //  2. find clip number corresponding to the latest start recording 
-    var lastRecordingClipNumber = getClipNumber(hh_mm_ss(lastRecordingEntry[dataTableEnum.startTime]));
+    var lastStartRecordingClipNumber = getClipNumber(hh_mm_ss(lastStartRecordingEntry[dataTableEnum.startTime]));
 
     //  3. take maximum of the above two
-    var startingClipNumber = Math.max(lastProcessingClipNumber, lastRecordingClipNumber);
+    var startingClipNumber = Math.max(lastProcessingClipNumber, lastStartRecordingClipNumber);
 
     //  4. find clip number corresponding to current time
     var currentTime = new Date();
     var currentTimeClipNumber = getClipNumber(hh_mm_ss(currentTime));
 
-    //  5. make entries for the missing clip numbers
+    //  5. get the endingClipNumber
+    var endingClipNumber;
+
+    //  a. if no stopRecording entry in the end
+    if (lastRecordingEntry == lastStartRecordingEntry) {
+        endingClipNumber = currentTimeClipNumber;
+    }
+    //  b. if stopRecording entry in the end
+    else {
+        endingClipNumber = getClipNumber(hh_mm_ss(lastRecordingEntry[dataTableEnum.startTime])) - 1;
+    }
+
+    //  6. make entries for the missing clip numbers
     var safeTyMargin = 2;
-    for (var i = startingClipNumber; i <= currentTimeClipNumber; i++) {
+    for (var i = startingClipNumber; i <= endingClipNumber; i++) {
         
         var stageMessage = 'Now Recording';
         //  category
