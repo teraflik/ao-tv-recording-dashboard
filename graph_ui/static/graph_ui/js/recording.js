@@ -268,7 +268,8 @@ var summaryStatusEnum  = Object.freeze({
     "ok"    :   1, 
     "empty"   :   2, 
     "error" :   3,
-    "inprogress":   4
+    "inprogress":   4,
+    "blank" : 5
 });
 
 // Ref:- https://stackoverflow.com/questions/21346967/using-value-of-enum-as-key-in-another-enum-in-javascript
@@ -288,18 +289,27 @@ var summaryStatusToGraphic = {
     [summaryStatusEnum.inprogress] : {
                             "bgcolor" : "lightblue",
                             "innerHTML" : "&#10017;",
-                            }
+                            },
+    [summaryStatusEnum.blank] : {
+                            "bgcolor" : "brown",
+                            "innerHTML" : "&#10004;",
+                            },
 };
 
 
-function updateSummaryTable(formattedData, endpoint) {
+function updateSummaryTable(formattedData, blankRawData, endpoint) {
     
     //  create a colorToStage mapping
     var colorToStage = reverseJsonMapper(stageToColor);
 
     //  check status
-    
-    var status = summaryStatusEnum.ok;
+    var status;
+    if (!blankRawData || blankRawData.length == 0) {
+        status = summaryStatusEnum.ok;
+    }
+    else {
+        status = summaryStatusEnum.blank;
+    }
 
     for(var i = 0; i < formattedData.length; i++) {
         var color = formattedData[i][dataTableEnum.color];
@@ -831,7 +841,7 @@ function populateTimeline(timeline, endpoint, index) {
         //  8. update the summary table : 
         //  NOTE :--> this takes formattedData and not totalFormattedData.
         // updateSummaryTable(formattedData, endpoint);
-        updateSummaryTable(totalFormattedData, endpoint);
+        updateSummaryTable(totalFormattedData, blankRawData, endpoint);
 
         //  9. add total blank minutes
         updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint);
