@@ -381,23 +381,6 @@ function getCurrentRecordingEntries(formattedData) {
         return 0;
     });
 
-    //  get the last recording & processing entries.
-    // var lastRecordingEntry = null;
-    // var lastProcessingEntry = null;
-    // for (var i = 0; i < formattedData.length; i++) {
-    //     var entry = formattedData[i];
-    //     //  if entry is of category Recording and its the first of this kind.
-    //     if (!lastRecordingEntry && entry[dataTableEnum.category] == "Recording") {
-    //         lastRecordingEntry = entry;
-    //     }
-    //     else if (!lastProcessingEntry && entry[dataTableEnum.category] == "Processing") {
-    //         lastProcessingEntry = entry;
-    //     }
-
-    //     if (lastRecordingEntry && lastProcessingEntry) {
-    //         break;
-    //     }
-    // }
     var colorToStage = reverseJsonMapper(stageToColor);
 
     var lastRecordingEntry = null;
@@ -425,24 +408,10 @@ function getCurrentRecordingEntries(formattedData) {
         }
     }
 
-    // //  if no recording entry found
-    // if (!lastRecordingEntry) {
-    //     return [];
-    // }
-
     //  if no startRecordingEntry found
     if (!lastStartRecordingEntry) {
         return [];
     }
-
-    // //  check whether last entry is start / stop recording
-    // var lastRecordingEntryColor = lastRecordingEntry[dataTableEnum.color];
-    // var lastRecordingEntryStage = colorToStage[lastRecordingEntryColor];
-
-    // //  IF LAST ENTRY IS "STOP RECORDING"
-    // if (lastRecordingEntryStage == "Stop Recording") {
-    //     return [];
-    // }
 
     //  magic happens here.......
     var currentRecordingEntries = [];
@@ -455,9 +424,6 @@ function getCurrentRecordingEntries(formattedData) {
     else {
         lastProcessingClipNumber = getClipNumber(hh_mm_ss(lastProcessingEntry[dataTableEnum.startTime])) + 1;
     }
-
-    // //  2. find clip number corresponding to the latest start recording 
-    // var lastRecordingClipNumber = getClipNumber(hh_mm_ss(lastRecordingEntry[dataTableEnum.startTime]));
 
     //  2. find clip number corresponding to the latest start recording 
     var lastStartRecordingClipNumber = getClipNumber(hh_mm_ss(lastStartRecordingEntry[dataTableEnum.startTime]));
@@ -522,15 +488,7 @@ function getCurrentRecordingEntries(formattedData) {
         //  add entry
         currentRecordingEntries.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
     }
-    /*
-    TODO:
-    1.  Complete the clipNoToInterval Function (DONE)
-    2.  Add a manual start recording entry in today's date to database for a channel. (DONE)
-    3.  Change color of entries beyond 1hr to dark red.
-    4.  Check if it works.
-    */
     return currentRecordingEntries;
-     
 }
 
 function removeDuplicateObjects(objectArray) {
@@ -603,6 +561,9 @@ function createRecordingSlots(startStopEntries, endpoint) {
         if (startStopEntries[i]['stage_message'] == 'Stop Recording') {
             startRecordingDateTime = new Date(date + " 00:00:00");
             stopRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
+            
+            //  jugaad: to prevent entering the next clipNumber
+            stopRecordingDateTime.setMinutes(stopRecordingDateTime.getMinutes() - 2);
 
             i++;
         }
@@ -621,6 +582,9 @@ function createRecordingSlots(startStopEntries, endpoint) {
                 startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
                 stopRecordingDateTime = new Date(date + " 00:00:00");
                 stopRecordingDateTime.setDate(stopRecordingDateTime.getDate() + 1);
+    
+                //  jugaad: to prevent entering the next clipNumber
+                stopRecordingDateTime.setMinutes(stopRecordingDateTime.getMinutes() - 2);
             }
             
             i++;
@@ -628,6 +592,9 @@ function createRecordingSlots(startStopEntries, endpoint) {
         else {
             startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
             stopRecordingDateTime = new Date(startStopEntries[i+1]['timestamp']);
+
+            //  jugaad: to prevent entering the next clipNumber
+            stopRecordingDateTime.setMinutes(stopRecordingDateTime.getMinutes() - 2);
 
             i += 2;
         }
@@ -655,11 +622,7 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
         var stopRecordingTime = recordingSlots[i]['stopRecordingTime'];
 
         var startClipNumber = getClipNumber(hh_mm_ss(startRecordingTime));
-        var stopClipNumber = getClipNumber(hh_mm_ss(stopRecordingTime)) - 1;
-
-        if (stopClipNumber == 0) {
-            stopClipNumber = 48;
-        }
+        var stopClipNumber = getClipNumber(hh_mm_ss(stopRecordingTime));
 
         console.log("startClipNumber is........ " + startClipNumber);
 
