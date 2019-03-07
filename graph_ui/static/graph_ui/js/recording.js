@@ -633,10 +633,14 @@ function createRecordingSlots(startStopEntries, endpoint) {
 function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
     
     var dummyEntries = [];
-    var date = endpoint.searchParams.get('date');
+    var inputDate = endpoint.searchParams.get('date');
 
+    var currentTime = new Date();
+
+    //  loop over recording slots
     for(var i = 0; i < recordingSlots.length; i++) {
         
+        //  1. convert the start and end times to their corresponding clipNumbers
         var startRecordingTime = recordingSlots[i]['startRecordingTime'];
         var stopRecordingTime = recordingSlots[i]['stopRecordingTime'];
 
@@ -650,23 +654,35 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
         console.log("startClipNumber is........ " + startClipNumber);
 
         var safeTyMargin = 2;
+
+        //  2. loop through the clipNumbers
         for (var j = startClipNumber; j <= stopClipNumber; j++) {
+
+            //  3. check if entry corresponding to that clipNumber is present in the mapping - clipNoToProcessingEntry
             if (!clipNoToProcessingEntry[j]) {
                 console.log("clipNumber " + j + " is missing.");
 
-                var [startTime, endTime] = clipNoToInterval(date, j);
+                //  4. if not, create a dummy entry.
+                var [startTime, endTime] = clipNoToInterval(inputDate, j);
                 var startTimeString = hh_mm_ss(startTime);
                 var endTimeString = hh_mm_ss(endTime);
 
-                startTime.setMinutes(startTime.getMinutes() + 2);
-                endTime.setMinutes(endTime.getMinutes() - 2);
-
-                var stage = 'Failed';
-
                 var category = 'Processing';
-                var label = stage;
-                var tooltip = stage + " - " + startTimeString + " - " + endTimeString;
-                var color = stageToColor[stage];
+
+                var stageMessage = 'Now Recording';
+                var hoursElapsed = (currentTime - startTime) / (60 * 60 * 1000);
+                
+                if (hoursElapsed > 1) {
+                    stageMessage = 'Failed';
+                }
+
+                var label = stageMessage;
+                var tooltip = stageMessage + " - " + startTimeString + " - " + endTimeString;
+                var color = stageToColor[stageMessage];
+                
+                startTime.setMinutes(startTime.getMinutes() + safeTyMargin);
+                endTime.setMinutes(endTime.getMinutes() - safeTyMargin);
+
                 dummyEntries.push([category, label, tooltip, color, startTime, endTime]);
             }
         }
