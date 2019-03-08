@@ -62,6 +62,8 @@ sudo apt-get install python-dev
 sudo apt-get install python3-dev
 sudo apt-get install build-essential
 sudo apt-get install libssl-dev
+# install apache dependencies
+sudo apt-get install python3-pip apache2 libapache2-mod-wsgi-py3
 ```
 
 #### 2. Running the webapp
@@ -69,18 +71,45 @@ sudo apt-get install libssl-dev
 ```bash
 # Clone the GitHub Repo
 git clone https://gitlab.com/athenasowl-intern/ao-tv-recording-db-ui.git
+
 # move into the repo
 cd ao-tv-recording-db-ui/
+
 # checkout the development branch
 git checkout development
+
 # create a virtualenv using python3
 virtualenv env -p python3
+
 # activate the virtualenv
 source env/bin/activate
+
 # installing pip requirements
 pip install -r requirements.txt
-# run the webapp
-python manage.py runserver 0.0.0.0.:8000
-```
 
-#### 3. TODO :- Serve the app from apache
+# collect static files
+python manage.py collectstatic
+
+# copy the template.conf file to apache directory
+sudo cp template.conf /etc/apache2/sites-available/ao-tv-recording-db-ui.conf
+
+# set the values of placeholder variables
+project_name=ao_db_ui
+project_path=$PWD # review this
+venv_name=env
+
+# replace placeholders from template file
+sudo sed -i -e "s:{project_path}:$project_path:g" -e "s:{project_name}:$project_name:g" -e "s:{venv_name}:$venv_name:g" /etc/apache2/sites-available/ao-tv-recording-db-ui.conf
+
+# create a symlink from sites-available/ao-tv... .conf to sites-enables/ao-tv... .conf
+sudo ln -s /etc/apache2/sites-available/ao-tv-recording-db-ui.conf /etc/apache2/sites-enabled/ao-tv-recording-db-ui.conf
+
+# remove the previous symlink in sites-enabled
+sudo rm /etc/apache2/sites-enabled/000-default.conf
+
+# restart the apache web service
+sudo service apache2 restart
+
+# # run the webapp
+# python manage.py runserver 0.0.0.0.:8000
+```
