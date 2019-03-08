@@ -32,19 +32,14 @@ sudo systemctl status mysql
 # enable it to start at boot time
 sudo systemctl enable mysql
 
-# finally, run it
-sudo mysql -u root -p
-```
+# create a new database sys1
+mysql -u root --password=12345 -e "create database sys1"
 
-```mysql
-create database sys1;
-exit;
-```
-
-```bash
-# Load the database tables from dump
+# import data from the dump
 mysql -u root --password=12345 sys1 < ~/sys1_dump.sql
 ```
+
+
 
 
 
@@ -57,19 +52,18 @@ mysql -u root --password=12345 sys1 < ~/sys1_dump.sql
 sudo apt install virtualenv
 
 # installing other dependencies
-sudo apt-get install libmysqlclient-dev
-sudo apt-get install python-dev
-sudo apt-get install python3-dev
-sudo apt-get install build-essential
-sudo apt-get install libssl-dev
+sudo apt-get install libmysqlclient-dev python-dev python3-dev build-essential libssl-dev -y
 # install apache dependencies
-sudo apt-get install python3-pip apache2 libapache2-mod-wsgi-py3
+sudo apt-get install python3-pip apache2 libapache2-mod-wsgi-py3 -y
 ```
 
 #### 2. Running the webapp
 
 ```bash
-# Clone the GitHub Repo
+# move to /var/www/html
+sudo cd /var/www/html
+
+# Clone the GitHub Repo (private repo, needs authentication)
 git clone https://gitlab.com/athenasowl-intern/ao-tv-recording-db-ui.git
 
 # move into the repo
@@ -95,7 +89,7 @@ sudo cp template.conf /etc/apache2/sites-available/ao-tv-recording-db-ui.conf
 
 # set the values of placeholder variables
 project_name=ao_db_ui
-project_path=$PWD # review this
+project_path=$PWD
 venv_name=env
 
 # replace placeholders from template file
