@@ -414,7 +414,7 @@ var summaryStatusToGraphic = {
                             },
     [summaryStatusEnum.empty] : {
                             "bgcolor" : "lightgrey",
-                            "innerHTML" : "&#10067;",
+                            "innerHTML" : "NA",
                             },
     [summaryStatusEnum.blank] : {
                             "bgcolor" : "brown",
