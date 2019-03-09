@@ -400,60 +400,66 @@ function reverseJsonMapper(originalMapping) {
     return reverseMapping;
 }
 
+var summaryStatusEnum  = Object.freeze({
+    "ok"    :   1, 
+    "blank" :   2,
+    "empty"   :   3
+});
+
+// Ref:- https://stackoverflow.com/questions/21346967/using-value-of-enum-as-key-in-another-enum-in-javascript
+var summaryStatusToGraphic = {
+    [summaryStatusEnum.ok] : {
+                            "bgcolor" : "lightgreen",
+                            "innerHTML" : "&#10004;",
+                            },
+    [summaryStatusEnum.empty] : {
+                            "bgcolor" : "lightgrey",
+                            "innerHTML" : "&#10067;",
+                            },
+    [summaryStatusEnum.blank] : {
+                            "bgcolor" : "brown",
+                            "innerHTML" : "&#10008;",
+                            },
+};
+
 function updateSummaryTable(formattedData, endpoint) {
     
     //  create a colorToStage mapping
     var colorToStage = reverseJsonMapper(stageToColor);
 
     //  check status
-    var statusEnum  = Object.freeze({
-                                        "ok"    :   1, 
-                                        "blank"   :   2, 
-                                        "empty" :   3
-                                    });
     
-    var status = statusEnum.ok;
+    var status = summaryStatusEnum.ok;
 
     for(var i = 0; i < formattedData.length; i++) {
         var color = formattedData[i][dataTableEnum.color];
         var stage = colorToStage[color];
 
         if (stage == 'Empty') {
-            status = statusEnum.empty;
+            status = summaryStatusEnum.empty;
             break;
         }
         else if (stage == "Start Recording" || stage == "Stop Recording") {
             continue;
         }
         else if (stage == 'Blank Frame') {
-            status = statusEnum.blank;
+            status = summaryStatusEnum.blank;
             break;
         }
     }
 
-    var innerHTML;
-    var bgcolor;
+    var innerHTML = summaryStatusToGraphic[status].innerHTML;
+    var bgcolor = summaryStatusToGraphic[status].bgcolor;
 
-    
-    if (status == statusEnum.blank) {
-        innerHTML = '&#10008;';     //  cross sign
-        bgcolor = stageToColor['Blank Frame'];
-    }
-    else if (status == statusEnum.empty) {
-        innerHTML = '&#10067;';     //  question mark
-        bgcolor = stageToColor['Empty'];
-    }
-    else if (status == statusEnum.ok) {
-        innerHTML = '&#10004;';     //  tick sign
-        bgcolor = 'green';
-    }
-
+    // select the DOM element corresponding to summaryBox of this channel.
     var deviceID = endpoint.searchParams.get('device_id');
     var channelValue = endpoint.searchParams.get('channel_values');
+
 
     var summaryBoxID = ['s', deviceID, channelValue].join("_");
     var summaryBox = document.getElementById(summaryBoxID);
 
+    // fill the DOM Element with the details.
     summaryBox.innerHTML = innerHTML;
     summaryBox.setAttribute('bgcolor', bgcolor);
 }
@@ -635,7 +641,7 @@ function setDateInDatePicker(ID, endpoint) {
 }
 
 function setColorLabels() {
-    var table = document.getElementById("color-labels");
+    var table = document.getElementById("timeline-color-labels");
     var trElement = table.childNodes[1].childNodes[1];
 
     for (key in stageToColor) {
@@ -652,6 +658,29 @@ function setColorLabels() {
         }
     }
 }
+
+function setSummaryColorLabels() {
+    var table = document.getElementById("summary-color-labels");
+    var trElement = table.childNodes[1].childNodes[1];
+
+    var summaryReverseEnum = reverseJsonMapper(summaryStatusEnum)
+
+    for (key in summaryStatusToGraphic) {
+        if (summaryStatusToGraphic.hasOwnProperty(key)) {
+            
+            var stage = document.createElement("th");
+            stage.innerText = summaryReverseEnum[key];
+
+            var color = document.createElement("th");
+            color.setAttribute("bgcolor", summaryStatusToGraphic[key].bgcolor);
+            color.innerHTML = summaryStatusToGraphic[key].innerHTML;
+
+            trElement.appendChild(color);
+            trElement.appendChild(stage);
+        }
+    }
+}
+
 
 function attachSummaryToTimeline() {
     
@@ -705,6 +734,9 @@ google.charts.setOnLoadCallback(function() {
 
     //  patch:  add color labels to page top
     setColorLabels();
+
+    //  patch:  add summaryColorLabels at top of summaryTable.
+    setSummaryColorLabels();
 
     //  patch:  attach summaryTable to timelines
     attachSummaryToTimeline();
