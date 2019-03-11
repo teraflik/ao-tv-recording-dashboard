@@ -64,7 +64,8 @@ def general(request):
 
     current_url = resolve(request.path_info).url_name
 
-    myDict = dict(request.GET._iterlists())
+    # myDict = dict(request.GET._iterlists())
+    myDict = dict(request.GET)
     
     for key, value in myDict.items():
         if key != 'channel_values':
