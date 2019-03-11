@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import configparser
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -81,6 +82,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ao_db_ui.wsgi.application'
 
+config = configparser.ConfigParser()
+config.read('/var/.ao/parameters.ini')
+
+stage = config.get("DEFINITION", 'SECTION').upper()
+
+DB_HOST = config.get(stage, 'DB_HOST')  # your host
+DB_USERNAME = config.get(stage, 'DB_USERNAME')  # username
+DB_PASSWORD = config.get(stage, 'DB_PASSWORD')  # password
+DB_NAME = config.get(stage, 'DB_NAME')
+
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
@@ -88,10 +99,10 @@ WSGI_APPLICATION = 'ao_db_ui.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sys1',
-        'USER': 'root',
-        'PASSWORD': '12345',
-        'HOST': '127.0.0.1',
+        'NAME': DB_NAME,
+        'USER': DB_USERNAME,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_HOST,
         'PORT': '3306',
     }
 }
