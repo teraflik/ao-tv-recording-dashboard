@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'ao_db_ui.wsgi.application'
 config = configparser.ConfigParser()
 config.read('/var/.ao/parameters.ini')
 
-stage = config.get("DEFINITION", 'SECTION').upper()
+stage = "LOCAL"
 
 DB_HOST = config.get(stage, 'DB_HOST')  # your host
 DB_USERNAME = config.get(stage, 'DB_USERNAME')  # username
