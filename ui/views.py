@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.apps import apps
 from django.http import JsonResponse
 from django.urls import resolve
+from django.contrib.auth.decorators import login_required
 
 from rest_api import models
 
@@ -57,9 +58,11 @@ def make_table_html(myDict):
     return tableHTML
 
 # Create your views here.
+@login_required
 def home(request):
     return render(request, 'ui/home.html', {'channels': channels})
 
+@login_required
 def general(request):
 
     current_url = resolve(request.path_info).url_name

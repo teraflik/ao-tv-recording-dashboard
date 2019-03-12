@@ -8,10 +8,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import ChannelInfo, FilterRecordingTracking, InvalidFrameTracking, Recording, RecordingTracking
 from .serializers import ChannelInfoSerializer, FilterRecordingTrackingSerializer, InvalidFrameTrackingSerializer, RecordingSerializer, RecordingTrackingSerializer
+from rest_framework.permissions import  IsAuthenticated
+
 # Create your views here.
 
+
 class GraphUIRedirectView(APIView):
-    
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request):
         request_id = request.GET.get('request_id')
         device_id = request.GET.get('device_id')
@@ -34,7 +38,8 @@ def handle_buggy_time(input_time):
         return input_time + ':00.000'
 
 class RecordingView(APIView):
-    
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request):
 
         #   retrieve the GET parameters
@@ -83,12 +88,22 @@ class RecordingView(APIView):
         
         serializer = RecordingSerializer(recordings, many=True)
         return Response(serializer.data)
+
+        # temp_json = {
+        #     'device_id': device_id,
+        #     'input_date': input_date,
+        #     'input_start_time': input_start_time,
+        #     'input_finish_time': input_finish_time,
+        #     'input_timezone': input_timezone,
+        #     'channel_values': channel_values
+        # }
         # return JsonResponse(temp_json)
     
     def post(self, request):
         pass
 
 class BlankView(APIView):
+    permission_classes = (IsAuthenticated,)
     
     def get(self, request):
 
