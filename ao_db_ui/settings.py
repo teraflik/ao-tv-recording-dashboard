@@ -20,13 +20,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '%9*v-nfg_=_4f9uwn)4qrg&u^&u+m9c5dts03ah+c6z_!ml_%@'
+config = configparser.ConfigParser()
+config.read('/var/.ao/parameters.ini')
+stage = "LOCAL"
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+SECRET_KEY = config.get(stage, 'SECRET_KEY')
+DEBUG = config.get(stage, "DEBUG") == "True"
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = config.get(stage, "ALLOWED_HOSTS").split(",")
 
 
 # Application definition
@@ -81,11 +82,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ao_db_ui.wsgi.application'
-
-config = configparser.ConfigParser()
-config.read('/var/.ao/parameters.ini')
-
-stage = "LOCAL"
 
 DB_HOST = config.get(stage, 'DB_HOST')  # your host
 DB_USERNAME = config.get(stage, 'DB_USERNAME')  # username
