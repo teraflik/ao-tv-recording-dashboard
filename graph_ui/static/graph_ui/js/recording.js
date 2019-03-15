@@ -955,7 +955,19 @@ function attachSummaryToTimeline() {
 function linkToBlankFramesUI() {
     
     //  get the current URL & change it to get the URL for blank UI
-    var baseURL = new URL(document.URL.replace('recording', 'blank'));
+    
+    //  this one has bug
+    //  recording.athenasowl.tv/graph_ui/recording?date=.... --> blank.athenasowl.tv/graph_ui/recording?date=...
+    //  var baseURL = new URL(document.URL.replace('recording', 'blank'));
+
+    //  new logic
+    var protocol = window.location.protocol;
+    var host = window.location.host;
+    var port = window.location.port;
+    var path = window.location.pathname.replace('recording', 'blank');
+    var searchParams = window.location.search;
+
+    var baseURL = new URL(protocol + host + port + path + searchParams);
 
     //  loop for generating specific URLs
     for(var i = 0; i < channelValues.length; i++) {
