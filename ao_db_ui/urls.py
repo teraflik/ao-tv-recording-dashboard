@@ -28,5 +28,5 @@ urlpatterns = [
     url(r'^graph_ui/', include('graph_ui.urls')),
     url(r'^login/', auth_views.LoginView.as_view(template_name='ui/login.html', authentication_form=LoginForm, redirect_authenticated_user=True), name='login'),
     url(r'^logout/', auth_views.LogoutView.as_view(template_name='ui/logout.html'), name='logout'),
-    url(r'^.*$', RedirectView.as_view(url='/graph_ui/recording', permanent=False), name='index')
+    url(r'^$', RedirectView.as_view(url='/graph_ui/recording', permanent=False), name='index')
 ]
