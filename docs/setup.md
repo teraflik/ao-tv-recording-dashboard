@@ -69,7 +69,7 @@ Assumes :-
 3. gsutil cp installed.
 
 ```bash
-# move to /var/www/html
+M# move to /var/www/html
 sudo su
 cd /var/www/html
 # create /var/.ao directory where parameters.ini will be stored

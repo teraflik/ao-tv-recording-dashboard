@@ -48,3 +48,20 @@ This documents the changes made to the schema of tables used for TV Recording lo
       add logo_url varchar(2000);
       ```
 
+
+
+## Authentication Database Addition
+
+Databases existing are ...........
+
+'archive_recording'
+'archive_recording_tracking'
+'channel_info'
+'daily_report'
+'filter_recording_tracking'
+'invalid_frame_tracking'
+'process_slots'
+'recording'
+'recording_limit'
+'recording_tracking'
+

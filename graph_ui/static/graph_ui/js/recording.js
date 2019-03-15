@@ -493,6 +493,9 @@ function getCurrentRecordingEntries(formattedData) {
 
 function removeDuplicateObjects(objectArray) {
     
+    console.log("objectArray is ......");
+    console.log(objectArray);
+
     var uniqueStringArray = new Set(objectArray.map(e => JSON.stringify(e)));
     var uniqueObjectArray = Array.from(uniqueStringArray).map(e => JSON.parse(e));
     return uniqueObjectArray;
@@ -675,11 +678,15 @@ function populateTimeline(timeline, endpoint, index) {
     //  recording.athenasowl.tv/graph_ui/recording?date=.... --> blank.athenasowl.tv/graph_ui/recording?date=...
     //  var blankEndPoint = new URL(endpoint.href.replace('recording', 'blank'));
     
-    var protocol = window.location.protocol;
-    var host = window.location.host;
-    var path = window.location.pathname.replace('recording', 'blank');
-    var searchParams = window.location.search;
+    //  creating an element with capability to extract protocol, host, path, etc...
+    var url = document.createElement('a');
+    url.href = endpoint.href;
+    var protocol = url.protocol;
+    var host = url.host;
+    var path = url.pathname.replace('recording', 'blank');
+    var searchParams = url.search;
     var blankEndPoint = new URL(protocol + "//" + host + path + searchParams);
+    console.log("blankEndPoint is .... " + blankEndPoint.href);
 
 
     $.when(
