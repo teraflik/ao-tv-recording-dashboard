@@ -83,23 +83,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ao_db_ui.wsgi.application'
 
+DB_ENGINE = config.get(stage, 'DB_ENGINE')
 DB_HOST = config.get(stage, 'DB_HOST')  # your host
 DB_USERNAME = config.get(stage, 'DB_USERNAME')  # username
 DB_PASSWORD = config.get(stage, 'DB_PASSWORD')  # password
 DB_NAME = config.get(stage, 'DB_NAME')
-
+DB_PORT = config.get(stage, 'DB_PORT')
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': DB_ENGINE,
         'NAME': DB_NAME,
         'USER': DB_USERNAME,
         'PASSWORD': DB_PASSWORD,
         'HOST': DB_HOST,
-        'PORT': '3306',
+        'PORT': DB_PORT,
     }
 }
 
