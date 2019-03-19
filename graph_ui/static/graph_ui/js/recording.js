@@ -183,11 +183,11 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         
         var safeTyMargin = 2;
 
-        // label = entry['request_id'] + ":" + entry['device_id'];
+        // //  a. this was for on-click: tableview redirect
+        // label = '{"request_id": "' + entry['request_id'] + '", "device_id": "' + entry['device_id'] +'"}';
 
-        label = '{"request_id": "' + entry['request_id'] + '", "device_id": "' + entry['device_id'] +'"}';
-        // console.log("Label is " + label);
-
+        //  b. this is for on-click: redirect to bucket video.
+        label = '{"video_path": "' + entry['video_path'] +'"}';
         
         //  color
         if (entry['stage_number'] == 1 || entry['stage_number'] == 6 || entry['stage_number'] == 5) {
@@ -877,24 +877,28 @@ function selectHandler(timeline, index) {
     var selectedDataTable = globalDataTable[index];
     var selection = timeline.getSelection()[0];
     var rowNo = selection.row;
-    var label = selectedDataTable.getValue(rowNo, 1);
+    var label = selectedDataTable.getValue(rowNo, dataTableEnum.label);
     
-    var GETparams;
+    var labelJSON;
     
     //  if label isn't a JSON dump, then simply skip.
     try {
-        GETparams = JSON.parse(label);
+        labelJSON = JSON.parse(label);
     }
     catch(err) {
         return;
     }
-    
-    var redirectURL = new URL(window.location.origin + "/ui/recording_graph_ui_redirect");
 
-    for (key in GETparams) {
-        redirectURL.searchParams.set(key, GETparams[key]);
-    }
+    // //  a. this was for on-click: table-view redirect
+    // var GETparams = labelJSON;
+    // var redirectURL = new URL(window.location.origin + "/ui/recording_graph_ui_redirect");
 
+    // for (key in GETparams) {
+    //     redirectURL.searchParams.set(key, GETparams[key]);
+    // }
+
+    //  b. this is for on-click: graph_view redirect
+    var redirectURL = new URL(labelJSON['video_path'].replace("gs://", "https://storage.cloud.google.com/"));
     window.open(redirectURL);
 }
 
