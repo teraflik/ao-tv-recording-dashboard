@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.apps import apps
 from django.http import JsonResponse
-from django.urls import resolve
 from django.contrib.auth.decorators import login_required
 
 from rest_api import models

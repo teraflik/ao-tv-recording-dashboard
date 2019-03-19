@@ -1,3 +1,5 @@
+from django.urls import resolve
+
 def make_table_dict(request):
     current_url = resolve(request.path_info).url_name
 
@@ -20,6 +22,8 @@ def make_table_dict(request):
         table_dict['table'] =  'Recording'
     elif current_url == 'ui-blank':
         table_dict['table'] =  'Invalid Frame Tracking'
+    
+    return table_dict
 
 def make_table_html(table_dict):
     
