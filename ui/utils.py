@@ -1,6 +1,6 @@
 from django.urls import resolve
 
-def make_table_dict(request):
+def make_table_dict(request, channels):
     current_url = resolve(request.path_info).url_name
 
     # table_dict = dict(request.GET._iterlists())

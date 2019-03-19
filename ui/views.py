@@ -21,7 +21,7 @@ def home(request):
 @login_required
 def general(request):
 
-    table_dict = utils.make_table_dict(request)
+    table_dict = utils.make_table_dict(request, channels)
     table_html = utils.make_table_html(table_dict)
 
     return render(request, 'ui/datatable.html', {'tableHTML': table_html})
