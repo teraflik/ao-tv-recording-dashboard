@@ -83,8 +83,6 @@ class RecordingView(APIView):
         
         if device_id != 'both':
             filters['device_id'] = device_id
-        
-        filters['channel_value__in'] = [int(x) for x in channel_values]
 
         recordings = Recording.objects.filter(**filters)
 
@@ -92,10 +90,10 @@ class RecordingView(APIView):
         for ch in channel_values:
             start = '_'.join([start_date_ist_str, ch, start_time_ist_str])
             finish = '_'.join([finish_date_ist_str, ch, finish_time_ist_str])
-            q = q | (Q(request_id__range=[start, finish]) & ~Q(stage_message__in = ["Start Recording", "Stop Recording"]))
-
-        q = q | Q(stage_message__in = ["Start Recording", "Stop Recording"], timestamp__range = [start_datetime, finish_datetime])
-        recordings = recordings.filter(q)        
+            q = q | (Q(request_id__range=[start, finish], channel_value = ch) & ~Q(stage_message__in = ["Start Recording", "Stop Recording"]))
+        
+        q = q | Q(stage_message__in = ["Start Recording", "Stop Recording"], timestamp__range = [start_datetime, finish_datetime], channel_value__in = [int(x) for x in channel_values])
+        recordings = recordings.filter(q)
         
         serializer = RecordingSerializer(recordings, many=True)
         return Response(serializer.data)
