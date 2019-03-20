@@ -163,8 +163,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
     }
 
     //  1. for each request_id, get single entry having the maximum stage_number
-    var highestStageNumberEntries = getHighestStageNumberEntries(rawData);
-    
+    var highestStageNumberEntries = getHighestStageNumberEntries(rawData);    
 
     var dataTableContents = [];
     // console.log("Highest stage number entries are :-");
@@ -183,12 +182,18 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         
         var safeTyMargin = 2;
 
+        //  label
         // //  a. this was for on-click: tableview redirect
         // label = '{"request_id": "' + entry['request_id'] + '", "device_id": "' + entry['device_id'] +'"}';
 
         //  b. this is for on-click: redirect to bucket video.
-        label = '{"video_path": "' + entry['video_path'] +'"}';
-        
+        if (entry['stage_number'] == 5) {
+            label = '{"video_path": "' + entry['video_path'] +'"}';
+        }
+        else {
+            label = '';
+        }
+
         //  color
         if (entry['stage_number'] == 1 || entry['stage_number'] == 6 || entry['stage_number'] == 5) {
             color = stageToColor[entry['stage_message']];
