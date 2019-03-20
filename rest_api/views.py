@@ -26,6 +26,17 @@ class GraphUIRedirectView(APIView):
     def post(self, request):
         pass
 
+class FilterRecordingTrackingView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        request_id = request.GET.get('request_id')
+        filter_recording_trackings = FilterRecordingTracking.objects.using('barc-prod').filter(request_id = request_id)
+        serializer = FilterRecordingTrackingSerializer(filter_recording_trackings, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        pass
 
 def handle_buggy_time(input_time):
     if not input_time:
@@ -90,13 +101,12 @@ class RecordingView(APIView):
         return Response(serializer.data)
 
         # temp_json = {
-        #     'device_id': device_id,
-        #     'input_date': input_date,
-        #     'input_start_time': input_start_time,
-        #     'input_finish_time': input_finish_time,
-        #     'input_timezone': input_timezone,
-        #     'channel_values': channel_values
+        #     'start_date_ist_str': start_date_ist_str,
+        #     'start_time_ist_str': start_time_ist_str,
+        #     'finish_date_ist_str': finish_date_ist_str,
+        #     'finish_time_ist_str': finish_time_ist_str
         # }
+
         # return JsonResponse(temp_json)
     
     def post(self, request):
