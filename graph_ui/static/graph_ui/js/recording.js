@@ -183,16 +183,16 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
         var safeTyMargin = 2;
 
         //  label
-        // //  a. this was for on-click: tableview redirect
-        // label = '{"request_id": "' + entry['request_id'] + '", "device_id": "' + entry['device_id'] +'"}';
+        //  a. this was for on-click: tableview redirect
+        label = '{"request_id": "' + entry['request_id'] + '", "device_id": "' + entry['device_id'] +'"}';
 
-        //  b. this is for on-click: redirect to bucket video.
-        if (entry['stage_number'] == 5) {
-            label = '{"video_path": "' + entry['video_path'] +'"}';
-        }
-        else {
-            label = '';
-        }
+        // //  b. this is for on-click: redirect to bucket video.
+        // if (entry['stage_number'] == 5) {
+        //     label = '{"video_path": "' + entry['video_path'] +'"}';
+        // }
+        // else {
+        //     label = '';
+        // }
 
         //  color
         if (entry['stage_number'] == 1 || entry['stage_number'] == 6 || entry['stage_number'] == 5) {
@@ -894,16 +894,19 @@ function selectHandler(timeline, index) {
         return;
     }
 
-    // //  a. this was for on-click: table-view redirect
-    // var GETparams = labelJSON;
-    // var redirectURL = new URL(window.location.origin + "/ui/recording_graph_ui_redirect");
+    //  a. this was for on-click: table-view redirect
+    var GETparams = labelJSON;
+    var redirectURL = new URL(window.location.origin + "/ui/recording_graph_ui_redirect");
 
-    // for (key in GETparams) {
-    //     redirectURL.searchParams.set(key, GETparams[key]);
-    // }
+    for (key in GETparams) {
+        redirectURL.searchParams.set(key, GETparams[key]);
+    }
 
-    //  b. this is for on-click: graph_view redirect
-    var redirectURL = new URL(labelJSON['video_path'].replace("gs://", "https://storage.cloud.google.com/"));
+    // //  b. this is for on-click: graph_view redirect
+    // var redirectURL = new URL(labelJSON['video_path'].replace("gs://", "https://storage.cloud.google.com/"));
+    // console.log(redirectURL.href);
+
+
     window.open(redirectURL);
 }
 

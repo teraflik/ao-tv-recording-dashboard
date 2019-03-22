@@ -38,6 +38,19 @@ class FilterRecordingTrackingView(APIView):
     def post(self, request):
         pass
 
+class RecordingTrackingView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        request_id = request.GET.get('request_id')
+        device_id = request.GET.get('device_id')
+        recording_tracking = RecordingTracking.objects.filter(request_id = request_id, device_id = device_id)
+        serializer = RecordingTrackingSerializer(recording_tracking, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        pass
+
 def handle_buggy_time(input_time):
     if not input_time:
         return None

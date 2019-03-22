@@ -154,7 +154,7 @@ function createBlankDateRangeEntries(uniqueBlankRawData) {
         var invalidFrameEndTime = new Date(startTime);
         invalidFrameEndTime.setMilliseconds(toMilliseconds);
 
-        blankDateRangeEntries.push({"startTime": invalidFrameStartTime, "endTime": invalidFrameEndTime});
+        blankDateRangeEntries.push({"request_id": entry["request_id"], "device_id": entry["device_id"], "startTime": invalidFrameStartTime, "endTime": invalidFrameEndTime});
     }
     return blankDateRangeEntries;
 }
@@ -340,6 +340,8 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
             
             var currentStartTime = blankEntries[j]['startTime'];
             var currentEndTime = blankEntries[j]['endTime'];
+            //  label for brownish blank slot in the timeline
+            var blankLabel = '{"request_id": "' + blankEntries[j]['request_id'] + '", "device_id": "' + blankEntries[j]['device_id'] +'"}';
 
             //  patch: timeline cluttering issue
             if ((currentStartTime - lastEndTime) / 1000 < 1) {
@@ -364,7 +366,7 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
             tooltip = 'Blank Frame ' + hh_mm_ss(startTimeTimeline) + ' - ' + hh_mm_ss(endTimeTimeline);
 
             if (startTimeTimeline < endTimeTimeline) {
-                blankDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+                blankDataTableContents.push([category, blankLabel, tooltip, color, startTimeTimeline, endTimeTimeline]);
             }
             
             lastEndTime = currentEndTime;
@@ -581,7 +583,7 @@ function populateTimeline(timeline, endpoint, index) {
 
         
         //  7. updating the globalDataTable lookup
-        // globalDataTable[index] = dataTable;
+        globalDataTable[index] = dataTable;
 
         
         //  8. update the summary table : 
@@ -724,6 +726,54 @@ function scrollToGivenID() {
         'slow');
 }
 
+function selectHandler(timeline, index) {
+
+    var selectedDataTable = globalDataTable[index];
+    var selection = timeline.getSelection()[0];
+    var rowNo = selection.row;
+    var label = selectedDataTable.getValue(rowNo, dataTableEnum.label);
+
+    console.log("label of the clicked entry is ---> " + label);
+    var labelJSON;
+    
+    //  if label isn't a JSON dump, then simply skip.
+    try {
+        labelJSON = JSON.parse(label);
+    }
+    catch(err) {
+        return;
+    }
+    console.log("labelJSON is ....");
+    console.log(labelJSON);
+    //  a. this was for on-click: table-view redirect
+    var GETparams = labelJSON;
+    var getVideoURLEndpoint = new URL(window.location.origin + "/api/recording_tracking");
+
+    for (key in GETparams) {
+        getVideoURLEndpoint.searchParams.set(key, GETparams[key]);
+    }
+
+    $.ajax({
+        type: 'GET',
+        url: getVideoURLEndpoint,
+        async: false,
+        dataType: 'json',
+        success: function(data){
+                var entry = data[0];
+                var redirectURL = new URL(entry['clip_path'].replace("gs://", "https://storage.cloud.google.com/"));
+                console.log("redirectURL is .....");
+                console.log(redirectURL.href);
+                window.open(redirectURL);
+            }
+    });
+
+
+    // //  b. this is for on-click: graph_view redirect
+    // var redirectURL = new URL(labelJSON['video_path'].replace("gs://", "https://storage.cloud.google.com/"));
+    // window.open(redirectURL);
+}
+
+
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
@@ -755,10 +805,10 @@ google.charts.setOnLoadCallback(function() {
         (function(i){
             
             timelines.push(initializeTimeline(specificEndPoints[i]));
-            
-            // google.visualization.events.addListener(timelines[i], 'select', function() {
-            //     selectHandler(timelines[i], i);
-            // });
+
+            google.visualization.events.addListener(timelines[i], 'select', function() {
+                selectHandler(timelines[i], i);
+            });
         
         })(i);
     }
