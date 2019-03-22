@@ -868,6 +868,12 @@ function getBaseEndPoint() {
         baseEndPoint.searchParams.set('date', yyyy_mm_dd(new Date()));
     }
 
+    //  Remove search parameters other than date.
+    var parameters = Array.from(baseEndPoint.searchParams.keys()).filter(x => x != 'date');
+    for (var i = 0; i < parameters.length; i++) {
+        baseEndPoint.searchParams.delete(parameters[i]);
+    }
+    console.log("baseEndPoint is :-> " + baseEndPoint.href);
     return baseEndPoint;
 }
 
