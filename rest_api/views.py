@@ -30,8 +30,10 @@ class FilterRecordingTrackingView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        request_id = request.GET.get('request_id')
-        filter_recording_trackings = FilterRecordingTracking.objects.using('barc-prod').filter(request_id = request_id)
+        input_date = request.GET.get('date') or str(datetime.datetime.date(datetime.datetime.now()))
+        channel_values = request.GET.getlist('channel_values') or list(map(str, ChannelInfo.objects.values_list('channel_value', flat=True)))
+        yyyymmdd_date = "".join(input_date.split("-"))
+        filter_recording_trackings = FilterRecordingTracking.objects.using('barc-prod').filter(request_id__startswith = yyyymmdd_date, channel_value__in = [int(x) for x in channel_values])
         serializer = FilterRecordingTrackingSerializer(filter_recording_trackings, many=True)
         return Response(serializer.data)
     
