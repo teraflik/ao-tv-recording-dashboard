@@ -4,6 +4,10 @@ var globalDataTable = {};
 
 var globalStore = {};
 
+var globalReportData = [];
+
+var globalReportDataCounter = 0;
+
 var stageToColor = {
     "Start Recording":  'green',
     "Clipping Started":  'yellow',
@@ -681,15 +685,37 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
     return dummyEntries;
 }
 
+//   need to change this totally.
+//   Separately should obtain data, and that too synchronously. No global variable required.
+
+
+
+function generateDailyReport(endpoint, data, slots) {
+    /*
+    Generates entries for daily_report.csv for a given channel.
+    */
+   var date = endpoint.searchParams.get("date");
+   var channelValue = endpoint.searchParams.get("channel_values");
+
+    //  
+    var res = alasql('SELECT clip_number, SUM(clip_duration) AS total_time FROM ? GROUP BY clip_number',[data]);
+
+
+
+    globalReportDataCounter += 1;
+    globalReportData = globalReportData.concat(res);
+}
+
 function populateTimeline(timeline, endpoint, index) {
     
-    //  1. get data via ajax call
+    //  1. get the endpoint for recording_table
     var recordingEndPoint = new URL(endpoint.href);
 
     //  this one has bug
-    //  recording.athenasowl.tv/graph_ui/recording?date=.... --> blank.athenasowl.tv/graph_ui/recording?date=...
+    //  recording.athenasowl.tv/graph_ui/recording?date=... --> blank.athenasowl.tv/graph_ui/blank?date=...
     //  var blankEndPoint = new URL(endpoint.href.replace('recording', 'blank'));
     
+    //  2. get the endpoint for invalid_frame_tracking_table
     //  creating an element with capability to extract protocol, host, path, etc...
     var url = document.createElement('a');
     url.href = endpoint.href;
@@ -700,6 +726,17 @@ function populateTimeline(timeline, endpoint, index) {
     var blankEndPoint = new URL(protocol + "//" + host + path + searchParams);
     console.log("blankEndPoint is .... " + blankEndPoint.href);
 
+    //  3. get the endpoint for filter_recording_tracking_table
+    var url = document.createElement('a');
+    url.href = endpoint.href;
+    var protocol = url.protocol;
+    var host = url.host;
+    var path = url.pathname.replace('recording', 'filter_recording_tracking');
+    var searchParams = url.search;
+    var filterRecordingTrackingEndPoint = new URL(protocol + "//" + host + path + searchParams);
+    filterRecordingTrackingEndPoint.searchParams.delete("device_id");
+
+    console.log("filterRecordingTrackingEndPoint is .... " + filterRecordingTrackingEndPoint.href);
 
     $.when(
 
@@ -721,11 +758,23 @@ function populateTimeline(timeline, endpoint, index) {
             }
             
             globalStore[endpoint.href]['blankRawData'] = blankRawData;
+        }),
+
+        //  3. get data from filterRecordingTrackingEndPoint
+        $.get(filterRecordingTrackingEndPoint, function(filterRecordingTrackingRawData) {
+            
+            if (!globalStore[endpoint.href]) {
+                globalStore[endpoint.href] = {};
+            }
+            
+            globalStore[endpoint.href]['filterRecordingTrackingRawData'] = filterRecordingTrackingRawData;
         })
+
     ).then(function() {
 
         var recordingRawData = globalStore[endpoint.href]['recordingRawData'];
         var blankRawData = globalStore[endpoint.href]['blankRawData'];
+        var filterRecordingTrackingRawData = globalStore[endpoint.href]['filterRecordingTrackingRawData'];
 
         // console.log("blankRawData is.......");
         // console.log(blankRawData);
@@ -777,6 +826,7 @@ function populateTimeline(timeline, endpoint, index) {
 
         //  3. If its today's date, then add current recordings
         var date = endpoint.searchParams.get('date');
+        var device_id = endpoint.searchParams.get('device_id');
         // var currentRecordingEntries = [];
         // var today = yyyy_mm_dd(new Date());
         
@@ -836,7 +886,12 @@ function populateTimeline(timeline, endpoint, index) {
 
         //  9. add total blank minutes
         updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint);
-        
+
+        //  10. create entries in report (if its not today's date and device_id = 'a' {either one will do.})
+        if (date != yyyy_mm_dd(new Date()) && device_id == 'a') {
+            generateDailyReport(filterRecordingTrackingEndPoint, filterRecordingTrackingRawData, recordingSlots);
+        }
+
         //  8. debugging
         // console.log("Endpoint is :- " + endpoint.href);
         // console.log(formattedData);
@@ -1027,10 +1082,6 @@ function linkToBlankFramesUI() {
     }
 }
 
-function generateDailyReport(baseEndPointRecording) {
-
-}
-
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
@@ -1085,8 +1136,4 @@ google.charts.setOnLoadCallback(function() {
             console.log("NOT refreshing every 5mins");
         }
     }
-
-    //  5. generate daily report
-    //  add constraints : can generate reports of latest 2 days ago. Not current date.
-    generateDailyReport(baseEndPoint);
 });
