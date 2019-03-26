@@ -1027,6 +1027,10 @@ function linkToBlankFramesUI() {
     }
 }
 
+function generateDailyReport(baseEndPointRecording) {
+
+}
+
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
@@ -1071,6 +1075,18 @@ google.charts.setOnLoadCallback(function() {
     //  4. populate charts with periodic refreshing
     for (var i = 0; i < timelines.length; i++) {
         populateTimeline(timelines[i], specificEndPoints[i], i);
-        setInterval(populateTimeline, 300000, timelines[i], specificEndPoints[i], i);
+
+        //  if date is TODAY, then refresh every 5mins.
+        if (baseEndPoint.searchParams.get('date') == yyyy_mm_dd(new Date())) {
+            console.log("refreshing every 5mins");
+            setInterval(populateTimeline, 300000, timelines[i], specificEndPoints[i], i);
+        }
+        else {
+            console.log("NOT refreshing every 5mins");
+        }
     }
+
+    //  5. generate daily report
+    //  add constraints : can generate reports of latest 2 days ago. Not current date.
+    generateDailyReport(baseEndPoint);
 });
