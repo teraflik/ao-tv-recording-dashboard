@@ -760,21 +760,21 @@ function populateTimeline(timeline, endpoint, index) {
             globalStore[endpoint.href]['blankRawData'] = blankRawData;
         }),
 
-        //  3. get data from filterRecordingTrackingEndPoint
-        $.get(filterRecordingTrackingEndPoint, function(filterRecordingTrackingRawData) {
+        // //  3. get data from filterRecordingTrackingEndPoint
+        // $.get(filterRecordingTrackingEndPoint, function(filterRecordingTrackingRawData) {
             
-            if (!globalStore[endpoint.href]) {
-                globalStore[endpoint.href] = {};
-            }
+        //     if (!globalStore[endpoint.href]) {
+        //         globalStore[endpoint.href] = {};
+        //     }
             
-            globalStore[endpoint.href]['filterRecordingTrackingRawData'] = filterRecordingTrackingRawData;
-        })
+        //     globalStore[endpoint.href]['filterRecordingTrackingRawData'] = filterRecordingTrackingRawData;
+        // })
 
     ).then(function() {
 
         var recordingRawData = globalStore[endpoint.href]['recordingRawData'];
         var blankRawData = globalStore[endpoint.href]['blankRawData'];
-        var filterRecordingTrackingRawData = globalStore[endpoint.href]['filterRecordingTrackingRawData'];
+        // var filterRecordingTrackingRawData = globalStore[endpoint.href]['filterRecordingTrackingRawData'];
 
         // console.log("blankRawData is.......");
         // console.log(blankRawData);
@@ -887,10 +887,10 @@ function populateTimeline(timeline, endpoint, index) {
         //  9. add total blank minutes
         updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint);
 
-        //  10. create entries in report (if its not today's date and device_id = 'a' {either one will do.})
-        if (date != yyyy_mm_dd(new Date()) && device_id == 'a') {
-            generateDailyReport(filterRecordingTrackingEndPoint, filterRecordingTrackingRawData, recordingSlots);
-        }
+        // //  10. create entries in report (if its not today's date and device_id = 'a' {either one will do.})
+        // if (date != yyyy_mm_dd(new Date()) && device_id == 'a') {
+        //     generateDailyReport(filterRecordingTrackingEndPoint, filterRecordingTrackingRawData, recordingSlots);
+        // }
 
         //  8. debugging
         // console.log("Endpoint is :- " + endpoint.href);
@@ -1137,3 +1137,125 @@ google.charts.setOnLoadCallback(function() {
         }
     }
 });
+
+function getJSONSynchronous(endpoint) {
+    var data;
+    $.ajax({
+        type: 'GET',
+        url: endpoint,
+        async: false,
+        dataType: 'json',
+        success: function(response){
+            data = response;
+        }
+    });
+    return data;
+}
+
+function jsonIndexer(jsonArray, indexAttribute) {
+    
+    var index = {};
+    
+    for (var i = 0; i < jsonArray.length; i++) {
+        var entry = jsonArray[i];
+        var indexAttributeValue = entry[indexAttribute];
+        index[indexAttributeValue] = entry;
+    }
+
+    return index;
+}
+
+function generateDailyReport(date) {
+
+    //  1. obtain slot-information baseEndPoint
+    var slotInfoBaseEndPoint = new URL(window.location.origin + "/api/recording");
+    reportDataBaseEndPoint.searchParams.set('date', date);
+
+    //  2. obtain reportData baseEndPoint
+    var reportDataBaseEndPoint = new URL(window.location.origin + "/api/filter_recording_tracking");
+    reportDataBaseEndPoint.searchParams.set('date', date);
+
+    //  3. create specificEndPoints (array of JSON Objects)
+    var specificEndPoints = [];
+    for (var i = 0; i < channelValues.length; i++) {
+        //  
+        entry = {};
+        entry['slotInfo'] = addGETParameters(slotInfoBaseEndPoint.href, {'device_id': 'a', 'channel_values': channelValues[i]});
+        entry['reportData'] = addGETParameters(reportDataBaseEndPoint.href, {'channel_values': channelValues[i]});
+        
+        specificEndPoints.push(entry);
+    }
+
+    //  4. loop over specificEndPoints to get formattedReportData
+
+    var formattedReportData = [];
+    var filteredFormattedReportData = [];
+
+    for (var i = 0; i < specificEndPoints.length; i++) {
+
+        var entry = specificEndPoints[i];
+        var channelValue = entry['reportData'].searchParams.get('channel_values');
+
+        //  a. get slotRawData from endPoint
+        var recordingRawData = getJSONSynchronous(entry['slotInfo']);
+
+        //  b. process to get slots
+        var startStopEntries = recordingRawData.filter(function(entry) {
+            return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
+        });
+
+        var recordingSlots = createRecordingSlots(startStopEntries, entry['slotInfo']);
+
+        //  c. get reports rawData
+        var reportRawData = getJSONSynchronous(entry['reportData']);
+
+        //  d. process to get formattedReportData
+        var groupedReportData = alasql('SELECT clip_number, SUM(clip_duration) AS total_time FROM ? GROUP BY clip_number',[reportRawData]);
+
+        var indexedGroupedReportData = jsonIndexer(groupedReportData, 'clip_number');
+
+        var specificFormattedReportData = [];
+        var specificFilteredFormattedReportData = [];
+
+        for (var j = 0; j < recordingSlots; j++) {
+            var slot = recordingSlots[j];
+
+            var startingClipNumber = getClipNumber(hh_mm_ss(slot['startRecordingTime']));
+            var endingClipNumber = getClipNumber(hh_mm_ss(slot['stopRecordingTime']));
+
+            for (var clipNumber = startingClipNumber; clipNumber <= endingClipNumber; clipNumber++) {
+
+                var reportDataEntry = indexedGroupedReportData[clipNumber];
+                //  if we have entry for that clipNumber
+                if (!!reportDataEntry) {
+
+                    //  if total_time > 29.9, then no blank data
+                    if (reportDataEntry['total_time'] >= 29.9) {
+                        specificFormattedReportData.push([channelValue, clipNumber, '0.0%']);
+                    }
+                    //  else, percentage blank data is calculated
+                    else {
+                        var blankPercentage = ((1 - reportDataEntry['total_time'] / 29.9) * 100).toFixed(1);
+                        specificFormattedReportData.push([channelValue, clipNumber, blankPercentage]);
+                    }
+                }
+                //  if we don't have entry for that clipNumber
+                else {
+                    specificFormattedReportData.push([channelValue, clipNumber, '100.0%']);
+                }
+            }
+        }
+
+        specificFilteredFormattedReportData = specificFormattedReportData.filter(function (entry) {
+            return entry[2] != '0.0%';
+        });
+
+        formattedReportData = formattedReportData.concat(specificFormattedReportData);
+        filteredFormattedReportData = filteredFormattedReportData.concat(specificFilteredFormattedReportData);
+    }
+
+    return {
+        "formattedReportData" : formattedReportData,
+        "filteredFormattedReportData" : filteredFormattedReportData
+    };
+}
