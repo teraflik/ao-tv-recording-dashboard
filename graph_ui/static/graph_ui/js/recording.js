@@ -551,6 +551,13 @@ function makeClipNoToProcessingEntry(processingEntries) {
 
 function createRecordingSlots(startStopEntries, endpoint) {
     
+    //  sort the startStopEntries according to timestamp in ASC order.
+    startStopEntries.sort( (r1, r2) => {
+        if (r1.timestamp < r2.timestamp) return -1;
+        if (r1.timestamp > r2.timestamp) return 1;
+        return 0;
+    });
+    
     //  extract date from endpoint and get today's date
     var date = endpoint.searchParams.get('date');
     var today = yyyy_mm_dd(new Date());
@@ -877,9 +884,9 @@ function getBaseEndPoint() {
     return baseEndPoint;
 }
 
-function setDateInDatePicker(ID, endpoint) {
+function setDateInDatePicker(datePickerElementID, endpoint) {
     var dateValue = endpoint.searchParams.get('date');
-    var dateElement = document.getElementById(ID);
+    var dateElement = document.getElementById(datePickerElementID);
     dateElement.value = dateValue;
 }
 
@@ -916,7 +923,7 @@ function selectHandler(timeline, index) {
     window.open(redirectURL);
 }
 
-function setColorLabels() {
+function setTimelineColorLabels() {
     var table = document.getElementById("timeline-color-labels");
     var trElement = table.childNodes[1].childNodes[1];
 
@@ -1029,7 +1036,7 @@ google.charts.setOnLoadCallback(function() {
     setDateInDatePicker('date', baseEndPoint);
 
     //  patch:  add color labels to page top
-    setColorLabels();
+    setTimelineColorLabels();
 
     //  patch:  add summaryColorLabels at top of summaryTable.
     setSummaryColorLabels();
