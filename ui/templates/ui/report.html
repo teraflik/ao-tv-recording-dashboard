@@ -1,0 +1,26 @@
+{% extends 'ui/base.html' %}
+{% load static %}
+
+{% block head %}    
+    <!-- For alasql.js -->
+    <script src="https://cdn.jsdelivr.net/npm/alasql@0.4"></script>
+
+{% endblock %}
+
+
+{% block content %}
+    Report Page. Use the console.
+{% endblock %}
+
+
+{% block footer %}
+  <script type="text/javascript">
+  var channelValues = [];
+  var channels = [];
+  {% for channel in channels %}
+    channelValues.push({{channel.channel_value}});
+    channels[{{channel.channel_value}}] = '{{channel.channel_name}}';
+  {% endfor %}
+  </script>
+  <script src="{% static "ui/js/report.js" %}"></script>
+{% endblock %}

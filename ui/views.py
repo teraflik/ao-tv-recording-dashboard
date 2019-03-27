@@ -26,3 +26,7 @@ def general(request):
 
     return render(request, 'ui/datatable.html', {'tableHTML': table_html})
     # return JsonResponse(request.GET)
+
+@login_required
+def report(request):
+    return render(request, 'ui/report.html', {'channels': channels})

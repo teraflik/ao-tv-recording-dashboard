@@ -6,4 +6,5 @@ urlpatterns = [
     url(r'^recording_graph_ui_redirect', views.general),
     url(r'^blank', views.general, name='ui-blank'),
     url(r'^home', views.home, name='ui-home'),
+    url(r'^report', views.report, name='ui-report'),
 ]
