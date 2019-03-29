@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <!-- Meta, title, CSS, favicons, etc. -->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>TV Recording Dashboard</title>
+
+        <!-- Bootstrap is included by dashboard.js in scripts -->
+        <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous"> -->
+        <!-- Font Awesome -->
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+        <!-- Custom Theme Style -->
+        <link href="{% static 'dashboard/css/custom.css' %}" rel="stylesheet">
+    </head>
+
+    <body>
+        <div class="main-wrapper">
+        {% block content %}
+        {% endblock %}
+        </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script type="text/javascript" src="http://192.168.2.45:19999/dashboard.js"></script>
+        <script type="text/javascript" src="{% static 'dashboard/js/custom.js' %}"></script>
+    </body>
+</html>

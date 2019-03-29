@@ -1,0 +1,74 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- page content -->
+<div class="content">
+        <table class="table table-striped">
+        <thead>
+            <tr>
+                <th style="width: 1%">#</th>
+                <th style="width: 10%">Node</th>
+                <th style="width: 30%">OBS</th>
+                <th style="width: 15%">CPU</th>
+                <th style="width: 5%">RAM</th>
+                <th style="width: 15%">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for node in nodes %}
+            <tr>
+            <td>{{ node.pk }}</td>
+            <td>
+                <a>{{ node.label }}</a>
+                <br />
+                <small>{{ node.ip_address }}</small>
+            </td>
+            <td>
+                <span class="obs-status label label-default my-2" data-node="{{ node.pk }}" id="obs-status-{{ node.pk }}">Fetching...</span>
+                <button data-node="{{ node.pk }}" class="obs-start-recording btn btn-default btn-xs my-2"><i class="fa fa-play"></i> Start Recording</button>
+                <button data-node="{{ node.pk }}" class="obs-stop-recording btn btn-default btn-xs my-2"><i class="fa fa-stop"></i> Stop Recording</button>
+            </td>
+            <td>
+                <div data-netdata="system.cpu"
+                    data-host="http://{{ node.ip_address }}:19999/"
+                    data-dimensions="user"
+                    data-chart-library="sparkline"
+                    data-dygraph-valuerange="[0, 100]"
+                    data-height="30px"
+                    data-width="100%"
+                    data-after="-100"
+                    data-show-value-of-user-at="cpu-node-{{ node.pk }}"
+                    ></div>
+                <span id="cpu-node-{{ node.pk }}"></span>%
+            </td>
+            <td>
+                <div data-netdata="system.ram"
+                    data-host="http://{{ node.ip_address }}:19999/"
+                    data-dimensions="used|buffers|active|wired"
+                    data-chart-library="easypiechart"
+                    data-append-options="percentage"
+                    data-easypiechart-linewidth="3"
+                    data-easypiechart-scaleColor="false"
+                    data-easypiechart-max-value="100"
+                    data-units=""
+                    data-width="50px"
+                    data-after="-10"
+                    data-title=""
+                    ></div>
+            </td>
+            <td>
+                <button data-node="{{ node.pk }}" class="btn btn-primary btn-xs tvrp-deploy" id="deploy-{{ node.pk }}"><i class="fa fa-play"></i> Deploy</button>
+                <button data-node="{{ node.pk }}" class="btn btn-warning btn-xs" id="restart-{{ node.pk }}"><i class="fa fa-play"></i> Restart</button>
+            </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+</div>
+<div class="bottom-wrapper" id="tvrp-log">
+</div>
+
+<!-- /page content -->
+  
+{% endblock %}

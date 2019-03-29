@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'graph_ui.apps.GraphUiConfig',
     'ui.apps.UiConfig',
     'rest_api.apps.RestApiConfig',
+    'dashboard.apps.DashboardConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -162,6 +163,10 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+# Media Files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_REDIRECT_URL = 'graph-recording'
 LOGIN_URL = 'login'
