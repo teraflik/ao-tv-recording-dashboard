@@ -7,4 +7,5 @@ urlpatterns = [
     url(r'^blank', views.general, name='ui-blank'),
     url(r'^home', views.home, name='ui-home'),
     url(r'^report', views.report, name='ui-report'),
+    url(r'^send_mail', views.send_mail, name='ui-mail'),
 ]
