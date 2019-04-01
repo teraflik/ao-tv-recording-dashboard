@@ -31,27 +31,26 @@ Vue.component('node', {
         @mouseleave="hover = false">
         <td class="node-id">{{ id }}</td>
         <td class="node-ip_address">{{ ip_address }}</td>
-        <td class="node-label">{{ label }}</td>
-        <td v-if="ping" class="node-obs">
+        <td class="node-channel">{{ channel_id }} - {{ label }}</td>
+        <td v-if="ping" class="node-obs text-center">
             <obs
             :id=id></obs>
         </td>
         <td v-else colspan="99" class="text-center">Host Unreachable!</td>
-        <td v-if="ping" class="node-cpu">
+        <td v-if="ping" class="node-cpu text-center">
             <netdata-cpu
             :ip_address="ip_address"></netdata-cpu>
         </td>
-        <td v-if="ping" class="node-temp">
+        <td v-if="ping" class="node-temp text-center">
             <netdata-temp
             :id="id"
             :ip_address="ip_address"></netdata-temp>
         </td>
-        <td v-if="ping" class="node-ram">
+        <td v-if="ping" class="node-ram text-center">
             <netdata-ram
             :ip_address="ip_address"></netdata-ram>
         </td>
-        <td v-if="ping" class="node-channel_id">{{ channel_id }}</td>
-        <td v-if="ping" class="node-uptime">{{ uptime }}</td>
+        <td v-if="ping" class="node-uptime text-center">{{ uptime }}</td>
         <td v-if="ping" class="node-overlay" v-show="hover">
             <button @click="show_screenshot()" title="Screenshot" class="btn"><i class="fas fa-camera"></i></button>
             <button @click="show_cron()" title="Cron" class="btn"><i class="fas fa-hourglass-start"></i></button>
