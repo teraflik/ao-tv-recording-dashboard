@@ -32,7 +32,7 @@ Vue.component('node', {
         <td class="node-id">{{ id }}</td>
         <td class="node-ip_address">{{ ip_address }}</td>
         <td class="node-label">{{ label }}</td>
-        <td v-if="ping" class="node-obs_status">
+        <td v-if="ping" class="node-obs">
             <obs
             :id=id></obs>
         </td>
@@ -258,17 +258,20 @@ Vue.component('obs', {
         },
         handle (arg) {
             this.action(arg)
-            setTimeout(this.refresh, 500)
+            setTimeout(this.refresh, 100)
         }
     },
     template:
-    `<div>
-        <div>{{ status }}</div>
-        <div v-if="is_running" class="btn-group" role="group" aria-label="OBS Monitoring">
-            <button v-show="!is_recording" @click="handle('start_recording')" class="btn"><i class="fas fa-play"></i></button>
-            <button v-show="is_recording" @click="handle('stop_recording')" class="btn"><i class="fas fa-stop"></i></button>
+    `<div class="h-100 text-center">
+        <div class="pt-2">
+            {{ status }}
         </div>
-        <button @click="refresh" class="btn"><i class="fas fa-redo-alt"></i></button>
+        <div class="pt-2">
+            <button v-if="is_running" v-show="!is_recording" @click="handle('start_recording')" title="Start Recording" class="btn btn-outline-success"><i class="fas fa-play"></i></button>
+            <button v-if="is_running" v-show="is_recording" @click="handle('stop_recording')" title="Stop Recording" class="btn btn-outline-danger"><i class="fas fa-stop"></i></button>
+            <button v-if="is_running" @click="handle('reset_source')" title="Reset Source" class="btn btn-outline-warning"><i class="fas fa-sign-in-alt"></i></button>
+            <button @click="refresh" title="Update" class="btn btn-outline-primary"><i class="fas fa-redo-alt"></i></button>
+        </div>
     </div>`
 })
 

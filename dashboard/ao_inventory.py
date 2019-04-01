@@ -34,14 +34,14 @@ class OBSWebsocket():
         recording = self.client.call(obswebsocket.requests.StopRecording())
         return True if recording.status else recording.datain['error']
     
-    def refresh_source(self):
+    def reset_source(self):
         scene = self.client.call(obswebsocket.requests.GetCurrentScene())
         sources = scene.getSources()
         for source in sources:
             settings = self.client.call(obswebsocket.requests.GetSourceSettings(source["name"], source["type"])).getSourcesettings()
             self.client.call(obswebsocket.requests.SetSourceSettings(source["name"], settings, source["type"]))
-            return settings
-        #return True
+            #return settings
+        return True
 
 class AOInventoryManager(InventoryManager):
     def get_cron(self, host, username, password):

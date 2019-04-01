@@ -87,8 +87,8 @@ def obs(request, node_id):
             response = obs.start_recording()
         elif request.GET.get("action") == "stop_recording":
             response = obs.stop_recording()
-        elif request.GET.get("action") == "refresh_source":
-            response = obs.refresh_source()
+        elif request.GET.get("action") == "reset_source":
+            response = obs.reset_source()
         else:
             response = "Recording" if obs.is_recording() else "Not Recording"
     except ConnectionError:

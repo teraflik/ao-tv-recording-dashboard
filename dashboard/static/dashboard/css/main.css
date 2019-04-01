@@ -8,6 +8,10 @@
   content: "%";
 }
 
+.node > td{
+    vertical-align: middle;
+}
+
 .node-overlay {
     position: absolute;
     text-align: right;
@@ -16,8 +20,8 @@
     background-color: rgba(255,255,255,1);
 }
 
-.node-overlay > button{
-    opacity: 0.54;
+.node-overlay > button {
+    opacity: 0.70;
     height: 3em;
     width: 3em;
     border-radius: 1em;
@@ -25,11 +29,33 @@
     vertical-align: bottom;
 }
 
-.node-overlay > button:hover{
+.node-overlay > button:hover {
     opacity: 1;
-    background-color: rgba(32,33,36,0.059);
+    background-color: rgba(32,33,36,0.07);
     transition: all 0.3s ease;
 }
+
+.node-obs {
+    height: 80px;
+}
+
+.node-obs button:hover {
+    opacity: 1;
+    transition: all 0.2s ease;
+}
+/*
+.node-obs button:hover[title="Start Recording"] { 
+    background-color: rgba(0, 255, 0, 0.6);
+}
+.node-obs button:hover[title="Stop Recording"] { 
+    background-color: rgba(255, 0, 0, 0.6);
+}
+.node-obs button:hover[title="Reset Source"] { 
+    background-color: rgba(0, 123, 255, 0.9);
+}
+.node-obs button:hover[title="Update"] { 
+    background-color: rgba(255, 255, 0, 0.8);
+} */
 
 /* Loading Animation */
 .spinner {
