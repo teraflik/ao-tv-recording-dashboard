@@ -8,6 +8,9 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.18/b-1.5.6/b-colvis-1.5.6/b-flash-1.5.6/b-html5-1.5.6/b-print-1.5.6/fh-3.1.4/r-2.2.2/datatables.min.js"></script>
 
+    <!-- For alasql.js -->
+    <script src="https://cdn.jsdelivr.net/npm/alasql@0.4"></script>
+
 {% endblock %}
 
 
@@ -16,6 +19,10 @@
 <div>
     {{ tableHTML | safe }}
 </div>
+
+<center><h2> Blank Frames Daily Report</h2></center>
+
+<br>
 
 <table class="table table-hover" id="example" cellspacing="0" width="100%">
     <thead>
@@ -59,5 +66,14 @@
 {% endblock %}
 
 {% block footer %}
-    <script src="{% static "ui/js/datatable.js" %}"></script>
+    <script type="text/javascript">
+        var channelValues = [];
+        var channels = {};
+        {% for channel in channels %}
+            channelValues.push({{channel.channel_value}});
+            channels[{{channel.channel_value}}] = '{{channel.channel_name}}';        
+        {% endfor %}
+    </script>
+    <script src="{% static "ui/js/report.js" %}"></script>
+    <script src="{% static "ui/js/daily_report.js" %}"></script>
 {% endblock %}

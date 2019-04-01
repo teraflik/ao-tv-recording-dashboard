@@ -31,6 +31,17 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'ui-home' %}">TableUI</a>
                 </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Blank Frames Report
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="{% url 'ui-daily-report-home' %}">Daily Report</a>
+                        <a class="dropdown-item" href="{% url 'ui-weekly-report-home' %}">Weekly Report</a>
+                    </div>
+                </li>
+
                 <!-- <li class="nav-item">
                     <a class="nav-link" href="#">Link</a>
                 </li>

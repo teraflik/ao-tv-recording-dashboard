@@ -3,6 +3,8 @@ import time
 import json
 import csv
 import requests
+from requests_toolbelt import MultipartEncoder
+
 from pathlib import Path
 
 from django.shortcuts import render
@@ -22,13 +24,29 @@ model_names = list(map(lambda x: x._meta.db_table, _models))
 channels = models.ChannelInfo.objects.values('channel_name', 'channel_value')
 
 # EMAIL CLOUD FUNCTION URL
-EMAIL_CLOUD_FUNCTION_URL = 'https://us-central1-athenas-owl-dev.cloudfunctions.net/cf-testattachmail'
+EMAIL_CLOUD_FUNCTION_URL = 'https://us-central1-athenas-owl-dev.cloudfunctions.net/cf-send-attach-mail-generic'
 
 
 # Create your views here.
 @login_required
 def home(request):
     return render(request, 'ui/home.html', {'channels': channels})
+
+@login_required
+def daily_report_home(request):
+    return render(request, 'ui/daily_report_home.html', {'channels': channels})
+
+@login_required
+def daily_report(request):
+    return render(request, 'ui/daily_report.html', {'channels': channels})
+
+@login_required
+def weekly_report_home(request):
+    return render(request, 'ui/weekly_report_home.html', {'channels': channels})
+
+@login_required
+def weekly_report(request):
+    return render(request, 'ui/weekly_report.html', {'channels': channels})
 
 @login_required
 def general(request):
@@ -65,8 +83,9 @@ def send_mail(request):
                 writer.writerow(row)
 
         # send the csv via mail
-        files = {'file': open(filename, 'rb'), "recipient_mail": recipient_mail}
-        response = requests.request("POST", EMAIL_CLOUD_FUNCTION_URL, files=files)
+        fields ={'file': (filename, open(filename, 'rb')), 'receiver': recipient_mail, 'subject': 'Blank Frames Report', 'message': 'Report', 'key': 'AOPlatform'}
+        data = MultipartEncoder(fields = fields)
+        response = requests.post('https://us-central1-athenas-owl-dev.cloudfunctions.net/cf-send-attach-mail-generic', data=data, headers={'Content-Type': data.content_type})
         
         # remove file
         os.remove(filename)

@@ -1,0 +1,161 @@
+{% extends 'ui/base.html' %}
+
+{% block content %}
+<div class="w-75 mx-auto">
+
+<center>
+    <h2> Blank Frames Weekly Report</h2>
+</center>
+
+<br>
+<br>
+
+<form class="form-horizontal" onsubmit="return validateForm()" action="{% url 'ui-weekly-report' %}" name="form">
+  
+
+  <!-- Week input -->
+  <div class="form-group row">
+    <label class="control-label col-sm-3" for="week">Week:</label>
+    <div class="col-sm-7">
+      <input type="week" class="form-control" id="week" name="week" onchange="setDatesAccordingToWeek()">
+    </div>
+  </div>
+
+  <!-- Start Date input -->
+  <div class="form-group row">
+    <label class="control-label col-sm-3" for="start_date">Start Date:</label>
+    <div class="col-sm-7">
+      <input type="date" class="form-control" id="start_date" name="start_date">
+    </div>
+  </div>
+
+  <!-- End Date input -->
+  <div class="form-group row">
+    <label class="control-label col-sm-3" for="end_date">End Date:</label>
+    <div class="col-sm-7">
+      <input type="date" class="form-control" id="end_date" name="end_date">
+    </div>
+  </div>
+
+
+  <!-- Submit Button -->
+  <div class="form-group row"> 
+    <div class="col-sm-10">
+      <button type="submit" class="btn btn-primary btn-block">Submit</button>
+    </div>
+  </div>
+
+</form>
+</div>
+
+
+<script type="text/javascript">
+
+
+  // Ref :- https://weeknumber.net/how-to/javascript
+
+  //  adding getWeek() and getWeekYear() to date object
+  Date.prototype.getWeek = function() {
+    var date = new Date(this.getTime());
+    date.setHours(0, 0, 0, 0);
+    // Thursday in current week decides the year.
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    // January 4 is always in week 1.
+    var week1 = new Date(date.getFullYear(), 0, 4);
+    // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+    return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
+                          - 3 + (week1.getDay() + 6) % 7) / 7);
+  }
+
+  // Returns the four-digit year corresponding to the ISO week of the date.
+  Date.prototype.getWeekYear = function() {
+    var date = new Date(this.getTime());
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    return date.getFullYear();
+  }
+
+
+  // Ref :- https://stackoverflow.com/questions/16590500/javascript-calculate-date-from-week-number
+  function getDateOfISOWeek(w, y) {
+    var simple = new Date(y, 0, 1 + (w - 1) * 7);
+    var dow = simple.getDay();
+    var ISOweekStart = simple;
+    if (dow <= 4)
+        ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+    else
+        ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+    return ISOweekStart;
+  }
+
+  function setDatesAccordingToWeek() {
+
+    console.log("onchange callback triggered");
+    var HTMLWeekInput = document.getElementById('week').value;
+    var [year, weekNo] = [HTMLWeekInput.split('-')[0], HTMLWeekInput.split('-')[1].slice(1)].map((x) => parseInt(x));
+
+    var startDate = getDateOfISOWeek(weekNo, year);
+    var endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 6);
+
+    document.getElementById('start_date').value = yyyy_mm_dd(startDate);
+    document.getElementById('end_date').value = yyyy_mm_dd(endDate);    
+
+  }
+
+  function yyyy_mm_dd(dateObject) {
+    var d = dateObject;
+    month = '' + (d.getMonth() + 1);
+    day = '' + d.getDate();
+    year = d.getFullYear();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+
+    return [year, month, day].join('-');
+  }
+
+  //  This returns the week corresponding to the passed in dateObject
+  function getHTMLWeekInput(dateObject) {
+    var weekYearString = dateObject.getWeekYear().toString();
+    var weekString = dateObject.getWeek() < 10 ? "0" + dateObject.getWeek().toString() : dateObject.getWeek().toString();
+
+    return weekYearString + "-W" + weekString;
+  }
+  
+  //  set default values in datepicker
+  var today = new Date();
+
+  var oneWeekBefore = new Date();
+  oneWeekBefore.setDate(oneWeekBefore.getDate() - 7);
+
+  document.getElementById('end_date').value = yyyy_mm_dd(today);
+  document.getElementById('start_date').value = yyyy_mm_dd(oneWeekBefore);
+
+
+  //  set current week default value
+  document.getElementById('week').value = getHTMLWeekInput(today);
+
+  function validateForm() {
+
+    //	check for empty fields
+    var start_date_input = document.forms["form"]["start_date"].value;
+    var end_date_input = document.forms["form"]["end_date"].value;
+				
+    if (start_date_input =="" || end_date_input =="") {
+        alert("Please Fill All Required Field!");
+        return false;
+    }
+    else {  
+        //	check if start_date more than end_date
+        start_time = new Date(start_date_input).getTime();
+        finish_time = new Date(end_date_input).getTime();
+
+        if (start_time > finish_time) {
+            alert("Starting date can't exceed ending time!");
+            return false;
+        }
+    }
+
+  }
+</script>
+{% endblock %}

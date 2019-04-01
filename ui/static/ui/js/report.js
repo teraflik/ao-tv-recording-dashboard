@@ -294,7 +294,7 @@ function generateWeeklyReport(startDate, endDate) {
         console.log("indexedChannelWiseDailyReport ...");
         console.log(indexedChannelWiseDailyReport);
         
-        var dailyEntryWeeklyReport = {'date': dateTimeObject.toDateString()};
+        var dailyEntryWeeklyReport = {'date': date};
 
         //  loop over channelValues array
         for (var i = 0; i < channelValues.length; i++) {

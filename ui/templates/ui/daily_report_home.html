@@ -1,0 +1,61 @@
+{% extends 'ui/base.html' %}
+
+{% block content %}
+<div class="w-75 mx-auto">
+<center>
+    <h2> Blank Frames Daily Report</h2>
+</center>
+
+<br>
+<br>
+
+
+<form class="form-horizontal" onsubmit="return validateForm()" action="{% url 'ui-daily-report' %}" name="form">
+  
+  <!-- Date input -->
+  <div class="form-group row">
+    <label class="control-label col-sm-3" for="date">Date:</label>
+    <div class="col-sm-7">
+      <input type="date" class="form-control" id="date" name="date">
+    </div>
+  </div>
+
+
+  <!-- Submit Button -->
+  <div class="form-group row"> 
+    <div class="col-sm-10">
+      <button type="submit" class="btn btn-primary btn-block">Submit</button>
+    </div>
+  </div>
+
+</form>
+</div>
+
+
+<script type="text/javascript">
+
+  function yyyy_mm_dd(dateObject) {
+    var d = dateObject;
+    month = '' + (d.getMonth() + 1);
+    day = '' + d.getDate();
+    year = d.getFullYear();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+
+    return [year, month, day].join('-');
+  }
+
+  //  set today's date by default in datepicker
+  document.getElementById('date').value = yyyy_mm_dd(new Date());
+
+  function validateForm() {
+	//	check for empty fields
+    var date_input = document.forms["form"]["date"].value;
+    if (date_input =="") {
+			alert("Date can't be empty!");
+			return false;
+    }
+  }
+</script>
+{% endblock %}
