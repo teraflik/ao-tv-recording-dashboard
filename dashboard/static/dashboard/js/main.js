@@ -278,7 +278,7 @@ Vue.component('obs', {
 new Vue({
     el: '#dashboard',
     data: {
-        apiURL: '/dashboard/nodes/',
+        apiURL: 'nodes/',
         nodes: [],
         loading: true,
         errored: false,
