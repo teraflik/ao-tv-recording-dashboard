@@ -1,9 +1,13 @@
+{% extends 'dashboard/base.html' %}
 {% load static %}
+
+{% block head %}
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
 <link href="{% static 'dashboard/css/main.css' %}" rel="stylesheet">
+{% endblock %}
 
-<body>
+{% block content %}
 <main id="dashboard">
     <section v-if="errored">
         <div class="alert alert-danger text-center">
@@ -29,7 +33,7 @@
                     <th>Label</th>
                     <th>OBS Status</th>
                     <th style="width: 200px">CPU</th>
-                    <th style="width: 80px">Temperature</th>
+                    <th style="width: 100px">Temperature</th>
                     <th style="width: 80px">RAM</th>
                     <th>Channel ID</th>
                     <th>Uptime</th>
@@ -59,4 +63,4 @@
 <script type="text/javascript" src="http://192.168.2.45:19999/dashboard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script type="text/javascript" src="{% static 'dashboard/js/main.js' %}"></script>
-</body>
+{% endblock %}
