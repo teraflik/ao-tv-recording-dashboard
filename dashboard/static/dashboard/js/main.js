@@ -199,8 +199,8 @@ Vue.component('cron', {
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Cron</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <h5 class="modal-title">Task Scheduler</h5>
+                    <button type="button" class="close" @click="close()">
                     <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -258,7 +258,7 @@ Vue.component('obs', {
         },
         handle (arg) {
             this.action(arg)
-            setTimeout(this.refresh, 100)
+            setTimeout(this.refresh, 1000)
         }
     },
     template:
