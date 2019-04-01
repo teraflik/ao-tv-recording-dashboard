@@ -22,7 +22,7 @@ def nodes(request, node_id=None):
     Returns information about a node given its primary key (`node_id`) as JSONResponse.
     If no `node_id` is specified, returns information about all the nodes in database.
     """
-    #return JsonResponse({"nodes": [{"id": 1, "ip_address": "192.168.2.35", "label": "Asutosh", "ping": True, "obs_status": "Not Running", "channel_id": "1", "uptime": "up 3 hours, 31 minutes", "cron": "* * * * * cd /home/user/Documents/asutosh/athenas-owl/ao-shell && touch log_file && echo `date` >> log_file", "screenshot_url": "/media/screenshots/1_Asutosh_lDJtjyZ.jpg"}, {"id": 3, "ip_address": "192.168.2.34", "label": "Rishabh", "ping": True, "obs_status": "Not Running", "channel_id": "Test", "uptime": "up 3 days, 3 hours, 31 minutes", "cron": "no crontab for user", "screenshot_url": "/media/screenshots/3_Rishabh_oczZIth.jpg"}, {"id": 7, "ip_address": "192.168.2.234", "label": "TV Recording Beta", "ping": True, "obs_status": "Not Running", "channel_id": "0", "uptime": "up 3 days, 1 hour, 37 minutes", "cron": "no crontab for user", "screenshot_url": None}]})
+    #return JsonResponse({"nodes": [{"id": 1, "ip_address": "192.168.2.35", "label": "Asutosh", "ping": True, "channel_id": "1", "uptime": "up 7 hours, 8 minutes", "cron": "* * * * * cd /home/user/Documents/asutosh/athenas-owl/ao-shell && touch log_file && echo `date` >> log_file", "screenshot_url": "/media/screenshots/1_Asutosh_Y04Whyl.jpg"}, {"id": 2, "ip_address": "192.168.2.34", "label": "Rishabh", "ping": True, "channel_id": "Test", "uptime": "up 3 days, 6 hours, 26 minutes", "cron": "no crontab for user", "screenshot_url": "/media/screenshots/2_Rishabh_Nemq7kk.jpg"}, {"id": 3, "ip_address": "192.168.2.234", "label": "TV Recording Beta", "ping": True, "channel_id": "0", "uptime": "up 3 days, 3 hours, 1 minute", "cron": "no crontab for user", "screenshot_url": "/media/screenshots/3_TV_Recording_Beta_1VbIAOu.jpg"}]})
     nodes = []
     inv = AOInventoryManager()
     
@@ -35,7 +35,6 @@ def nodes(request, node_id=None):
                 "ip_address": node.ip_address,
                 "label": node.label,
                 "ping": True,
-                "obs_status": inv.obs_status(node.ip_address),
                 "channel_id": inv.get_channel_id(node.ip_address, node.username, node.password),
                 "uptime": inv.get_uptime(node.ip_address, node.username, node.password),
                 "cron": inv.get_cron(node.ip_address, node.username, node.password),
@@ -69,7 +68,7 @@ def screenshot(request, node_id):
 def obs(request, node_id):
     """
     Manages OBS running on a node via OBSWebsocket instance.
-    GET parameter `action` supports `start_recording`, `stop_recording`.
+    GET parameter `action` supports many arguments.
     Response is True on successful completion of the specified action.
     In absence of the action parameter, returns the current recording status of OBS.
     """
@@ -80,16 +79,24 @@ def obs(request, node_id):
 
     try:
         obs = OBSWebsocket(node.ip_address)
-        if request.GET.get("action") == "start_recording":
+        if request.GET.get("action") == "is_running":
+            response = True
+        elif request.GET.get("action") == "is_recording":
+            response = obs.is_recording()
+        elif request.GET.get("action") == "start_recording":
             response = obs.start_recording()
         elif request.GET.get("action") == "stop_recording":
             response = obs.stop_recording()
         elif request.GET.get("action") == "refresh_source":
             response = obs.refresh_source()
         else:
-            response = "Recording" if obs.recording_status() else "Not Recording"
+            response = "Recording" if obs.is_recording() else "Not Recording"
     except ConnectionError:
-        response = "Not Running"
+        if request.GET.get("action") == "is_running":
+            response = False
+        else:
+            response = "Not Running"
+
     return JsonResponse(data = {"response": response})
 
 @login_required

@@ -1,5 +1,5 @@
 Vue.component('node', {
-    props: ['id', 'ip_address', 'label', 'ping', 'obs_status', 'channel_id', 'uptime', 'cron', 'screenshot_url'],
+    props: ['id', 'ip_address', 'label', 'ping', 'channel_id', 'uptime', 'cron', 'screenshot_url'],
     data () {
         return {
             hover: false,
@@ -14,8 +14,8 @@ Vue.component('node', {
         overlay.style.top = rowPos.top
         overlay.style.right = rowPos.right
         overlay.style.height = rowPos.height
-        overlay.style.width = 350
-        overlay.style.left = rowPos.right - 350
+        overlay.style.width = 200
+        overlay.style.left = rowPos.right - 200
     },
     methods: {
         show_screenshot() {
@@ -24,15 +24,6 @@ Vue.component('node', {
         show_cron() {
             this.bus.$emit('show_cron')
         },
-        obs (action) {
-            endpoint = this.$root.apiURL + this.id + '/obs?action=' + action
-            
-            fetch(endpoint).then(response => response.json())
-            .then(data => this.obs_status = data.response)
-            .catch(error => {
-                console.log(error)
-            })
-        }
     },
     template:
     `<tr class="node"
@@ -41,7 +32,10 @@ Vue.component('node', {
         <td class="node-id">{{ id }}</td>
         <td class="node-ip_address">{{ ip_address }}</td>
         <td class="node-label">{{ label }}</td>
-        <td v-if="ping" class="node-obs_status">{{ obs_status }}</td>
+        <td v-if="ping" class="node-obs_status">
+            <obs
+            :id=id></obs>
+        </td>
         <td v-else colspan="99" class="text-center">Host Unreachable!</td>
         <td v-if="ping" class="node-cpu">
             <netdata-cpu
@@ -61,8 +55,6 @@ Vue.component('node', {
         <td v-if="ping" class="node-overlay" v-show="hover">
             <button @click="show_screenshot()" title="Screenshot" class="btn"><i class="fas fa-camera"></i></button>
             <button @click="show_cron()" title="Cron" class="btn"><i class="fas fa-hourglass-start"></i></button>
-            <button @click="obs('start_recording')" title="Start Recording" class="btn"><i class="fas fa-play"></i></i></button>
-            <button @click="obs('stop_recording')" title="Stop Recording" class="btn"><i class="fas fa-stop-circle"></i></button>
         </td>
         <screenshot v-if="ping"
             :bus="bus"
@@ -148,8 +140,8 @@ Vue.component('screenshot', {
             this.visible = true
         },
         close () {
-            this.visible = false
             this.$root.modal = false
+            this.visible = false
         },
         refresh () {
             endpoint = this.$root.apiURL + this.id + '/screenshot?response=json'
@@ -195,8 +187,8 @@ Vue.component('cron', {
             this.visible = true
         },
         close () {
-            this.visible = false
             this.$root.modal = false
+            this.visible = false
         }
     },
     mounted () {
@@ -221,6 +213,62 @@ Vue.component('cron', {
                 </div>
             </div>
         </div>
+    </div>`
+})
+
+Vue.component('obs', {
+    props: ['id'],
+    data () {
+        return {
+            status: 'loading...',
+            is_running: false,
+            is_recording: false,
+        }
+    },
+    mounted () {
+        this.refresh()
+    },
+    methods: {
+        action (arg) {
+            var self = this
+            return new Promise( function(resolve, reject) {
+                fetch(self.$root.apiURL + self.id + '/obs?action=' + arg).then(response => response.json())
+                .then(data => {
+                    resolve(data.response)
+                })
+                .catch(error => {
+                    console.log(error)
+                })
+            })
+        },
+        refresh () {
+            this.action('is_running').then(response => {
+                this.is_running = response
+                
+                if( this.is_running ){
+                    this.action('is_recording').then(response => {
+                        this.is_recording = response
+                        this.status = this.is_recording ? 'Recording' : 'Not Recording'
+                    })
+                }
+                else {
+                    this.status = 'Not Running'
+                }
+            })
+        },
+        handle (arg) {
+            this.action(arg)
+            setTimeout(this.refresh, 500)
+        }
+    },
+    template:
+    `<div>
+        <div>{{ status }}</div>
+        <div v-if="is_running" class="btn-group" role="group" aria-label="OBS Monitoring">
+            <button v-show="!is_recording" @click="handle('start_recording')" class="btn"><i class="fas fa-play"></i></button>
+            <button v-show="is_recording" @click="handle('stop_recording')" class="btn"><i class="fas fa-stop"></i></button>
+        </div>
+        <button @click="refresh" class="btn"><i class="fas fa-redo-alt"></i></button>
     </div>`
 })
 

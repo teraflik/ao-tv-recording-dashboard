@@ -22,7 +22,7 @@ class OBSWebsocket():
             self.log.warning("Failed to connect to OBS Websocket on %s:%s", host, port)
             raise ConnectionError("Failed to connect to OBS Websocket on {host}:{port}".format(host=host, port=port))
 
-    def recording_status(self):
+    def is_recording(self):
         recording = self.client.call(obswebsocket.requests.GetStreamingStatus())
         return recording.getRecording()
     
@@ -68,11 +68,3 @@ class AOInventoryManager(InventoryManager):
             return self.run_command("reboot")
         except (ConnectionError, OSError) as e:
             return str(e)
-    
-    def obs_status(self, host, port=4444):
-        try:
-            obs = OBSWebsocket(host, port)
-            obs_status = "Recording" if obs.recording_status() else "Not Recording"
-        except ConnectionError:
-            obs_status = "Not Running"
-        return obs_status
