@@ -52,7 +52,7 @@ class AOInventoryManager(InventoryManager):
 
     def get_uptime(self, host, username, password):
         try:
-            return self.run_command(host, username, password, "uptime -p")
+            return self.run_command(host, username, password, r"""awk '{printf("%02d:%02d", int($1/3600), int(($1%3600)/60))}' /proc/uptime""")
         except (ConnectionError, OSError) as e:
             return str(e)
     
