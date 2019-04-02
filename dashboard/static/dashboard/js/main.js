@@ -6,17 +6,6 @@ Vue.component('node', {
             bus: new Vue(),
         }
     },
-    updated () {
-        row = this.$el
-        var overlay = row.querySelector('.node-overlay')
-        rowPos = row.getBoundingClientRect()
-
-        overlay.style.top = rowPos.top
-        overlay.style.right = rowPos.right
-        overlay.style.height = rowPos.height
-        overlay.style.width = 200
-        overlay.style.left = rowPos.right - 200
-    },
     methods: {
         show_screenshot() {
             this.bus.$emit('show_screenshot')
@@ -51,9 +40,9 @@ Vue.component('node', {
             :ip_address="ip_address"></netdata-ram>
         </td>
         <td v-if="ping" class="node-uptime text-center">{{ uptime }}</td>
-        <td v-if="ping" class="node-overlay" v-show="hover">
-            <button @click="show_screenshot()" title="Screenshot" class="btn"><i class="fas fa-camera"></i></button>
-            <button @click="show_cron()" title="Cron" class="btn"><i class="fas fa-hourglass-start"></i></button>
+        <td v-if="ping" class="node-actions">
+            <button @click="show_screenshot()" title="Screenshot" class="btn btn-lg btn-outline-secondary"><i class="fas fa-camera"></i></button>
+            <button @click="show_cron()" title="Cron" class="btn btn-lg btn-outline-secondary"><i class="fas fa-hourglass-start"></i></button>
         </td>
         <screenshot v-if="ping"
             :bus="bus"
@@ -177,7 +166,8 @@ Vue.component('cron', {
     props: ['bus', 'id', 'ip_address', 'label', 'cron'],
     data () {
         return {
-            visible: false
+            visible: false,
+            pretty_cron: []
         }
     },
     methods: {
@@ -188,7 +178,25 @@ Vue.component('cron', {
         close () {
             this.$root.modal = false
             this.visible = false
+        },
+        prettify () {
+            var self = this
+            if (this.cron == "no crontab for user" || this.cron == ""){}
+            else {
+                var cronjob_list = this.cron.split('\n');
+                cronjob_list.forEach(function (cronjob, index){
+                    exp = cronjob.split(/\s+/).slice(0,5).join(" ")
+                    job = cronjob.split(/\s+/).slice(5).join(" ")
+                    self.pretty_cron.push({
+                        'exp': cronstrue.toString(exp), 
+                        'job': job
+                    })
+                })
+            }
         }
+    },
+    created () {
+        this.prettify()
     },
     mounted () {
         this.bus.$on('show_cron', this.open)
@@ -204,7 +212,17 @@ Vue.component('cron', {
                     </button>
                 </div>
                 <div class="modal-body">
-                    <pre>{{ cron }}</pre>
+                    <table v-if="pretty_cron.length" class="table table-borderless">
+                        <thead>
+                            <th>Schedule</th>
+                            <th>Job</th>
+                        </thead>
+                        <tr v-for="cron in pretty_cron">
+                            <td>{{ cron.exp }}</td>
+                            <td><code>{{ cron.job }}</code></td>
+                        </tr>
+                    </table>
+                    <code v-else>No Tasks Scheduled</code>
                 </div>
                 <div class="modal-footer">
                     <h4 class="modal-title mr-auto">{{ label }} <small><code>[{{ ip_address}}]</code></small></h4>

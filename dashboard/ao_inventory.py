@@ -46,7 +46,7 @@ class OBSWebsocket():
 class AOInventoryManager(InventoryManager):
     def get_cron(self, host, username, password):
         try:
-            return self.run_command(host, username, password, "crontab -l")
+            return self.run_command(host, username, password, "crontab -l | grep -v '#'") #Don't get commented lines
         except (ConnectionError, OSError) as e:
             return str(e)
 

@@ -1,3 +1,28 @@
+@import url('https://fonts.googleapis.com/css?family=Patua+One');
+
+body{
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.ao-logo {
+    font-family: 'Patua One', sans-serif;
+}
+.node > td{
+    vertical-align: middle;
+}
+
+.node-overlay {
+    position: absolute;
+    text-align: right;
+    z-index: 999;
+    background-color: rgba(255,255,255,1);
+}
+
+.node-obs {
+    height: 80px;
+}
+
 .easyPieChartLabel {
     font-size: 16px !important;
     font-weight: 600 !important;
@@ -7,55 +32,6 @@
 .easyPieChartLabel::after { 
   content: "%";
 }
-
-.node > td{
-    vertical-align: middle;
-}
-
-.node-overlay {
-    position: absolute;
-    text-align: right;
-    /* vertical-align: bottom !important; Not working goddamit*/
-    z-index: 999;
-    background-color: rgba(255,255,255,1);
-}
-
-.node-overlay > button {
-    opacity: 0.70;
-    height: 3em;
-    width: 3em;
-    border-radius: 1em;
-    font-size: 1.5em;
-    vertical-align: bottom;
-}
-
-.node-overlay > button:hover {
-    opacity: 1;
-    background-color: rgba(32,33,36,0.07);
-    transition: all 0.3s ease;
-}
-
-.node-obs {
-    height: 80px;
-}
-
-.node-obs button:hover {
-    opacity: 1;
-    transition: all 0.2s ease;
-}
-/*
-.node-obs button:hover[title="Start Recording"] { 
-    background-color: rgba(0, 255, 0, 0.6);
-}
-.node-obs button:hover[title="Stop Recording"] { 
-    background-color: rgba(255, 0, 0, 0.6);
-}
-.node-obs button:hover[title="Reset Source"] { 
-    background-color: rgba(0, 123, 255, 0.9);
-}
-.node-obs button:hover[title="Update"] { 
-    background-color: rgba(255, 255, 0, 0.8);
-} */
 
 /* Loading Animation */
 .spinner {
