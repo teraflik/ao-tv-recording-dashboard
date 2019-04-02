@@ -19,8 +19,17 @@ Vue.component('node', {
         @mouseover="hover = true"
         @mouseleave="hover = false">
         <td class="node-id">{{ id }}</td>
-        <td class="node-ip_address">{{ ip_address }}</td>
-        <td class="node-channel">{{ channel_id }} - {{ label }}</td>
+        <td class="node-channel">
+            <div class="h-100">
+                <div class="pt-2">
+                    <strong>{{ label }}</strong>
+                    <sup><span class="badge badge-secondary">{{ channel_id }}</span></sup>
+                </div>
+                <div class="pt-2">
+                    <code>[{{ ip_address }}]</code>
+                </div>
+            </div>
+        </td>
         <td v-if="ping" class="node-obs text-center">
             <obs
             :id=id></obs>
@@ -32,7 +41,6 @@ Vue.component('node', {
         </td>
         <td v-if="ping" class="node-temp text-center">
             <netdata-temp
-            :id="id"
             :ip_address="ip_address"></netdata-temp>
         </td>
         <td v-if="ping" class="node-ram text-center">
@@ -71,7 +79,7 @@ Vue.component('netdata-cpu', {
             data-legend="no"
             data-dygraph-valuerange="[0, 100]"
             data-height="70px"
-            data-width="200px"
+            data-width="220px"
             data-after="-100"
             data-title=""
             data-units=""></div>`
@@ -184,13 +192,16 @@ Vue.component('cron', {
             if (this.cron == "no crontab for user" || this.cron == ""){}
             else {
                 var cronjob_list = this.cron.split('\n');
-                cronjob_list.forEach(function (cronjob, index){
+                cronjob_list.forEach(function (cronjob){
                     exp = cronjob.split(/\s+/).slice(0,5).join(" ")
                     job = cronjob.split(/\s+/).slice(5).join(" ")
-                    self.pretty_cron.push({
-                        'exp': cronstrue.toString(exp), 
-                        'job': job
-                    })
+                    try {
+                        self.pretty_cron.push({
+                            'exp': cronstrue.toString(exp), 
+                            'job': job
+                        })
+                    }
+                    catch{ /*Don't push the string if it cannot be parsed by cronstrue*/ }
                 })
             }
         }

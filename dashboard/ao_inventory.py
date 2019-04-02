@@ -58,7 +58,7 @@ class AOInventoryManager(InventoryManager):
     
     def get_channel_id(self, host, username, password):
         try:
-            return self.get_file_contents(host, username, password, "/home/user/scripts/channel_value.txt")
+            return self.get_file_contents(host, username, password, "/home/user/Desktop/TV/scripts/channel_value.txt")
         except (ConnectionError, OSError) as e:
             return str(e)
 
