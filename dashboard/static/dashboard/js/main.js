@@ -23,7 +23,7 @@ Vue.component('node', {
             <div class="h-100">
                 <div class="pt-2">
                     <strong>{{ label }}</strong>
-                    <sup><span class="badge badge-secondary">{{ channel_id }}</span></sup>
+                    <sup><i class="fas fa-info-circle" :title="channel_id"></i></sup>
                 </div>
                 <div class="pt-2">
                     <code>[{{ ip_address }}]</code>
