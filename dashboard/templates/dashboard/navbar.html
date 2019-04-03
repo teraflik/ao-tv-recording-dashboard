@@ -2,11 +2,15 @@
     
     <ul class="navbar-nav mr-auto">
         {% if user.is_authenticated %}
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'graph-recording' %}">GraphUI</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'ui-home' %}">TableUI</a>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Timelines
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item" href="{% url 'graph-recording' %}">All Recordings</a>
+                <a class="dropdown-item" href="{% url 'graph-blank' %}">Blank Frames</a>
+                <a class="dropdown-item" href="{% url 'graph-filter-recording-tracking' %}">Filtered Recordings</a>
+            </div>
         </li>
         
         <li class="nav-item dropdown">
