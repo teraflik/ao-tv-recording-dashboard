@@ -1,0 +1,33 @@
+<nav class="navbar navbar-expand-md navbar-dark bg-primary">
+
+    <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'graph-recording' %}">GraphUI</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'ui-home' %}">TableUI</a>
+        </li>
+        <li class="nav-item active">
+            <a class="nav-link" href="{% url 'dashboard:index' %}">Monitoring</a>
+        </li>
+    </ul>
+
+    <div class="mx-auto order-0">
+        <a class="navbar-brand ao-logo" href="{% url 'graph-recording' %}">AthenasOwl</a>
+    </div>
+
+    <ul class="navbar-nav ml-auto">
+        {% if user.is_authenticated %}
+            <li class="nav-item" id="register">
+                <a class="nav-link" href="https://docs.google.com/spreadsheets/d/1EgZMWRG4VsuaT7bPOKtgCWLF_sNdv4Qt_JAOEe977Mg/edit?ts=5c835c30#gid=92650668">Taggers Sheet</a>
+            </li>
+            <li class="nav-item" id="register">
+                <a class="nav-link" href="{% url 'logout' %}">Log-Out</a>
+            </li>
+        {% else %}
+            <li class="nav-item" id="register">
+                <a class="nav-link" href="{% url 'login' %}">Log-In</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
