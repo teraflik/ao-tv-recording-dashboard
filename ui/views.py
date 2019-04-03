@@ -25,7 +25,7 @@ channels = models.ChannelInfo.objects.values('channel_name', 'channel_value')
 
 # EMAIL CLOUD FUNCTION URL
 EMAIL_CLOUD_FUNCTION_URL = 'https://us-central1-athenas-owl-dev.cloudfunctions.net/cf-send-attach-mail-generic'
-
+AUTH_KEY = 'AOPlatform'
 
 # Create your views here.
 @login_required
@@ -71,6 +71,9 @@ def send_mail(request):
         recipient_mail = request.POST.get('recipient_mail')
         filename = request.POST.get('filename')
         datatable_export = json.loads(request.POST.get('datatable_export'))
+        
+        report_type = request.POST.get('report_type')
+        dates = request.POST.get('dates')
 
         # write the data to csv
         with open(filename, mode='w') as csv_file:
@@ -83,7 +86,9 @@ def send_mail(request):
                 writer.writerow(row)
 
         # send the csv via mail
-        fields ={'file': (filename, open(filename, 'rb')), 'receiver': recipient_mail, 'subject': 'Blank Frames Report', 'message': 'Report', 'key': 'AOPlatform'}
+        email_message = utils.render_from_file('templates/ui/email_content.html', {'report_type': report_type, 'dates': dates})
+        fields ={'file': (filename, open(filename, 'rb')), 'receiver': recipient_mail, 'subject': 'Blank Frames Report', 'message': email_message, 'key': AUTH_KEY}
+        
         data = MultipartEncoder(fields = fields)
         response = requests.post('https://us-central1-athenas-owl-dev.cloudfunctions.net/cf-send-attach-mail-generic', data=data, headers={'Content-Type': data.content_type})
         

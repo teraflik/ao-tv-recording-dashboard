@@ -1,3 +1,4 @@
+import jinja2
 from django.urls import resolve
 
 def make_table_dict(request, channels):
@@ -67,3 +68,11 @@ def make_table_html(table_dict):
     table_html = '<table class="table table-bordered table-hover" style="font-size: 12px">' + table_head_html + table_body_html + '</table>'
     
     return table_html
+
+def render_from_file(template_file, arguments):
+    with open(template_file) as tf:
+        template_string = tf.read()
+    
+    jinja2_template = jinja2.Template(template_string, trim_blocks=True)
+    message_string = jinja2_template.render(arguments)
+    return message_string
