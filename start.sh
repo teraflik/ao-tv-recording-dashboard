@@ -104,6 +104,9 @@ cat > /etc/apache2/sites-available/ao-tv-recording-db-ui.conf << EOF
 </VirtualHost>
 EOF
 
+mkdir ${HOME}/.ansible
+sudo printf "[defaults]\ndefault_local_tmp=${HOME}/.ansible\nlocal_tmp=${HOME}/.ansible/tmp\n" > /etc/ansible/ansible.cfg
+
 # create a symlink from sites-available/ao-tv... .conf to sites-enables/ao-tv... .conf
 sudo ln -s /etc/apache2/sites-available/ao-tv-recording-db-ui.conf /etc/apache2/sites-enabled/ao-tv-recording-db-ui.conf
 # remove the previous symlink in sites-enabled
