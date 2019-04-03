@@ -651,19 +651,27 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
         var startClipNumber = getClipNumber(hh_mm_ss(startRecordingTime));
         var stopClipNumber = getClipNumber(hh_mm_ss(stopRecordingTime));
 
-        console.log("startClipNumber is........ " + startClipNumber);
+        // console.log("startClipNumber is........ " + startClipNumber);
 
         var safeTyMargin = 2;
 
         //  2. loop through the clipNumbers
         for (var j = startClipNumber; j <= stopClipNumber; j++) {
-
+            
             //  3. check if entry corresponding to that clipNumber is present in the mapping - clipNoToProcessingEntry
             if (!clipNoToProcessingEntry[j]) {
-                console.log("clipNumber " + j + " is missing.");
-
+            
                 //  4. if not, create a dummy entry.
                 var [startTime, endTime] = clipNoToInterval(inputDate, j);
+                
+                if (j == startClipNumber) {
+                    startTime = startRecordingTime;
+                }
+
+                if (j == stopClipNumber) {
+                    endTime = stopRecordingTime;
+                }
+                
                 var startTimeString = hh_mm_ss(startTime);
                 var endTimeString = hh_mm_ss(endTime);
 
@@ -683,11 +691,13 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
                 startTime.setMinutes(startTime.getMinutes() + safeTyMargin);
                 endTime.setMinutes(endTime.getMinutes() - safeTyMargin);
 
-                dummyEntries.push([category, label, tooltip, color, startTime, endTime]);
+                if (startTime < endTime) {
+                    dummyEntries.push([category, label, tooltip, color, startTime, endTime]);                        
+                }
             }
         }
 
-        console.log("stopClipNumber is........ " + stopClipNumber);
+        // console.log("stopClipNumber is........ " + stopClipNumber);
     }
 
     return dummyEntries;
