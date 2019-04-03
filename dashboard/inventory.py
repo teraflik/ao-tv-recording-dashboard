@@ -14,7 +14,7 @@ from ansible.parsing.dataloader import DataLoader
 from ansible.vars.manager import VariableManager
 
 
-logging.basicConfig(level=logging.ERROR, filename="dashboard.log", format='%(asctime)s | %(levelname)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(level=logging.ERROR, filename="/tmp/dashboard.log", format='%(asctime)s | %(levelname)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 class AnsibleInventoryFile():
     """
