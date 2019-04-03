@@ -500,8 +500,8 @@ function getCurrentRecordingEntries(formattedData) {
 
 function removeDuplicateObjects(objectArray) {
     
-    console.log("objectArray is ......");
-    console.log(objectArray);
+    // console.log("objectArray is ......");
+    // console.log(objectArray);
 
     var uniqueStringArray = new Set(objectArray.map(e => JSON.stringify(e)));
     var uniqueObjectArray = Array.from(uniqueStringArray).map(e => JSON.parse(e));
@@ -721,7 +721,7 @@ function populateTimeline(timeline, endpoint, index) {
     var path = url.pathname.replace('recording', 'blank');
     var searchParams = url.search;
     var blankEndPoint = new URL(protocol + "//" + host + path + searchParams);
-    console.log("blankEndPoint is .... " + blankEndPoint.href);
+    // console.log("blankEndPoint is .... " + blankEndPoint.href);
 
     //  3. get the endpoint for filter_recording_tracking_table
     var url = document.createElement('a');
@@ -733,7 +733,7 @@ function populateTimeline(timeline, endpoint, index) {
     var filterRecordingTrackingEndPoint = new URL(protocol + "//" + host + path + searchParams);
     filterRecordingTrackingEndPoint.searchParams.delete("device_id");
 
-    console.log("filterRecordingTrackingEndPoint is .... " + filterRecordingTrackingEndPoint.href);
+    // console.log("filterRecordingTrackingEndPoint is .... " + filterRecordingTrackingEndPoint.href);
 
     $.when(
 
@@ -760,6 +760,9 @@ function populateTimeline(timeline, endpoint, index) {
 
     ).then(function() {
 
+        console.log("Endpoint is ...");
+        console.log(endpoint.href);
+
         var recordingRawData = globalStore[endpoint.href]['recordingRawData'];
         var blankRawData = globalStore[endpoint.href]['blankRawData'];
         // var filterRecordingTrackingRawData = globalStore[endpoint.href]['filterRecordingTrackingRawData'];
@@ -770,8 +773,8 @@ function populateTimeline(timeline, endpoint, index) {
         //  2. prepare data in the format to be feeded to the visualisation library.
         var formattedData = prepareDataForGoogleChartTimeline(recordingRawData, endpoint);
 
-        console.log("formattedData is.......");
-        console.log(formattedData);
+        // console.log("formattedData is.......");
+        // console.log(formattedData);
 
         //  2.1 filter out recordingEntries and processingEntries
         var startStopEntries = recordingRawData.filter(function(entry) {
@@ -785,21 +788,22 @@ function populateTimeline(timeline, endpoint, index) {
             return 0;
         });
 
-        console.log("startStopEntries sorted are.........");
-        console.log(startStopEntries);
-
         //  2.3 filter the processing entries
         var processingEntries = formattedData.filter(function(dataTableEntry) {
             return dataTableEntry[dataTableEnum.category] == 'Processing';
         });
 
-        console.log("processingEntries are.........");
-        console.log(processingEntries);
+        // console.log("processingEntries are.........");
+        // console.log(processingEntries);
 
         //  2.4 create a mapping of clipNumber --> processingEntry
         var clipNoToProcessingEntry = makeClipNoToProcessingEntry(processingEntries);
-        console.log("clipNoToProcessingEntry is........");
-        console.log(clipNoToProcessingEntry);
+        // console.log("clipNoToProcessingEntry is........");
+        // console.log(clipNoToProcessingEntry);
+
+
+        console.log("startStopEntries sorted are.........");
+        console.log(startStopEntries);
 
         //  2.5 make recording slots
         var recordingSlots = createRecordingSlots(startStopEntries, endpoint);
@@ -808,6 +812,7 @@ function populateTimeline(timeline, endpoint, index) {
 
 
         var dummyEntries = getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint);
+
         console.log("dummyEntries are.......");
         console.log(dummyEntries);
 
@@ -828,8 +833,8 @@ function populateTimeline(timeline, endpoint, index) {
 
         var totalFormattedData = formattedData.concat(dummyEntries);
 
-        // console.log("totalFormattedData is ....");
-        // console.log(totalFormattedData);
+        console.log("totalFormattedData is ....");
+        console.log(totalFormattedData);
 
         //  3. create dataTable object
         var dataTable = initializeDataTable();
@@ -923,7 +928,7 @@ function getBaseEndPoint() {
     for (var i = 0; i < parameters.length; i++) {
         baseEndPoint.searchParams.delete(parameters[i]);
     }
-    console.log("baseEndPoint is :-> " + baseEndPoint.href);
+    // console.log("baseEndPoint is :-> " + baseEndPoint.href);
     return baseEndPoint;
 }
 
@@ -1117,38 +1122,11 @@ google.charts.setOnLoadCallback(function() {
 
         //  if date is TODAY, then refresh every 5mins.
         if (baseEndPoint.searchParams.get('date') == yyyy_mm_dd(new Date())) {
-            console.log("refreshing every 5mins");
+            // console.log("refreshing every 5mins");
             setInterval(populateTimeline, 300000, timelines[i], specificEndPoints[i], i);
         }
         else {
-            console.log("NOT refreshing every 5mins");
+            // console.log("NOT refreshing every 5mins");
         }
     }
 });
-
-function getJSONSynchronous(endpoint) {
-    var data;
-    $.ajax({
-        type: 'GET',
-        url: endpoint,
-        async: false,
-        dataType: 'json',
-        success: function(response){
-            data = response;
-        }
-    });
-    return data;
-}
-
-function jsonIndexer(jsonArray, indexAttribute) {
-    
-    var index = {};
-    
-    for (var i = 0; i < jsonArray.length; i++) {
-        var entry = jsonArray[i];
-        var indexAttributeValue = entry[indexAttribute];
-        index[indexAttributeValue] = entry;
-    }
-
-    return index;
-}
