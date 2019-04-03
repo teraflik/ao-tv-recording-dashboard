@@ -221,7 +221,7 @@ $(document).ready(function(){
                 // //  4. give more width to date column for proper formatting (NOT WORKING RIGHT NOW)
                 // columnDefs: [
                 //     { width: "500px", targets: 0 }
-                ],
+                // ],
             });
             globalTable = table;
         }
