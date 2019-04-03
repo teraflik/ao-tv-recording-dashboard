@@ -1,0 +1,152 @@
+{% extends 'ui/base.html' %}
+{% load static %}
+
+{% block head %}
+    <!-- For Google Charts -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <link rel="stylesheet" href="{% static "graph_ui/css/google-chart-timeline-main.css" %}"/>
+    
+    <style>
+        .channel {
+          height: 100%;
+          width: 100%;
+        }
+      
+        .channel-metadata {
+          float:left;
+          display:inline-block;
+          width: 100px;
+          height: 100%;
+        }
+      
+        .channel-timeline {
+            float:left;
+            display:inline-block;
+            width: -moz-calc(100% - 100px);
+            width: -webkit-calc(100% - 100px);
+            width: calc(100% - 100px);
+            height: 100%;
+          }
+
+        hr { 
+            display: block;
+            margin-before: 0.5em;
+            margin-after: 0.5em;
+            margin-start: auto;
+            margin-end: auto;
+            overflow: hidden;
+            border-style: inset;
+            border-width: 5px;
+            background-color: black;
+        }
+        /* body {
+          /* display: flex; */
+          justify-content: center;
+          align-items: center;
+          margin: 0 auto;
+        } */
+        main {
+          height: 100%;
+          width: 100%;
+          margin: 5%;
+          /* display: inline-block; */
+          vertical-align: top
+        }
+        @media (min-width: 1400px){
+          .container {
+            max-width: 1350px;
+          }
+        }
+      </style>
+{% endblock %}
+
+
+{% block content %}
+
+      <center>
+        <h2> Filter Recording Timeline UI </h2>
+      </center>
+      <form class="form-inline">
+          <div class="form-group mx-sm-3 mb-2">
+            <input type="date" class="form-control" id="date" name='date' placeholder="Password">
+          </div>
+          <button type="submit" class="btn btn-primary mb-2">Submit</button>
+      </form>
+    
+    <!-- Summary Color Labels -->
+    <!-- <hr>
+    <h4> Summary Color Labels</h4>
+    <table class="table table-bordered table-hover" id="summary-color-labels" style="font-size: 12px">
+      <tbody>
+        <tr>
+          
+        </tr>
+      </tbody>
+    </table> -->
+    
+    <!-- Summary Table -->
+    <!-- <table class="table table-bordered table-hover" id="summary" style="font-size: 12px">
+      <tbody>
+        <tr>
+          <th>Channel Name:</th>
+          {% for channel in channels %}
+            <td>{{ channel.channel_name }}</td>
+          {% endfor %}
+        </tr>
+        
+        <tr>
+          <th>Status:</th>
+          {% for channel in channels %}
+            <td id="s_filter_{{channel.channel_value}}" style="font-size: 15px"></td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table> -->
+
+    <br>
+    <hr>
+    <!-- Timeline Color Labels-->
+    <h4> Timeline Color Labels</h4>
+    <table class="table table-bordered table-hover" id="timeline-color-labels" style="font-size: 12px">
+      <tbody>
+        <tr>
+          
+        </tr>
+      </tbody>
+    </table>
+  
+
+    <!-- Timelines -->
+    <div id="main">
+      {% for channel in channels %}
+            <div>
+              <hr>
+              <div class="channel" id="{{ channel.channel_value }}">
+                <div class="channel-metadata">
+                    <center>
+                        <img src='{{ channel.logo_url }}' style="height: 50%; width: 50%">
+                        <br>
+                        <strong>{{channel.channel_name}}</strong>
+                    </center>
+                </div>
+
+                <div class="channel-timeline">
+                    <a id="filter_{{channel.channel_value}}_blank" href="#"></a>
+                    <div id="filter_{{channel.channel_value}}"></div>
+                </div>
+            </div>
+            </div>
+      {% endfor %}
+    </div>
+{% endblock %}
+
+
+{% block footer %}
+  <script type="text/javascript">
+  var channelValues = [];
+  {% for channel in channels %}
+    channelValues.push({{channel.channel_value}});
+  {% endfor %}
+  </script>
+  <script src="{% static "graph_ui/js/filter_recording_tracking.js" %}"></script>
+{% endblock %}
