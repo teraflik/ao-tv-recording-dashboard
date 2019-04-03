@@ -250,7 +250,9 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
             // console.log(entry['clip_number'] == getClipNumber(startTimeString));
         }
 
-        dataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+        if (startTimeTimeline < endTimeTimeline) {
+            dataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+        }
     }
 
     //  3. return it.
