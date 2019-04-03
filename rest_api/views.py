@@ -30,9 +30,13 @@ class FilterRecordingTrackingView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
+
+        # get the input params
         input_date = request.GET.get('date') or str(datetime.datetime.date(datetime.datetime.now()))
         channel_values = request.GET.getlist('channel_values') or list(map(str, ChannelInfo.objects.values_list('channel_value', flat=True)))
+        
         yyyymmdd_date = "".join(input_date.split("-"))
+        
         filter_recording_trackings = FilterRecordingTracking.objects.using('barc-prod').filter(request_id__startswith = yyyymmdd_date, channel_value__in = [int(x) for x in channel_values])
         serializer = FilterRecordingTrackingSerializer(filter_recording_trackings, many=True)
         return Response(serializer.data)
@@ -83,9 +87,13 @@ class RecordingView(APIView):
         start_datetime = input_timezone.localize(datetime.datetime.strptime(input_date + " " + input_start_time, "%Y-%m-%d %H:%M:%S.%f"))
         finish_datetime = input_timezone.localize(datetime.datetime.strptime(input_date + " " + input_finish_time, "%Y-%m-%d %H:%M:%S.%f"))
 
-        # keep 1 min buffer for starting and ending times.
-        start_datetime = start_datetime - datetime.timedelta(minutes=1)
-        finish_datetime = finish_datetime + datetime.timedelta(minutes=1)
+        # # keep 1 min buffer for starting and ending times.
+        # start_datetime = start_datetime - datetime.timedelta(minutes=1)
+        # finish_datetime = finish_datetime + datetime.timedelta(minutes=1)
+
+
+        # start_datetime = start_datetime + datetime.timedelta(minutes=1)
+        # finish_datetime = finish_datetime + datetime.timedelta(minutes=1)
         
         # get the corresponding IST date and time values in string format 
         start_date_ist_str = start_datetime.astimezone(ist_timezone).strftime("%Y%m%d")
@@ -156,9 +164,9 @@ class BlankView(APIView):
         start_datetime = input_timezone.localize(datetime.datetime.strptime(input_date + " " + input_start_time, "%Y-%m-%d %H:%M:%S.%f"))
         finish_datetime = input_timezone.localize(datetime.datetime.strptime(input_date + " " + input_finish_time, "%Y-%m-%d %H:%M:%S.%f"))
 
-        # keep 1 min buffer for starting and ending times.
-        start_datetime = start_datetime - datetime.timedelta(minutes=1)
-        finish_datetime = finish_datetime + datetime.timedelta(minutes=1)
+        # # keep 1 min buffer for starting and ending times.
+        # start_datetime = start_datetime - datetime.timedelta(minutes=1)
+        # finish_datetime = finish_datetime + datetime.timedelta(minutes=1)
         
         # get the corresponding IST date and time values in string format.
         start_date_ist_str = start_datetime.astimezone(ist_timezone).strftime("%Y%m%d")
