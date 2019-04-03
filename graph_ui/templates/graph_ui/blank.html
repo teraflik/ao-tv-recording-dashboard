@@ -6,6 +6,7 @@
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <link rel="stylesheet" href="{% static "graph_ui/css/google-chart-timeline-main.css" %}"/>
     <style>
+      
         .channel {
           height: 100%;
           width: 100%;
@@ -86,30 +87,32 @@
       
     
     <!-- Summary Table -->
-    <table class="table table-bordered table-hover" id="summary" style="font-size: 12px">
-      <tbody>
-        <tr>
-          <th>Channel Name:</th>
-          {% for channel in channels %}
-            <td>{{ channel.channel_name }}</td>
-          {% endfor %}
-        </tr>
-        
-        <tr>
-          <th>Device A:</th>
-          {% for channel in channels %}
-            <td id="s_a_{{channel.channel_value}}" style="font-size: 15px"></td>
-          {% endfor %}
-        </tr>
-        
-        <tr>
-          <th>Device B:</th>
-          {% for channel in channels %}
-            <td id="s_b_{{channel.channel_value}}" style="font-size: 15px"></td>
-          {% endfor %}
-        </tr>
-      </tbody>
-    </table>
+    <div style="overflow: auto">
+      <table class="table table-bordered table-hover" id="summary" style="font-size: 12px">
+        <tbody>
+          <tr>
+            <th>Channel Name:</th>
+            {% for channel in channels %}
+              <td>{{ channel.channel_name }}</td>
+            {% endfor %}
+          </tr>
+          
+          <tr>
+            <th>Device A:</th>
+            {% for channel in channels %}
+              <td id="s_a_{{channel.channel_value}}" style="font-size: 15px"></td>
+            {% endfor %}
+          </tr>
+          
+          <tr>
+            <th>Device B:</th>
+            {% for channel in channels %}
+              <td id="s_b_{{channel.channel_value}}" style="font-size: 15px"></td>
+            {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
 
     <br>
