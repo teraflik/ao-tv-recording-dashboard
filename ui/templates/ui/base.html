@@ -12,94 +12,19 @@
     
     <!-- For jQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://athenasowl.tv/favicon.png">
 
     {% block head %}
     {% endblock %}
     
     <link rel="stylesheet" href="{% static "ui/css/main.css" %}"/>
-	<title>UI Test Page</title>
+	<title>TV Recording Dashboard | AthenasOwl</title>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-md navbar-dark bg-primary">
-
-        <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="{% url 'graph-recording' %}">GraphUI</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'ui-home' %}">TableUI</a>
-                </li>
-
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Blank Frames Report
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="{% url 'ui-daily-report-home' %}">Daily Report</a>
-                        <a class="dropdown-item" href="{% url 'ui-weekly-report-home' %}">Weekly Report</a>
-                    </div>
-                </li>
-
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="#">Link</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'dashboard:index' %}">Monitoring</a>
-                </li>
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="#">Link</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Link</a>
-                </li> -->
-            </ul>
-        </div>
-            
-        <!-- <ul class="navbar-nav">
-            <li class="nav-item active"><a class="nav-link" href="#">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Technology</a></li>
-
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Resources
-                </a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <a class="dropdown-item" href="#">Blog</a>
-                    <a class="dropdown-item" href="#">Whitepaper</a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#">Newscast</a>
-                </div>
-            </li>
-        </ul> -->
-        
-        <div class="mx-auto order-0">
-            <a class="navbar-brand mx-auto ao-logo" href="{% url 'graph-recording' %}">AthenasOwl</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        </div>
-        
-    
-        <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
-            <ul class="navbar-nav ml-auto">
-                {% if user.is_authenticated %}
-                    <li class="nav-item" id="register">
-                        <a class="nav-link" href="https://docs.google.com/spreadsheets/d/1EgZMWRG4VsuaT7bPOKtgCWLF_sNdv4Qt_JAOEe977Mg/edit?ts=5c835c30#gid=92650668">Taggers Sheet</a>
-                    </li>
-                    <li class="nav-item" id="register">
-                        <a class="nav-link" href="{% url 'logout' %}">Log-Out</a>
-                    </li>
-                {% else %}
-                    <li class="nav-item" id="register">
-                        <a class="nav-link" href="{% url 'login' %}">Log-In</a>
-                    </li>
-                {% endif %}
-            </ul>
-        </div>
-    
-    </nav>
+    {% include 'dashboard/navbar.html' %}
 	<main class="container">
             <ul class="nav nav-pills nav-fill my-3">
                 {% for model in models %}
