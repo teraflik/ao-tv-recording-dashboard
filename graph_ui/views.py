@@ -12,3 +12,7 @@ def recording(request):
 @login_required
 def blank(request):
     return render(request, 'graph_ui/blank.html', {'channels': channels})
+
+@login_required
+def filter_recording_tracking(request):
+    return render(request, 'graph_ui/filter_recording_tracking.html', {'channels': channels})
