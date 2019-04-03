@@ -129,7 +129,9 @@ function sendMailHandler() {
     var dataToSend = {
     'recipient_mail': recipientMail, 
     'datatable_export': JSON.stringify(dataTableExport),
-    'filename': date + '_daily_report.csv'
+    'filename': date + '_daily_report.csv',
+    'report_type' : 'Daily',
+    'dates' : date
     };
 
 
