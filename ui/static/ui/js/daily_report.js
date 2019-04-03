@@ -153,7 +153,7 @@ $(document).ready(function(){
     var date = new URL(document.URL).searchParams.get('date');
 
     //  2. insert inProgress HTML to page and wait for 200ms (for the inProgressHTML to render properly)
-    insertInProgressHTML("#example", 500).then(function(response) {
+    insertInProgressHTML("#example", 2500).then(function(response) {
         
         //  3. Get Daily Report data.
         var data = generateDailyReport(date)['filteredFormattedReportData'];
@@ -181,14 +181,21 @@ $(document).ready(function(){
                 columns.push({"data": columnNames[i]});
             }
 
+            //  define filename of the downloaded CSV.
+            var csvFileName = date + '_daily_report';
+
             var table =  $('#example').DataTable({
 
                 //  1. buttons configuration
                 dom: 'Bfrtip',
                 buttons: [
-                        'csv',
                         {
-                            text: 'Send Mail',
+                            extend: 'csv',
+                            filename: csvFileName,
+                            text: 'Download CSV',
+                        },
+                        {
+                            text: 'Mail CSV',
                             action: function ( e, dt, node, config ) {
                                 $("#myModal").modal("show");
                             }

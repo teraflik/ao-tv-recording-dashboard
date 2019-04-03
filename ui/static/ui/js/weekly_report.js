@@ -155,7 +155,7 @@ $(document).ready(function(){
 
 
     //  2. insert inProgress HTML to page and wait for 200ms (for the inProgressHTML to render properly)
-    insertInProgressHTML("#example", 500).then(function(response) {
+    insertInProgressHTML("#example", 2500).then(function(response) {
         
         //  3. Get Daily Report data.
         var data = generateWeeklyReport(startDate, endDate);
@@ -188,6 +188,9 @@ $(document).ready(function(){
                 }
             }
 
+            //  define filename of the downloaded CSV.
+            var csvFileName = startDate + '_' + endDate + 'weekly_report';
+
             var table =  $('#example').DataTable({
                 
                 //  0. enable horizontal scrolling (to prevent overflow)
@@ -196,9 +199,13 @@ $(document).ready(function(){
                 //  1. buttons configuration
                 dom: 'Bfrtip',
                 buttons: [
-                        'csv',
                         {
-                            text: 'Send Mail',
+                            extend: 'csv',
+                            filename: csvFileName,
+                            text: 'Download CSV',
+                        },
+                        {
+                            text: 'Mail CSV',
                             action: function ( e, dt, node, config ) {
                                 $("#myModal").modal("show");
                             }
