@@ -529,7 +529,7 @@ function updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint) {
             var entry = uniqueBlankRawData[i];
             totalBlankSeconds += parseFloat(entry['invalid_frame_to']) - parseFloat(entry['invalid_frame_from']);
         }
-        DOMElement.innerHTML = "" + Math.round(totalBlankSeconds / 60) + " minutes of Blank Frames.";
+        DOMElement.innerHTML = "" + (totalBlankSeconds / 60).toFixed(2) + " minutes of Blank Frames.";
         DOMElement.setAttribute('style', 'color: red');
     }
 }

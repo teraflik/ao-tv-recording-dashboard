@@ -227,6 +227,14 @@ function prepareRecordingSlots(startStopEntries, blankDateRangeEntries, endpoint
 }
 
 function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpoint) {
+    
+    console.log("Endpoint is :- " + endpoint.href);
+
+    console.log("blankRawData is....");
+    console.log(blankRawData);
+
+    console.log("recordingRawData is....");
+    console.log(recordingRawData);
 
     var date = endpoint.searchParams.get('date');
     var startDate = new Date(date + " 00:00:00");
@@ -296,8 +304,8 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
     uniqueBlankRawData = removeDuplicateObjects(blankRawData);
 
     //  7. convert each entry of uniqueBlankRawData into blankDateRangeEntries
-    console.log("uniqueBlankRawData is....");
-    console.log(uniqueBlankRawData);
+    // console.log("uniqueBlankRawData is....");
+    // console.log(uniqueBlankRawData);
 
     blankDateRangeEntries = createBlankDateRangeEntries(uniqueBlankRawData);
 
@@ -499,7 +507,7 @@ function updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint) {
             var entry = uniqueBlankRawData[i];
             totalBlankSeconds += parseFloat(entry['invalid_frame_to']) - parseFloat(entry['invalid_frame_from']);
         }
-        DOMElement.innerHTML = "" + Math.round(totalBlankSeconds / 60) + " minutes of Blank Frames.";
+        DOMElement.innerHTML = "" + (totalBlankSeconds / 60).toFixed(2) + " minutes of Blank Frames.";
         DOMElement.setAttribute('style', 'color: red');
     }
 }
