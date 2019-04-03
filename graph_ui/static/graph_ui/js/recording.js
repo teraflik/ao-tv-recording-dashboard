@@ -570,17 +570,27 @@ function createRecordingSlots(startStopEntries, endpoint) {
         var entry = {};
         var startRecordingDateTime;
         var stopRecordingDateTime;
+
+        //  1. if the first entry is stop recording,
+        //     and corresponding clipNumber is 1, then skip it.
+
         //  1. if the first entry is stop recording,
         //     then the slot will be from 
         //     dayStart - stopRecording
         if (startStopEntries[i]['stage_message'] == 'Stop Recording') {
+
             startRecordingDateTime = new Date(date + " 00:00:00");
             stopRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
             
-            //  jugaad: to prevent entering the next clipNumber
-            stopRecordingDateTime.setMinutes(stopRecordingDateTime.getMinutes() - 2);
-
-            i++;
+            if (getClipNumber(hh_mm_ss(stopRecordingDateTime)) == 1) {
+                i++;
+                continue;
+            }
+            else {
+                //  jugaad: to prevent entering the next clipNumber
+                stopRecordingDateTime.setMinutes(stopRecordingDateTime.getMinutes() - 2);
+                i++;
+            }
         }
         //  2. if this entry is the last entry and its start recording,
         else if (i == startStopEntries.length - 1) {
