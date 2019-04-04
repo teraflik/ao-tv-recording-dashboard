@@ -80,10 +80,10 @@ def send_mail(request):
         report_type = request.POST.get('report_type')
         dates = request.POST.get('dates')
 
-        filename = '/tmp/' + filename
+        filepath = '/tmp/' + filename
 
         # write the data to csv
-        with open(filename, mode='w') as csv_file:
+        with open(filepath, mode='w') as csv_file:
             fieldnames = datatable_export['header']
             writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
@@ -94,7 +94,7 @@ def send_mail(request):
 
         # send the csv via mail
         email_message = loader.render_to_string('ui/email_content.html', {'report_type': report_type, 'dates': dates}, using=None)
-        fields ={'file': (filename, open(filename, 'rb')), 'receiver': recipient_mail, 'subject': 'Blank Frames Report', 'message': email_message, 'key': AUTH_KEY}
+        fields ={'file': (filename, open(filepath, 'rb')), 'receiver': recipient_mail, 'subject': 'Blank Frames Report', 'message': email_message, 'key': AUTH_KEY}
         
         data = MultipartEncoder(fields = fields)
         response = requests.post('https://us-central1-athenas-owl-dev.cloudfunctions.net/cf-send-attach-mail-generic', data=data, headers={'Content-Type': data.content_type})
