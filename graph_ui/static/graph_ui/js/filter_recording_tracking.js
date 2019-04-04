@@ -211,14 +211,6 @@ function prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, endp
     var endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 1);
 
-    //  if no data recieved
-    if (!filterRawData || filterRawData.length == 0) {
-        return [['Empty', '', 'No filter recordings available', stageToColor['empty'], startDate, endDate]];
-    }
-
-    
-    var processingDataTableContents = prepareProcessingEntries(filterRawData, endpoint);
-
     //  extract startStopRawData for device_id = 'a'
     var startStopRawData = recordingRawData.filter(function(entry) {
         return ((entry['device_id'] == 'a') && (entry['stage_number'] == 1 || entry['stage_number'] == 6));
@@ -230,7 +222,17 @@ function prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, endp
         });
     }
 
+    console.log("startStopRawData is ....");
+    console.log(startStopRawData);
+
+    //  if no data recieved
+    if (!startStopRawData || startStopRawData.length == 0) {
+        return [['Empty', '', 'No filter recordings available', stageToColor['empty'], startDate, endDate]];
+    }
+
     var startStopDataTableContents = prepareStartStopEntries(startStopRawData, endpoint);
+    
+    var processingDataTableContents = prepareProcessingEntries(filterRawData, endpoint);
 
     var dataTableContents = startStopDataTableContents.concat(processingDataTableContents);
 
@@ -478,8 +480,8 @@ function getCurrentRecordingEntries(formattedData) {
 
 function removeDuplicateObjects(objectArray) {
     
-    console.log("objectArray is ......");
-    console.log(objectArray);
+    // console.log("objectArray is ......");
+    // console.log(objectArray);
 
     var uniqueStringArray = new Set(objectArray.map(e => JSON.stringify(e)));
     var uniqueObjectArray = Array.from(uniqueStringArray).map(e => JSON.parse(e));
@@ -619,7 +621,7 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
         var startClipNumber = getClipNumber(hh_mm_ss(startRecordingTime));
         var stopClipNumber = getClipNumber(hh_mm_ss(stopRecordingTime));
 
-        console.log("startClipNumber is........ " + startClipNumber);
+        // console.log("startClipNumber is........ " + startClipNumber);
 
         var safeTyMargin = 2;
 
@@ -628,7 +630,7 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
 
             //  3. check if entry corresponding to that clipNumber is present in the mapping - clipNoToProcessingEntry
             if (!clipNoToProcessingEntry[j]) {
-                console.log("clipNumber " + j + " is missing.");
+                // console.log("clipNumber " + j + " is missing.");
 
                 //  4. if not, create a dummy entry.
                 var [startTime, endTime] = clipNoToInterval(inputDate, j);
@@ -655,7 +657,7 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
             }
         }
 
-        console.log("stopClipNumber is........ " + stopClipNumber);
+        // console.log("stopClipNumber is........ " + stopClipNumber);
     }
 
     return dummyEntries;
@@ -673,7 +675,7 @@ function populateTimeline(timeline, endpoint, index) {
     var path = '/api/recording';
     var searchParams = url.search;
     var recordingEndPoint = new URL(protocol + "//" + host + path + searchParams);
-    console.log("recordingEndPoint is .... " + recordingEndPoint.href);
+    // console.log("recordingEndPoint is .... " + recordingEndPoint.href);
 
     $.when(
 
@@ -701,6 +703,8 @@ function populateTimeline(timeline, endpoint, index) {
 
     ).then(function() {
         // var blankRawData = globalStore[endpoint.href]['blankRawData'];
+
+        console.log("recordingEndPoint is .... " + recordingEndPoint.href);
         
         var filterRawData = globalStore[endpoint.href]['filterRawData'];
         var recordingRawData = globalStore[endpoint.href]['recordingRawData'];
@@ -1042,7 +1046,7 @@ google.charts.setOnLoadCallback(function() {
 
     //  debug: print the specificEndPoints array
     for (var i = 0; i < specificEndPoints.length; i++) {
-        console.log("specificEndpoint Number " + i + " is " + specificEndPoints[i].href);
+        // console.log("specificEndpoint Number " + i + " is " + specificEndPoints[i].href);
     }
 
     //  4. populate charts with periodic refreshing
