@@ -90,7 +90,7 @@ def send_mail(request):
                 writer.writerow(row)
 
         # send the csv via mail
-        email_message = utils.render_from_file('ui/templates/ui/email_content.html', {'report_type': report_type, 'dates': dates})
+        email_message = utils.render_from_file('templates/ui/email_content.html', {'report_type': report_type, 'dates': dates})
         fields ={'file': (filename, open(filename, 'rb')), 'receiver': recipient_mail, 'subject': 'Blank Frames Report', 'message': email_message, 'key': AUTH_KEY}
         
         data = MultipartEncoder(fields = fields)
