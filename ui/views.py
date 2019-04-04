@@ -80,6 +80,8 @@ def send_mail(request):
         report_type = request.POST.get('report_type')
         dates = request.POST.get('dates')
 
+        filename = '/tmp/' + filename
+
         # write the data to csv
         with open(filename, mode='w') as csv_file:
             fieldnames = datatable_export['header']
