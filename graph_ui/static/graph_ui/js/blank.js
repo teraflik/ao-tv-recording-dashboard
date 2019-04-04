@@ -19,9 +19,9 @@ var globalStore = {};
 var stageToColor = {
     "Start Recording":  'green',
     "Stop Recording":  'red',
-    "Normal Frame": 'grey',
+    "Normal Frame": 'blue',
     "Blank Frame": 'brown',
-    "Empty": "lightblue",
+    "Empty": "grey",
     // "Failed": "red"
 }
 
