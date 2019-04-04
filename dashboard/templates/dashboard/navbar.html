@@ -2,7 +2,7 @@
     
     <ul class="navbar-nav mr-auto">
         {% if user.is_authenticated %}
-        <li class="nav-item dropdown">
+        <li class="nav-item dropdown active">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Timelines
             </a>
@@ -13,7 +13,7 @@
             </div>
         </li>
         
-        <li class="nav-item dropdown">
+        <li class="nav-item dropdown active">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Blank Frames Report
             </a>
@@ -32,17 +32,17 @@
 
     <ul class="navbar-nav ml-auto">
         {% if user.is_authenticated %}
-            <li class="nav-item">
+            <li class="nav-item active">
                 <a class="nav-link" href="{% url 'dashboard:index' %}">Monitoring</a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item active">
                 <a class="nav-link" href="https://docs.google.com/spreadsheets/d/1EgZMWRG4VsuaT7bPOKtgCWLF_sNdv4Qt_JAOEe977Mg/edit?ts=5c835c30#gid=92650668">Taggers Sheet</a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item active">
                 <a class="nav-link" href="{% url 'logout' %}">Log-Out</a>
             </li>
         {% else %}
-            <li class="nav-item">
+            <li class="nav-item active">
                 <a class="nav-link" href="{% url 'login' %}">Log-In</a>
             </li>
         {% endif %}
