@@ -12,6 +12,7 @@ from django.apps import apps
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.template import loader
 
 from rest_api import models
 from . import utils
@@ -90,7 +91,7 @@ def send_mail(request):
                 writer.writerow(row)
 
         # send the csv via mail
-        email_message = utils.render_from_file('templates/ui/email_content.html', {'report_type': report_type, 'dates': dates})
+        email_message = loader.render_to_string('ui/email_content.html', {'report_type': report_type, 'dates': dates}, using=None)
         fields ={'file': (filename, open(filename, 'rb')), 'receiver': recipient_mail, 'subject': 'Blank Frames Report', 'message': email_message, 'key': AUTH_KEY}
         
         data = MultipartEncoder(fields = fields)
