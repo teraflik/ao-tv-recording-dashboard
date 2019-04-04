@@ -85,6 +85,11 @@ cat > /etc/apache2/sites-available/ao-tv-recording-db-ui.conf << EOF
 		Require all granted
 	</Directory>
 
+    Alias /media ${project_path}/media
+	<Directory ${project_path}/media>
+		Require all granted
+	</Directory>
+
 	<Directory ${project_path}/${project_name}>
 		<Files wsgi.py>
 			Require all granted
@@ -106,6 +111,9 @@ EOF
 
 mkdir ${HOME}/.ansible
 sudo printf "[defaults]\ndefault_local_tmp=${HOME}/.ansible\nlocal_tmp=${HOME}/.ansible/tmp\n" > /etc/ansible/ansible.cfg
+
+sudo usermod -a -G www-data $user
+sudo chown -R www-data:www-data ${project_path}
 
 # create a symlink from sites-available/ao-tv... .conf to sites-enables/ao-tv... .conf
 sudo ln -s /etc/apache2/sites-available/ao-tv-recording-db-ui.conf /etc/apache2/sites-enabled/ao-tv-recording-db-ui.conf
