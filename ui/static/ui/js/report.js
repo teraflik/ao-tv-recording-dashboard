@@ -190,7 +190,7 @@ function generateDailyReport(date) {
     for (var i = 0; i < channelValues.length; i++) {
         //  
         entry = {};
-        entry['slotInfo'] = addGETParameters(slotInfoBaseEndPoint.href, {'device_id': 'a', 'channel_values': channelValues[i]});
+        entry['slotInfo'] = addGETParameters(slotInfoBaseEndPoint.href, {'channel_values': channelValues[i]});
         entry['reportData'] = addGETParameters(reportDataBaseEndPoint.href, {'channel_values': channelValues[i]});
         
         specificEndPoints.push(entry);
@@ -211,8 +211,14 @@ function generateDailyReport(date) {
 
         //  b. process to get slots
         var startStopEntries = recordingRawData.filter(function(entry) {
-            return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
+            return ((entry['device_id'] == 'a') && (entry['stage_number'] == 1 || entry['stage_number'] == 6));
         });
+
+        if (startStopEntries.length == 0) {
+            startStopEntries = recordingRawData.filter(function(entry) {
+                return ((entry['device_id'] == 'b') && (entry['stage_number'] == 1 || entry['stage_number'] == 6));
+            });
+        }
 
         var recordingSlots = createRecordingSlots(startStopEntries, entry['slotInfo']);
         console.log("details for channelValue = " + channelValue);
@@ -234,7 +240,7 @@ function generateDailyReport(date) {
         var specificFormattedReportData = [];
         var specificFilteredFormattedReportData = [];
 
-        var thresholdTotalTime = 29.8;
+        var THRESHOLD_TOTAL_TIME = 29;
 
         for (var j = 0; j < recordingSlots.length; j++) {
             var slot = recordingSlots[j];
@@ -249,12 +255,12 @@ function generateDailyReport(date) {
                 if (!!reportDataEntry) {
 
                     //  if total_time > thresholdTotalTime, then no blank data
-                    if (reportDataEntry['total_time'] >= thresholdTotalTime) {
+                    if (reportDataEntry['total_time'] >= THRESHOLD_TOTAL_TIME) {
                         specificFormattedReportData.push({'channel_name': channels[channelValue], 'clip_number': clipNumber, 'blank_percentage': 0.0});
                     }
                     //  else, percentage blank data is calculated
                     else {
-                        var blankPercentage = parseFloat(((1 - reportDataEntry['total_time'] / thresholdTotalTime) * 100).toFixed(1));
+                        var blankPercentage = parseFloat(((1 - reportDataEntry['total_time'] / THRESHOLD_TOTAL_TIME) * 100).toFixed(1));
                         specificFormattedReportData.push({'channel_name': channels[channelValue], 'clip_number': clipNumber, 'blank_percentage': blankPercentage});
                     }
                 }
@@ -315,7 +321,7 @@ function generateWeeklyReport(startDate, endDate) {
             var channelDailyReport = indexedChannelWiseDailyReport[channelName];
             
             if (!!channelDailyReport) {
-                dailyEntryWeeklyReport[channelName] = channelDailyReport['avg_blank'];
+                dailyEntryWeeklyReport[channelName] = channelDailyReport['avg_blank'].toFixed(2);
             }
             else {
                 dailyEntryWeeklyReport[channelName] = 0;

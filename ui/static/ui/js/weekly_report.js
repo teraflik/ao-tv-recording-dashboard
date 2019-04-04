@@ -17,7 +17,7 @@ function setColumns(columnNames) {
     });
 
     $('tr#header-row').html(rowHtml);
-    $('tr#footer-row').html(rowHtml);
+    // $('tr#footer-row').html(rowHtml);
 }
 
 
@@ -129,7 +129,7 @@ function sendMailHandler() {
     var dataToSend = {
     'recipient_mail': recipientMail,
     'datatable_export': JSON.stringify(dataTableExport),
-    'filename': startDate + '_' + endDate + 'weekly_report.csv',
+    'filename': startDate + '_' + endDate + '_weekly_report.csv',
     'report_type' : 'Weekly',
     'dates' : startDate + " to " + endDate
     };

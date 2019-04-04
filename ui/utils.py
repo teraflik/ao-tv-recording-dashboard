@@ -41,6 +41,14 @@ def make_table_html(table_dict):
     if table_dict.get('date'):
         table_head_html += '<th>Date</th>'
         table_body_html += '<td>' + table_dict.get('date') + '</td>'
+
+    if table_dict.get('start_date'):
+        table_head_html += '<th>Start Date</th>'
+        table_body_html += '<td>' + table_dict.get('start_date') + '</td>'
+    
+    if table_dict.get('end_date'):
+        table_head_html += '<th>End Date</th>'
+        table_body_html += '<td>' + table_dict.get('end_date') + '</td>'
     
     if table_dict.get('start_time') and table_dict.get('finish_time'):
         table_head_html += '<th>Time Interval</th>'

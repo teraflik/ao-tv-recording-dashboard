@@ -10,6 +10,5 @@ urlpatterns = [
     url(r'^daily_report', views.daily_report, name='ui-daily-report'),
     url(r'^weekly_report_home', views.weekly_report_home, name='ui-weekly-report-home'),
     url(r'^weekly_report', views.weekly_report, name='ui-weekly-report'),
-    url(r'^report', views.report, name='ui-report'),
     url(r'^send_mail', views.send_mail, name='ui-mail'),
 ]

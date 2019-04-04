@@ -38,7 +38,11 @@ def daily_report_home(request):
 
 @login_required
 def daily_report(request):
-    return render(request, 'ui/daily_report.html', {'channels': channels})
+
+    table_dict = utils.make_table_dict(request, channels)
+    table_html = utils.make_table_html(table_dict)
+
+    return render(request, 'ui/daily_report.html', {'channels': channels, 'tableHTML': table_html})
 
 @login_required
 def weekly_report_home(request):
@@ -46,7 +50,11 @@ def weekly_report_home(request):
 
 @login_required
 def weekly_report(request):
-    return render(request, 'ui/weekly_report.html', {'channels': channels})
+
+    table_dict = utils.make_table_dict(request, channels)
+    table_html = utils.make_table_html(table_dict)
+
+    return render(request, 'ui/weekly_report.html', {'channels': channels, 'tableHTML': table_html})
 
 @login_required
 def general(request):
@@ -56,10 +64,6 @@ def general(request):
 
     return render(request, 'ui/datatable.html', {'tableHTML': table_html})
     # return JsonResponse(request.GET)
-
-@login_required
-def report(request):
-    return render(request, 'ui/report.html', {'channels': channels})
 
 @login_required
 @csrf_exempt
@@ -86,7 +90,7 @@ def send_mail(request):
                 writer.writerow(row)
 
         # send the csv via mail
-        email_message = utils.render_from_file('templates/ui/email_content.html', {'report_type': report_type, 'dates': dates})
+        email_message = utils.render_from_file('ui/templates/ui/email_content.html', {'report_type': report_type, 'dates': dates})
         fields ={'file': (filename, open(filename, 'rb')), 'receiver': recipient_mail, 'subject': 'Blank Frames Report', 'message': email_message, 'key': AUTH_KEY}
         
         data = MultipartEncoder(fields = fields)
