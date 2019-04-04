@@ -100,7 +100,7 @@ def send_mail(request):
         response = requests.post('https://us-central1-athenas-owl-dev.cloudfunctions.net/cf-send-attach-mail-generic', data=data, headers={'Content-Type': data.content_type})
         
         # remove file
-        os.remove(filename)
+        os.remove(filepath)
 
         # return response
         return HttpResponse(status = response.status_code)
