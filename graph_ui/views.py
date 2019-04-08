@@ -1,6 +1,7 @@
-from django.shortcuts import render
-from rest_api import models
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
+from rest_api import models
 
 # Getting the list of channels
 channels = models.ChannelInfo.objects.all()

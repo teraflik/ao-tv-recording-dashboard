@@ -1,5 +1,15 @@
+# -*- coding: utf-8 -*-
+__author__ = "Asutosh Sahoo"
+__copyright__ = "Copyright (©) 2019. Athenas Owl. All rights reserved."
+__credits__ = ["Quantiphi Analytics"]
+
+# djangorestframework dependencies
 from rest_framework import serializers
-from .models import ChannelInfo, FilterRecordingTracking, InvalidFrameTracking, Recording, RecordingTracking
+
+# project dependencies
+from .models import (ChannelInfo, FilterRecordingTracking,
+                     InvalidFrameTracking, Recording, RecordingTracking)
+
 
 class ChannelInfoSerializer(serializers.ModelSerializer):
 
@@ -17,7 +27,7 @@ class InvalidFrameTrackingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InvalidFrameTracking
-        fields = ('device_id', 'request_id', 'invalid_frame_from', 'invalid_frame_to')
+        fields = ('device_id', 'request_id', 'invalid_frame_from', 'invalid_frame_to')  # skipped migration_status
 
 class RecordingSerializer(serializers.ModelSerializer):
     channel_name = serializers.ReadOnlyField(source='channel_value.channel_name')
@@ -32,4 +42,3 @@ class RecordingTrackingSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecordingTracking
         fields = '__all__'
-
