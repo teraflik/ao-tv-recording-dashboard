@@ -14,7 +14,7 @@ from .models import Node
 
 @login_required
 def index(request):
-    return TemplateResponse(request, 'dashboard/monitoring.html')
+    return TemplateResponse(request, 'monitoring/monitoring.html')
 
 @login_required
 def nodes(request, node_id=None):

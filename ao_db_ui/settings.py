@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'rest_api.apps.RestApiConfig',
     'ui.apps.UiConfig',
     'graph_ui.apps.GraphUiConfig',
-    'dashboard.apps.DashboardConfig'
+    'monitoring.apps.MonitoringConfig'
 ]
 
 MIDDLEWARE = [

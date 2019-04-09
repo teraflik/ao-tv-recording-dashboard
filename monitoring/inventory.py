@@ -14,7 +14,7 @@ from ansible.parsing.dataloader import DataLoader
 from ansible.vars.manager import VariableManager
 
 
-logging.basicConfig(level=logging.ERROR, filename="/tmp/dashboard.log", format='%(asctime)s | %(levelname)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(level=logging.ERROR, filename="/tmp/monitoring.log", format='%(asctime)s | %(levelname)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 class AnsibleInventoryFile():
     """
@@ -211,4 +211,4 @@ class InventoryManager():
 
 if __name__ == "__main__":
     inv = InventoryManager()
-    inv.ansible_run("192.168.2.236", "user", "12345", "/home/user/projects/ao-tv-recording-pipeline-deploy/dashboard.yml")
+    inv.ansible_run("192.168.2.236", "user", "12345", "/home/user/projects/ao-tv-recording-pipeline-deploy/monitoring.yml")

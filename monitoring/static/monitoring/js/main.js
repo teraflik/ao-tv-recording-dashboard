@@ -304,7 +304,7 @@ Vue.component('obs', {
 })
 
 new Vue({
-    el: '#dashboard',
+    el: '#monitoring',
     data: {
         apiURL: 'nodes/',
         nodes: [],
