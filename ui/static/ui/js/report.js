@@ -55,7 +55,7 @@ function getClipNumber(timeString) {
 }
 
 function getJSONSynchronous(endpoint) {
-    var data;
+    var data = [];
     $.ajax({
         type: 'GET',
         url: endpoint,
@@ -203,6 +203,9 @@ function generateDailyReport(date) {
 
     for (var i = 0; i < specificEndPoints.length; i++) {
 
+        var specificFormattedReportData = [];
+        var specificFilteredFormattedReportData = [];
+
         var entry = specificEndPoints[i];
         var channelValue = entry['reportData'].searchParams.get('channel_values');
 
@@ -210,6 +213,9 @@ function generateDailyReport(date) {
         var recordingRawData = getJSONSynchronous(entry['slotInfo']);
 
         //  b. process to get slots
+
+        //  1st checks device_id = 'a' for slot information
+        //  if not found, then checks in device_id = 'b'
         var startStopEntries = recordingRawData.filter(function(entry) {
             return ((entry['device_id'] == 'a') && (entry['stage_number'] == 1 || entry['stage_number'] == 6));
         });
@@ -236,9 +242,6 @@ function generateDailyReport(date) {
 
         console.log("indexedGroupedReportData is ....");
         console.log(indexedGroupedReportData);
-
-        var specificFormattedReportData = [];
-        var specificFilteredFormattedReportData = [];
 
         var THRESHOLD_TOTAL_TIME = 29;
 
