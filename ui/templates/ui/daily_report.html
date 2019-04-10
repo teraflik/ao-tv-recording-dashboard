@@ -55,7 +55,6 @@
                 </div>
 
                 <div class="modal-footer">
-                    <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button> -->
                     <button type="submit" class="btn btn-primary">Send E-mail</button>
                 </div>
 
@@ -74,6 +73,7 @@
             channels[{{channel.channel_value}}] = '{{channel.channel_name}}';        
         {% endfor %}
     </script>
+    <script src="{% static "ui/js/utils.js" %}"></script>
     <script src="{% static "ui/js/report.js" %}"></script>
     <script src="{% static "ui/js/daily_report.js" %}"></script>
 {% endblock %}
