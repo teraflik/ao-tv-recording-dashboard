@@ -196,7 +196,9 @@ function prepareProcessingEntries(filterRawData, endpoint) {
         
         tooltip = entry['device_id'] + ' ' + startTimeString + ' - ' + endTimeString;
 
-        processingDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+        if (startTimeTimeline < endTimeTimeline) {
+            processingDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+        }
     }
 
     //  3. return it.
