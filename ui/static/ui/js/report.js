@@ -216,7 +216,7 @@ function generateWeeklyReport(startDate, endDate) {
         var date = yyyy_mm_dd(dateTimeObject);
         var dailyReport = generateDailyReport(date);
 ``
-        var channelWiseDailyReport = alasql('SELECT channel_name, AVG(blank_percentage) AS avg_blank FROM ? GROUP BY channel_name', [dailyReport['formattedReportData']]);
+        var channelWiseDailyReport = alasql('SELECT channel_name, AVG(blank_percentage) AS avg_blank, COUNT(*) AS no_of_slots FROM ? GROUP BY channel_name', [dailyReport['formattedReportData']]);
         var indexedChannelWiseDailyReport = jsonIndexer(channelWiseDailyReport, 'channel_name');
 
         console.log("indexedChannelWiseDailyReport ...");
@@ -234,7 +234,7 @@ function generateWeeklyReport(startDate, endDate) {
             
 
             if (!!channelDailyReport) {
-                dailyEntryWeeklyReport[channelName] = channelDailyReport['avg_blank'].toFixed(2);
+                dailyEntryWeeklyReport[channelName] = channelDailyReport['avg_blank'].toFixed(2) + ", " + channelDailyReport['no_of_slots'];
             }
             else {
                 dailyEntryWeeklyReport[channelName] = "NA";
