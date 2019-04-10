@@ -1,97 +1,3 @@
-function yyyy_mm_dd(dateObject) {
-
-    var dd = dateObject.getDate();
-    var mm = dateObject.getMonth() + 1; //Months are zero based
-    var yyyy = dateObject.getFullYear();
-
-    if (dd < 10) {
-        dd = '0' + dd;
-    }
-
-    if (mm < 10) {
-        mm = '0' + mm;
-    }
-
-    return [yyyy, mm, dd].join("-");
-}
-
-function hh_mm_ss(dateObject) {
-
-    var hh = dateObject.getHours();
-    var mm = dateObject.getMinutes();
-    var ss = dateObject.getSeconds();
-
-    if (hh < 10) {
-        hh = '0' + hh;
-    }
-
-    if (mm < 10) {
-        mm = '0' + mm;
-    }
-
-    if (ss < 10) {
-        ss = '0' + ss;
-    }
-
-    return [hh, mm, ss].join(":")
-}
-
-function getClipNumber(timeString) {
-
-    var hours = parseInt(timeString.split(":")[0]);
-    var minutes = parseInt(timeString.split(":")[1]);
-
-    var clipNumber = 2 * hours + 1;
-
-    if (minutes >= 29) {
-        clipNumber += 1;
-    }
-
-    if (minutes >= 59) {
-        clipNumber += 1;
-    }
-
-    return clipNumber;
-}
-
-function getJSONSynchronous(endpoint) {
-    var data = [];
-    $.ajax({
-        type: 'GET',
-        url: endpoint,
-        async: false,
-        dataType: 'json',
-        success: function(response){
-            data = response;
-        }
-    });
-    return data;
-}
-
-function jsonIndexer(jsonArray, indexAttribute) {
-    
-    var index = {};
-    
-    for (var i = 0; i < jsonArray.length; i++) {
-        var entry = jsonArray[i];
-        var indexAttributeValue = entry[indexAttribute];
-        index[indexAttributeValue] = entry;
-    }
-
-    return index;
-}
-
-function addGETParameters(baseEndPoint, GETParams) {
-
-    var specificEndPoint = new URL(baseEndPoint);
-    
-    for (var key in GETParams) {
-        specificEndPoint.searchParams.set(key, GETParams[key]);
-    }
-
-    return specificEndPoint;
-}
-
 function createRecordingSlots(startStopEntries, endpoint) {
     
     //  sort the startStopEntries according to timestamp in ASC order.
@@ -201,6 +107,7 @@ function generateDailyReport(date) {
     var formattedReportData = [];
     var filteredFormattedReportData = [];
 
+    //  LOOPING THROUGH CHANNELS
     for (var i = 0; i < specificEndPoints.length; i++) {
 
         var specificFormattedReportData = [];
@@ -245,12 +152,14 @@ function generateDailyReport(date) {
 
         var THRESHOLD_TOTAL_TIME = 29;
 
+        //  LOOPING THROUGH SLOTS
         for (var j = 0; j < recordingSlots.length; j++) {
             var slot = recordingSlots[j];
 
             var startingClipNumber = getClipNumber(hh_mm_ss(slot['startRecordingTime']));
             var endingClipNumber = getClipNumber(hh_mm_ss(slot['stopRecordingTime']));
 
+            //  LOOPING THROUGH CLIPS IN SLOT
             for (var clipNumber = startingClipNumber; clipNumber <= endingClipNumber; clipNumber++) {
 
                 var reportDataEntry = indexedGroupedReportData[clipNumber];
@@ -306,7 +215,7 @@ function generateWeeklyReport(startDate, endDate) {
 
         var date = yyyy_mm_dd(dateTimeObject);
         var dailyReport = generateDailyReport(date);
-
+``
         var channelWiseDailyReport = alasql('SELECT channel_name, AVG(blank_percentage) AS avg_blank FROM ? GROUP BY channel_name', [dailyReport['formattedReportData']]);
         var indexedChannelWiseDailyReport = jsonIndexer(channelWiseDailyReport, 'channel_name');
 
@@ -323,11 +232,12 @@ function generateWeeklyReport(startDate, endDate) {
             //  if entry for that channelValue is available
             var channelDailyReport = indexedChannelWiseDailyReport[channelName];
             
+
             if (!!channelDailyReport) {
                 dailyEntryWeeklyReport[channelName] = channelDailyReport['avg_blank'].toFixed(2);
             }
             else {
-                dailyEntryWeeklyReport[channelName] = 0;
+                dailyEntryWeeklyReport[channelName] = "NA";
             }
         }
 
