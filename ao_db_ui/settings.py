@@ -10,12 +10,14 @@ Django settings for ao_db_ui project.
 import os
 import configparser
 
+# Project related dependencies
+from utils.constant import Constant
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 config = configparser.ConfigParser()
-config.read('/var/.ao/parameters.ini')
-
+config.read(Constant.PARAMETERS_INI_PATH)
 
 stage = "UI-APP-CONFIG"
 SECRET_KEY = config.get(stage, 'SECRET_KEY')
@@ -162,5 +164,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_REDIRECT_URL = 'graph-recording'
 LOGIN_URL = 'login'
-
 
