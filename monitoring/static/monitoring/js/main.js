@@ -1,5 +1,5 @@
 Vue.component('node', {
-    props: ['id', 'ip_address', 'label', 'ping', 'channel_id', 'uptime', 'cron', 'screenshot_url'],
+    props: ['id', 'ip_address', 'label', 'ping', 'channel_id', 'uptime', 'cron', 'screenshot_url', 'netdata_host'],
     data () {
         return {
             hover: false,
@@ -68,13 +68,13 @@ Vue.component('node', {
 })
 
 Vue.component('netdata-cpu', {
-    props: ['ip_address'],
+    props: ['ip_address', 'netdata_host'],
     mounted () {
         NETDATA.updatedDom()
     },
     template:
     `<div data-netdata="system.cpu"
-            :data-host="'http://' + ip_address + ':19999/'"
+            :data-host="netdata_host"
             data-chart-library="dygraph"
             data-legend="no"
             data-dygraph-valuerange="[0, 100]"
@@ -86,13 +86,13 @@ Vue.component('netdata-cpu', {
 })
 
 Vue.component('netdata-temp', {
-    props: ['ip_address'],
+    props: ['ip_address', 'netdata_host'],
     mounted () {
         NETDATA.updatedDom()
     },
     template:
     `<div data-netdata="sensors.coretemp_isa_0000_temperature"
-            :data-host="'http://' + ip_address + ':19999/'"
+            :data-host="netdata_host"
             data-dimensions="coretemp-isa-0000_temp1"
             data-chart-library="gauge"
             data-gauge-max-value="60"
@@ -103,13 +103,13 @@ Vue.component('netdata-temp', {
 })
 
 Vue.component('netdata-ram', {
-    props: ['ip_address'],
+    props: ['ip_address', 'netdata_host'],
     mounted () {
         NETDATA.updatedDom()
     },
     template:
     `<div data-netdata="system.ram"
-            :data-host="'http://' + ip_address + ':19999/'"
+            :data-host="netdata_host"
             data-dimensions="used|buffers|active|wired"
             data-chart-library="easypiechart"
             data-append-options="percentage"

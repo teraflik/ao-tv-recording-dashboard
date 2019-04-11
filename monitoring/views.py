@@ -1,6 +1,5 @@
 import io
 import os
-import subprocess
 from contextlib import redirect_stdout
 
 from ansi2html import Ansi2HTMLConverter
@@ -19,10 +18,30 @@ def index(request):
 @login_required
 def nodes(request, node_id=None):
     """
-    Returns information about a node given its primary key (`node_id`) as JSONResponse.
+    Returns information about a node in JSON given its unique ID.
+
     If no `node_id` is specified, returns information about all the nodes in database.
+
+    Args:
+        request: An HTTPRequest parameter. Can be used in future to parse custom GET Requests
+        node_id: The unique ID of the Node, for which information is required. If `None`, returns
+            returns info about all the nodes in the database.
+    
+    Returns:
+        JSONResponse containing information about the desired nodes as a list.
+
+        Each item in the list is a dictionary with the following schema:
+            **id**: The unique integer ID of the Node,
+            **ip_address**: IP address or hostname of the Node,
+            **label**: The custom label for the Node,
+            **ping**: Whether the Node responded to a Ping (ICMP) request,
+            **channel_id**: The channel ID currently configured on the Node's `/home/user/Desktop/TV/scripts/channel_value.txt` file,
+            **uptime**: The total uptime of the Node in HH:MM format,
+            **cron**: The output of `crontab -l` command on the Node (might need to be sanitized),
+            **screenshot_url**: A URL to the screenshot that was last captured on the Node's primary display,
+            **netdata_host**: The host:port combination on which Node's Netdata daemon is exposed
+
     """
-    #return JsonResponse({"nodes": [{"id": 1, "ip_address": "192.168.2.35", "label": "Asutosh", "ping": True, "channel_id": "cat: /home/user/Desktop/TV/scripts/channel_value.txt: No such file or directory", "uptime": "32:24", "cron": "* * * * * cd /home/user/Documents/asutosh/athenas-owl/ao-shell && touch log_file && echo `date` >> log_file\n0 12 * * 1-5 cd /home/user", "screenshot_url": "/media/screenshots/1_Asutosh_RhKJYyT.jpg"}, {"id": 2, "ip_address": "192.168.2.34", "label": "Rishabh", "ping": True, "channel_id": "cat: /home/user/Desktop/TV/scripts/channel_value.txt: No such file or directory", "uptime": "103:42", "cron": "no crontab for user", "screenshot_url": "/media/screenshots/2_Rishabh_JeIjweG.jpg"}, {"id": 3, "ip_address": "192.168.2.234", "label": "TV Recording Beta", "ping": True, "channel_id": "99", "uptime": "23:02", "cron": "PATH=/home/user/bin:/home/user/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin\n35 18 * * * bash /home/user/Desktop/TV/scripts/batch/obs-start.sh >> /home/user/Desktop/TV/scripts/batch/obs-start.txt\n37 18 * * * bash /home/user/Desktop/TV/scripts/batch/obs-stop.sh >> /home/user/Desktop/TV/scripts/batch/obs-stop.txt", "screenshot_url": "/media/screenshots/3_TV_Recording_Beta_MRAEVKU.jpg"}]})
     nodes = []
     inv = AOInventoryManager()
     
@@ -38,7 +57,8 @@ def nodes(request, node_id=None):
                 "channel_id": inv.get_channel_id(node.ip_address, node.username, node.password),
                 "uptime": inv.get_uptime(node.ip_address, node.username, node.password),
                 "cron": inv.get_cron(node.ip_address, node.username, node.password),
-                "screenshot_url": node.screenshot_url
+                "screenshot_url": node.screenshot_url,
+                "netdata_host": node.netdata_host
             })
         else:
             nodes.append({
@@ -46,13 +66,16 @@ def nodes(request, node_id=None):
                 "ip_address": node.ip_address,
                 "label": node.label,
                 "ping": False,
-                "screenshot_url": node.screenshot_url
             })
     
     return JsonResponse(data = {"nodes": nodes})
 
 @login_required
 def screenshot(request, node_id):
+    """
+    Take screenshot and return as `content_type=image` response.
+    If `?response=json` is specified, returns the `screenshot_url` as JsonResponse.
+    """
     try:
         node = Node.objects.get(pk=node_id)
     except Node.DoesNotExist:
