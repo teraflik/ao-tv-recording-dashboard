@@ -11,3 +11,11 @@ Develop a UI for monitoring and tracking TV recording with the following functio
 - Weekly tracking of specific channel blanks frame rate in an individual channel of the particular date or date range
 - Get the information of data loss on the channel of a particular date
 - Downtime checklist for taggers
+
+### Setting up SSL Reverse Proxy
+
+- Install apache2 libapache2-mod-wsgi-py3
+- a2enmod ssl
+- Copy rtc.conf to sites-available
+- a2dissite 000-default
+- a2ensite rtc
