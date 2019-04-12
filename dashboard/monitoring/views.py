@@ -30,16 +30,23 @@ def nodes(request, node_id=None):
     Returns:
         JSONResponse containing information about the desired nodes as a list.
 
-        Each item in the list is a dictionary with the following schema:
-            **id**: The unique integer ID of the Node,
-            **ip_address**: IP address or hostname of the Node,
-            **label**: The custom label for the Node,
-            **ping**: Whether the Node responded to a Ping (ICMP) request,
-            **channel_id**: The channel ID currently configured on the Node's `/home/user/Desktop/TV/scripts/channel_value.txt` file,
-            **uptime**: The total uptime of the Node in HH:MM format,
-            **cron**: The output of `crontab -l` command on the Node (might need to be sanitized),
-            **screenshot_url**: A URL to the screenshot that was last captured on the Node's primary display,
-            **netdata_host**: The host:port combination on which Node's Netdata daemon is exposed
+        Each item in the list is a dictionary with the following schema::
+
+            {
+                'id': The unique integer ID of the Node,
+                'ip_address': IP address or hostname of the Node,
+                'label': The custom label for the Node,
+                'ping': Whether the Node responded to a Ping (ICMP) request,
+                'channel_id': The channel ID currently configured on the Node's
+                     `/home/user/Desktop/TV/scripts/channel_value.txt` file,
+                'uptime': The total uptime of the Node in HH:MM format,
+                'cron': The output of `crontab -l` command on the Node (might
+                    need to be sanitized),
+                'screenshot_url': A URL to the screenshot that was last captured
+                    on the Node's primary display,
+                'netdata_host': The host:port combination on which Node's Netdata
+                    daemon is exposed
+            }
 
     """
     nodes = []

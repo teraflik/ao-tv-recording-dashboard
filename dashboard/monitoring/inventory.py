@@ -18,15 +18,13 @@ class AnsibleInventoryFile():
     """
     Creates a temporary file to hold the inventory to be used by Ansible.
     
-    Usage:
-    ```python
-        nodes = [{
-                'ip_address': 192.168.0.1,
-                'username': user
-            }]
-        inventory_file = AnsibleInventoryFile(nodes)
-        print(inventory_file.path)
-    ```
+    Example:
+        >>> nodes = [{
+                    'ip_address': 192.168.0.1,
+                    'username': user
+                }]
+        >>> inventory_file = AnsibleInventoryFile(nodes)
+        >>> print(inventory_file.path)
 
     Use the `dump()` method to dump the contents of the file to stdout. Use `destroy()` method to delete the file after use.
     """
@@ -166,13 +164,12 @@ class InventoryManager():
         """
         Captures the full screen of remote host and returns the image as file object. 
         
-        Usage:
-        ```
-            inv = InventoryManager()
-            f = inv.get_screengrab("192.168.2.35", "user", "12345")
-            with open("test.png", "w+b") as image:
-                image.write(f)
-        ```
+        Example:
+            >>> inv = InventoryManager()
+            >>> f = inv.get_screengrab("192.168.2.35", "user", "12345")
+            >>> with open("test.png", "w+b") as image:
+                    image.write(f)
+        
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
