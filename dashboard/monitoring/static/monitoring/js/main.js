@@ -37,15 +37,18 @@ Vue.component('node', {
         <td v-else colspan="99" class="text-center">Host Unreachable!</td>
         <td v-if="ping" class="node-cpu text-center">
             <netdata-cpu
-            :ip_address="ip_address"></netdata-cpu>
+            :ip_address="ip_address"
+            :netdata_host="netdata_host"></netdata-cpu>
         </td>
         <td v-if="ping" class="node-temp text-center">
             <netdata-temp
-            :ip_address="ip_address"></netdata-temp>
+            :ip_address="ip_address"
+            :netdata_host="netdata_host"></netdata-temp>
         </td>
         <td v-if="ping" class="node-ram text-center">
             <netdata-ram
-            :ip_address="ip_address"></netdata-ram>
+            :ip_address="ip_address"
+            :netdata_host="netdata_host"></netdata-ram>
         </td>
         <td v-if="ping" class="node-uptime text-center">{{ uptime }}</td>
         <td v-if="ping" class="node-actions">

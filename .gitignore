@@ -1,7 +1,7 @@
-env
+/env
 __pycache__
 *.pyc
 *.log
 .vscode
-/static
-/media
+/dashboard/static
+/dashboard/media
