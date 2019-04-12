@@ -93,9 +93,12 @@ function getClipNumber(timeString) {
 }
 
 /**
- * Performs indexing on a given JSONArray as per given  
- * @param {Date} dateObject - A JavaScript Data object whose corresponding `yyyy-mm-dd` we need
- * @returns {String} `yyyy-mm-dd` String.
+ * Performs indexing on a given JSONArray as per given attribute.  
+ * @param {Array} jsonArray - AN array of JSON 
+ * @param {String} indexAttribute - Name of the index attribute.
+ * @returns {String} Key-Value pair where 
+ *                     Key = index_attribute value
+ *                     Value = corresponding JSON Object
  */
 function jsonIndexer(jsonArray, indexAttribute) {
     
@@ -110,7 +113,13 @@ function jsonIndexer(jsonArray, indexAttribute) {
     return index;
 }
 
-function addGETParameters(baseEndPoint, GETParams) {
+/** 
+ * Adds GET Parameters to a base URL given
+ * @param {String} baseEndPoint - The base URL to which GET Params need to be added.
+ * @param {} GETParams - Key-Value pair with key being the parameter name and value being the corresponding parameter value.
+ * @returns {URL} A URL Object which now has new URL with all GET parameters added to it.
+ */
+function addGETParameters(baseEndPoint, GETParams){
 
     var specificEndPoint = new URL(baseEndPoint);
     
