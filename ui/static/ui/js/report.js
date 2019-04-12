@@ -234,7 +234,7 @@ function generateWeeklyReport(startDate, endDate) {
             
 
             if (!!channelDailyReport) {
-                dailyEntryWeeklyReport[channelName] = channelDailyReport['avg_blank'].toFixed(2) + ", " + channelDailyReport['no_of_slots'];
+                dailyEntryWeeklyReport[channelName] = channelDailyReport['avg_blank'].toFixed(2);
             }
             else {
                 dailyEntryWeeklyReport[channelName] = "NA";
