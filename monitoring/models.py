@@ -5,23 +5,29 @@ from django.core.files.base import ContentFile
 
 class Node(models.Model):
     """
-    A Node is a computer system accessible by the server, running this application on its network.
+    Store information and credentials of a Node.
+
+    A Node is any remote machine on the same network as the server (running this web application).
     
-    In order to allow retrieval of information from the node, its SSH credentials 
-    are required. Other health monitoring data (like CPU and RAM usage) is collected from 
-    the Netdata service running on the Node, that exposes its API on port 19999 by default.
+    In order to allow retrieval of information from the node, its SSH credentials
+    are required. Other health monitoring data (like CPU and RAM usage) is collected from
+    the Netdata service, which can be installed on the Node and runs on port 19999 by default.
 
     Attributes:
-        label: (Optional) A personal label set by user to identify the node
-        ip_address: The IP address/host of the remote machine
-        username: SSH user of the remote machine
-        password: SSH password of the remote machine
+        label (str, optional): A label set by the user to identify the :class:`Node` instance.
+        ip_address: The IP address/host of the Node.
+        username: SSH user.
+        password: SSH password.
         mac_address: (Optional) HWaddress. Can be used to verify the identity of 
-            the machine incase IP address changes. [Yet to be implemented]
-        screenshot: Screenshot last grabbed from the remote machine
-        netdata_host: The Netdata API endpoint for the host, which is consumed by the 
-            Netdata Vue.JS components.
+            the Node incase IP address changes and issue a warning.
+        screenshot: Screenshot last grabbed from the Node.
+        netdata_host: The Netdata API endpoint for the Node. This is used by the
+            front-end Netdata Vue.JS components. Default is `http://ip_address:19999/`.
+
+    Note:
+        The MAC Address verification has not been implemented.
     """
+
     label = models.CharField(max_length=200, blank=True)
     ip_address = models.GenericIPAddressField(verbose_name="IP Address", blank=False)
     username = models.CharField(verbose_name="SSH Username", max_length=50, default="user", blank=False)
@@ -31,15 +37,19 @@ class Node(models.Model):
     netdata_host = models.CharField(max_length=50, verbose_name="Netdata Host", blank=False, unique=True)
 
     def __str__(self):
-        return self.ip_address
+        """Provide a string representation to the object."""
+        
+        return self.label
     
     def update_screenshot(self, image):
         """
-        Updates the screenshot for the node, with the provided image file.
+        Updates the screenshot for the node, with the provided image.
 
+        The image is saved to ``MEDIA_ROOT```/media/screenshots/` directory
         Args:
-            image: JPG/PNG Image as a binary file object.
+            image (str): JPG/PNG Image as a byte string. Usually derived from `file.read()`
         """
+
         image_name = "{:s}.jpg".format(self.label)
         self.screenshot.save(image_name, ContentFile(image), save=True)
     
