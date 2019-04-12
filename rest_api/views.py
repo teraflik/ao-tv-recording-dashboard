@@ -126,7 +126,7 @@ class RecordingView(APIView):
 
         recordings = Recording.objects.filter(**filters)
 
-        if recordings:
+        if recordings.count() > 0:
             q = Q()
             for ch in channel_values:
                 start = '_'.join([start_date_ist_str, ch, start_time_ist_str])
@@ -186,7 +186,7 @@ class BlankView(APIView):
         
         invalid_frame_trackings = InvalidFrameTracking.objects.filter(**filters)
 
-        if invalid_frame_trackings:
+        if invalid_frame_trackings.count() > 0:
             q = Q()
             for ch in channel_values:
                 start = '_'.join([start_date_ist_str, ch, start_time_ist_str])
