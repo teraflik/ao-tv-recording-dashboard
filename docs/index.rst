@@ -12,7 +12,9 @@ monitoring.models
 
 monitoring.inventory
 --------------------
-.. automodule:: monitoring.inventory
+.. autoclass:: monitoring.inventory.InventoryManager
+   :members:
+.. autoclass:: monitoring.inventory.AnsibleInventoryFile
    :members:
 
 monitoring.ao_inventory
