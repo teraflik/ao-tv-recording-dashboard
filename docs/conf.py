@@ -21,12 +21,12 @@ django.setup()
 
 # -- Project information -----------------------------------------------------
 
-project = 'TV Recording Dashboard'
-copyright = '2019, Asutosh Sahoo, Raghav Khandelwal'
-author = 'Asutosh Sahoo, Raghav Khandelwal'
+project = "TV Recording Dashboard"
+copyright = "Copyright (©) 2019. Athenas Owl. All rights reserved."
+author = "Asutosh Sahoo, Raghav Khandelwal"
 
 # The full version, including alpha/beta/rc tags
-release = '0.7.3'
+release = "0.7.3"
 
 
 # -- General configuration ---------------------------------------------------
@@ -38,6 +38,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.napoleon'
 ]
+napoleon_numpy_docstring = False
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

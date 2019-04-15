@@ -2,25 +2,25 @@ Welcome to TV Recording Dashboard's documentation!
 ==================================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
-Monitoring models
+monitoring.models
 -----------------
 .. automodule:: monitoring.models
    :members:
 
-Monitoring inventory
+monitoring.inventory
 --------------------
 .. automodule:: monitoring.inventory
    :members:
 
-Monitoring ao_inventory
+monitoring.ao_inventory
 -----------------------
 .. automodule:: monitoring.ao_inventory
    :members:
 
-Monitoring views
+monitoring.views
 ----------------
 .. automodule:: monitoring.views
    :members:
