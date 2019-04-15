@@ -22,7 +22,32 @@ logging.basicConfig(level=logging.ERROR, filename="/tmp/monitoring.log",
 
 class AnsibleInventoryFile():
     """
-    Creates a temporary file to hold the inventory to be used by Ansible.
+    Creates a temporary inventory file to be used by Ansible.
+
+    Args:
+        nodes (list/dict): A list of dictionaries or any other data structure,
+            containing a mapping of fields as required by the template.
+        template (str): A Jinja2 template string that can parse the given ``nodes``.
+        
+    Note:
+        If you use the following template for your inventory file::
+            
+            '''[nodes]\n
+            {% for node in nodes %}
+            {{ node.ip_address }} ansible_user={{ node.username }}\n
+            {% endfor %}'''
+        
+        Then you can pass ``nodes`` as a list of dictionaries::
+
+            nodes = [
+                        {
+                            'ip_address': 192.168.0.1,
+                            'username': user
+                        },
+                    ...
+                    ]
+
+        This works because ``jinja2_template.render(nodes)`` is called under the hood.
 
     Example:
         >>> nodes = [{
@@ -31,8 +56,10 @@ class AnsibleInventoryFile():
                 }]
         >>> inventory_file = AnsibleInventoryFile(nodes)
         >>> print(inventory_file.path)
-
-    Use the `dump()` method to dump the contents of the file to stdout. Use `destroy()` method to delete the file after use.
+    
+    Warning:
+        Dont't forget to call :func:`destroy()` after the inventory
+        file is no longer required.
     """
 
     def __init__(self,
@@ -56,11 +83,11 @@ class AnsibleInventoryFile():
 
     @property
     def path(self):
-        """Get the path of inventory file"""
+        """Get the system path of the temporary inventory file."""
         return self.inventory_file.name
 
     def dump(self):
-        """Prints the contents of inventory file to stdout"""
+        """Prints the contents of inventory file to stdout."""
         try:
             with open(self.inventory_file.name, 'r') as fin:
                 print(fin.read())
@@ -76,10 +103,13 @@ class InventoryManager():
     """
     Provides methods to manage remote hosts over SSH.
 
-    Uses :class:`Paramiko.SSHClient` to establish SSH Connection and do stuff like:
-        - execute shell commands, or
-        - fetch contents of files, or 
-        - grab the realtime screenshot.
+    Uses :class:`Paramiko.SSHClient` to establish SSH Connection to the host and
+    do things like:
+
+        - run an ansible playbook
+        - execute shell commands
+        - fetch contents of files
+        - grab the realtime screenshot
 
     This class can be extended to include more methods or to implement specific 
     use-cases.
@@ -94,11 +124,26 @@ class InventoryManager():
     def ansible_run(self, host, username, password, playbook):
         """
         Runs an ansible playbook against the specified remote host.
-        Returns 0 if the playbook run was successful.
 
-        Note: The Ansible python API is constanly evolving, and thus the code snippet
-        below may not function as intended. For the latest version refer:
-        https://docs.ansible.com/ansible/latest/dev_guide/developing_api.html
+        The details of the run are printed to stdout by Ansible in ANSI color coded
+        text.
+        
+        Warning:
+            The Ansible python API is constanly evolving, and hence this method may not 
+            function as intended. For the latest version of the API, refer:
+            https://docs.ansible.com/ansible/latest/dev_guide/developing_api.html
+
+        Args:
+            host (str): hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
+            playbook (str): The path to the playbook file ``[.yml]`` on the server.
+        
+        Returns:
+            int: The playbook execution status. Status is ``0`` if the run was successful.
+
+        Raises:
+            ValueError: If the path to the playbook is invalid.
         """
         Options = namedtuple('Options', ['listtags', 'listtasks', 'listhosts',
                                          'syntax', 'module_path', 'become',
@@ -143,9 +188,18 @@ class InventoryManager():
 
     def ping(self, host, timeout=3):
         """
-        Returns True if host `<String>` responds to a ping request within the specified `timeout`.
+        Send a ping (ICMP) request to a remote host.
 
-        Note: a host may not respond to a ping (ICMP) request even if the host name is valid.
+        Args:
+            host (str): Hostname or IP address.
+            timeout (int): Ping request timeout (in seconds).
+
+        Returns:
+            bool: The ping response. ``True`` if the host responds to a ping request 
+                within the specified timeout period. ``False`` otherwise.
+
+        Note:
+            A host may not respond to a ping (ICMP) request even if the host name is valid.
         """
         # Building the command. Ex: "ping -c 1 google.com"
         command = ['ping', '-c', '1', host]
@@ -161,8 +215,20 @@ class InventoryManager():
     # TODO: Modify function to not use the linux cat command.
     def get_file_contents(self, host, username, password, file_path):
         """
-        Gets the contents of a (text) file from remote host, given the file path.
-        Raises `ConnectionError` if SSH Connection is unsuccessful or `OSError` if the file does not exist.
+        Gets the contents of a text file from remote host, given the file path.
+
+        Args:
+            host (str): Hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
+            file_path (str): Absolute path to the file on the remote host.
+        
+        Returns:
+            str: The contents of the remote file.
+
+        Raises:
+            ConnectionError: If SSH Connection cannot be established.
+            OSError: If there is an error reading the file from the remote host.
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -185,13 +251,25 @@ class InventoryManager():
 
     def get_screengrab(self, host, username, password):
         """
-        Captures the full screen of remote host and returns the image as file object. 
+        Captures a fullscreen screenshot of the specified remote host. 
 
         Example:
             >>> inv = InventoryManager()
             >>> f = inv.get_screengrab("192.168.2.35", "user", "12345")
             >>> with open("test.png", "w+b") as image:
                     image.write(f)
+
+        Args:
+            host (str): Hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
+
+        Returns:
+            str
+
+        Raises:
+            ConnectionError: If SSH Connection cannot be established.
+            OSError: If there is an error taking the screenshot on the remote host.
 
         """
         ssh = paramiko.SSHClient()
@@ -213,7 +291,6 @@ class InventoryManager():
             raise OSError(error)
 
         try:
-            # ? Sometimes fails to read the whole image. Socket might be getting closed before reading.
             with sftp.open('.shot.png') as image:
                 screengrab = image.read()
         except (FileNotFoundError, IOError) as e:
@@ -227,7 +304,17 @@ class InventoryManager():
     def run_command(self, host, username, password, command):
         """
         Runs the given command string on remote host.
-        Raises `ConnectionError` if SSH Connection is unsuccessful.
+        
+        Args:
+            host (str): Hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
+            command (str): Command to execute.
+
+        Raises:
+            ConnectionError: If SSH Connection can't be established.
+            OSError: If there is an error running the command on the remote host.
+        
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

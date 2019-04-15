@@ -110,9 +110,9 @@ class AOInventoryManager(InventoryManager):
             Commented lines are automatically ignored.
         
         Args:
-            host (string): hostname or IP address.
-            username (string): SSH user.
-            password (string): SSH password.
+            host (str): hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
 
         Returns:
             str: String containing the output of ``crontab -l`` without the commented 
@@ -130,9 +130,9 @@ class AOInventoryManager(InventoryManager):
         the contents of ``/proc/uptime``.
 
         Args:
-            host (string): hostname or IP address.
-            username (string): SSH user.
-            password (string): SSH password.
+            host (str): hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
 
         Returns:
             str: The uptime of the machine in **HH:MM** format. Incase of an error, 
@@ -149,9 +149,9 @@ class AOInventoryManager(InventoryManager):
         Gets the ``channel_id`` currently set on the remote machine from the designated file.
 
         Args:
-            host (string): hostname or IP address.
-            username (string): SSH user.
-            password (string): SSH password.
+            host (str): hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
 
         Returns:
             str: A string containing the contents of the ``/home/user/Desktop/TV/scripts/channel_value.txt``
