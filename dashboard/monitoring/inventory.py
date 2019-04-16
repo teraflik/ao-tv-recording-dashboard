@@ -32,17 +32,17 @@ class AnsibleInventoryFile():
     Note:
         If you use the following template for your inventory file::
             
-            '''[nodes]\n
+            [nodes]\n
             {% for node in nodes %}
             {{ node.ip_address }} ansible_user={{ node.username }}\n
-            {% endfor %}'''
+            {% endfor %}
         
         Then you can pass ``nodes`` as a list of dictionaries::
 
             nodes = [
                         {
-                            'ip_address': 192.168.0.1,
-                            'username': user
+                            'ip_address': '192.168.0.1',
+                            'username': 'user'
                         },
                     ...
                     ]
