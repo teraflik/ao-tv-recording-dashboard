@@ -1,10 +1,8 @@
 """
-.. module:: dashboard.monitoring
-   :platform: Linux (Ubuntu)
-   :synopsis: A set of tools that provide functionality to monitor and control machines
-        on a local network using SSH.
+A set of tools that provide functionality to monitor and control machines on the
+local network using SSH.
 
-.. moduleauthor:: Raghav Khandelwal <raghav.khandelwal@quantiphi.com>
+
 
 """
 
