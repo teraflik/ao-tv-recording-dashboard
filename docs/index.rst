@@ -1,9 +1,18 @@
-Welcome to TV Recording Dashboard's documentation!
+TV Recording Dashboard
 ==================================================
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Contents:
+   :maxdepth: 2
+
+   README <readme>
+
+..  contents:: Table of Contents
+    :local:
+
+Monitoring
+-----------
+.. automodule:: monitoring
+   :members:
 
 monitoring.models
 -----------------
