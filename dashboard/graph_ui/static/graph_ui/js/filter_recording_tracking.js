@@ -23,62 +23,6 @@ var dataTableEnum  = Object.freeze({
     "endTime" :   5,
 });
 
-function yyyy_mm_dd(dateObject) {
-
-    var dd = dateObject.getDate();
-    var mm = dateObject.getMonth() + 1; //Months are zero based
-    var yyyy = dateObject.getFullYear();
-
-    if (dd < 10) {
-        dd = '0' + dd;
-    }
-
-    if (mm < 10) {
-        mm = '0' + mm;
-    }
-
-    return [yyyy, mm, dd].join("-");
-}
-
-function hh_mm_ss(dateObject) {
-
-    var hh = dateObject.getHours();
-    var mm = dateObject.getMinutes();
-    var ss = dateObject.getSeconds();
-
-    if (hh < 10) {
-        hh = '0' + hh;
-    }
-
-    if (mm < 10) {
-        mm = '0' + mm;
-    }
-
-    if (ss < 10) {
-        ss = '0' + ss;
-    }
-
-    return [hh, mm, ss].join(":")
-}
-
-function getClipNumber(timeString) {
-
-    var hours = parseInt(timeString.split(":")[0]);
-    var minutes = parseInt(timeString.split(":")[1]);
-
-    var clipNumber = 2 * hours + 1;
-
-    if (minutes >= 29) {
-        clipNumber += 1;
-    }
-
-    if (minutes >= 59) {
-        clipNumber += 1;
-    }
-
-    return clipNumber;
-}
-
 function dateTimeFromProcessingRequestID(request_id) {
     
     var date = request_id.split("_")[0];
@@ -823,17 +767,6 @@ function initializeTimeline(endpoint) {
     var divID = "filter_" + channelValue;
     var container = document.getElementById(divID);
     return new google.visualization.Timeline(container);
-}
-
-function addGETParameters(baseEndPoint, GETParams) {
-
-    var specificEndPoint = new URL(baseEndPoint);
-    
-    for (var key in GETParams) {
-        specificEndPoint.searchParams.set(key, GETParams[key]);
-    }
-
-    return specificEndPoint;
 }
 
 function getBaseEndPoint() {
