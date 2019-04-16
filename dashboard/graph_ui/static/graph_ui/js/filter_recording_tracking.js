@@ -2,8 +2,6 @@ google.charts.load('46', {'packages':['timeline']});
 
 var globalDataTable = {};
 
-var globalStore = {};
-
 var stageToColor = {
     "Start Recording":  'green',
     // "Clipping Started":  'yellow',
@@ -667,6 +665,8 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
 
 function populateTimeline(timeline, endpoint, index) {
     
+    var filterEndPoint = new URL(endpoint.href);
+
     //  1. making corresponding endpoint for recording table.
     var recordingEndPoint = new URL(endpoint.href);
 
@@ -682,34 +682,15 @@ function populateTimeline(timeline, endpoint, index) {
     $.when(
 
         //  1. get data from endpoint
-        $.get(endpoint, function(filterRawData) {
-            
-            if (!globalStore[endpoint.href]) {
-                globalStore[endpoint.href] = {};
-            }
-            
-            globalStore[endpoint.href]['filterRawData'] = filterRawData;
-        }),
+        $.get(filterEndPoint),
 
         //  1. get data from recordingEndPoint
-        $.get(recordingEndPoint, function(recordingRawData) {
-                    
-            if (!globalStore[endpoint.href]) {
-                globalStore[endpoint.href] = {};
-            }
-            
-            globalStore[endpoint.href]['recordingRawData'] = recordingRawData;
-        }),
+        $.get(recordingEndPoint)
 
-
-
-    ).then(function() {
-        // var blankRawData = globalStore[endpoint.href]['blankRawData'];
-
-        console.log("recordingEndPoint is .... " + recordingEndPoint.href);
+    ).then(function(filterEndPointResponse, recordingEndPointResponse) {
         
-        var filterRawData = globalStore[endpoint.href]['filterRawData'];
-        var recordingRawData = globalStore[endpoint.href]['recordingRawData'];
+        var filterRawData = filterEndPointResponse[0];
+        var recordingRawData = recordingEndPointResponse[0];
 
         console.log("filterRawData is.......");
         console.log(filterRawData);

@@ -2,8 +2,6 @@ google.charts.load('46', {'packages':['timeline']});
 
 var globalDataTable = {};
 
-var globalStore = {};
-
 // var stageToColor = {
 //     "Start Recording":  'green',
 //     "Clipping Started":  'yellow',
@@ -521,34 +519,15 @@ function populateTimeline(timeline, endpoint, index) {
     $.when(
 
         //  1. get data from recordingEndPoint
-        $.get(recordingEndPoint, function(recordingRawData) {
-            
-            if (!globalStore[endpoint.href]) {
-                globalStore[endpoint.href] = {};
-            }
-            
-            globalStore[endpoint.href]['recordingRawData'] = recordingRawData;
-        }),
+        $.get(recordingEndPoint),
 
         //  2. get data from blankEndPoint
-        $.get(blankEndPoint, function(blankRawData) {
-            
-            if (!globalStore[endpoint.href]) {
-                globalStore[endpoint.href] = {};
-            }
-            
-            globalStore[endpoint.href]['blankRawData'] = blankRawData;
-        })
-    ).then(function() {
+        $.get(blankEndPoint)
 
-        var rawData = globalStore[endpoint.href]['recordingRawData'];
+    ).then(function(recordingEndPointResponse, blankEndPointResponse) {
 
-        var recordingRawData = globalStore[endpoint.href]['recordingRawData'];
-        var blankRawData = globalStore[endpoint.href]['blankRawData'];
-
-        //  1. debugging purpose
-        // console.log("Raw Data");
-        // console.log(rawData);
+        var recordingRawData = recordingEndPointResponse[0];
+        var blankRawData = blankEndPointResponse[0];
 
         
         //  2. prepare data in the format to be feeded to the visualisation library.

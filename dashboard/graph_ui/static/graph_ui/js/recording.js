@@ -2,8 +2,6 @@ google.charts.load('46', {'packages':['timeline']});
 
 var globalDataTable = {};
 
-var globalStore = {};
-
 var stageToColor = {
     "Start Recording":  'green',
     "Clipping Started":  'yellow',
@@ -366,142 +364,7 @@ function clipNoToInterval(dateString, clipNumber) {
     return [startTime, endTime];
 }
 
-function getCurrentRecordingEntries(formattedData) {
-
-    // Ref:- https://stackoverflow.com/questions/7486085/copy-array-by-value
-    var formattedData = formattedData.slice();
-
-    //  IF NO ENTRIES (will not hit this case as of now)
-    if (!formattedData) {
-        return [];
-    }
-
-    //  blank entry.
-    if (formattedData[0][1] == '') {
-        return [];
-    }
-
-    //  sort by starting timestamp (desc)
-    formattedData.sort( (r1, r2) => {
-        if (r1[dataTableEnum.startTime] < r2[dataTableEnum.startTime]) return 1;
-        if (r1[dataTableEnum.startTime] > r2[dataTableEnum.startTime]) return -1;
-        return 0;
-    });
-
-    var colorToStage = reverseJsonMapper(stageToColor);
-
-    var lastRecordingEntry = null;
-    var lastStartRecordingEntry = null;
-    var lastProcessingEntry = null;
-    for (var i = 0; i < formattedData.length; i++) {
-
-        var entry = formattedData[i];
-        
-        //  if entry is of category Recording and its the first of this kind.
-        if (!lastRecordingEntry && entry[dataTableEnum.category] == "Recording") {
-            lastRecordingEntry = entry;
-        }
-        
-        if (!lastStartRecordingEntry && colorToStage[entry[dataTableEnum.color]] == "Start Recording") {
-            lastStartRecordingEntry = entry;
-        }
-
-        if (!lastProcessingEntry && entry[dataTableEnum.category] == "Processing") {
-            lastProcessingEntry = entry;
-        }
-
-        if (lastRecordingEntry && lastStartRecordingEntry && lastProcessingEntry) {
-            break;
-        }
-    }
-
-    //  if no startRecordingEntry found
-    if (!lastStartRecordingEntry) {
-        return [];
-    }
-
-    //  magic happens here.......
-    var currentRecordingEntries = [];
-
-    //  1. get the latest clip number out of the formattedData entries
-    var lastProcessingClipNumber = 0;
-    if (!lastProcessingEntry) {
-        lastProcessingClipNumber = 0;
-    }
-    else {
-        lastProcessingClipNumber = getClipNumber(hh_mm_ss(lastProcessingEntry[dataTableEnum.startTime])) + 1;
-    }
-
-    //  2. find clip number corresponding to the latest start recording 
-    var lastStartRecordingClipNumber = getClipNumber(hh_mm_ss(lastStartRecordingEntry[dataTableEnum.startTime]));
-
-    //  3. take maximum of the above two
-    var startingClipNumber = Math.max(lastProcessingClipNumber, lastStartRecordingClipNumber);
-
-    //  4. find clip number corresponding to current time
-    var currentTime = new Date();
-    var currentTimeClipNumber = getClipNumber(hh_mm_ss(currentTime));
-
-    //  5. get the endingClipNumber
-    var endingClipNumber;
-
-    //  a. if no stopRecording entry in the end
-    if (lastRecordingEntry == lastStartRecordingEntry) {
-        endingClipNumber = currentTimeClipNumber;
-    }
-    //  b. if stopRecording entry in the end
-    else {
-        endingClipNumber = getClipNumber(hh_mm_ss(lastRecordingEntry[dataTableEnum.startTime])) - 1;
-    }
-
-    //  6. make entries for the missing clip numbers
-    var safeTyMargin = 2;
-    for (var i = startingClipNumber; i <= endingClipNumber; i++) {
-        
-        var stageMessage = 'Now Recording';
-        //  category
-        var category = 'Processing';
-
-        //  label
-        var label = stageMessage;
-
-        var [startTime, endTime] = clipNoToInterval(yyyy_mm_dd(new Date()), i);
-
-        var startTimeString = hh_mm_ss(startTime);
-        var endTimeString = hh_mm_ss(endTime);
-        
-        //  startTimeTimeline
-        var startTimeTimeline = new Date(startTime);
-        startTimeTimeline.setMinutes(startTimeTimeline.getMinutes() + safeTyMargin);
-
-        //  endTimeTimeline
-        var endTimeTimeline = new Date(endTime);
-        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
-        
-        //  color
-        //  see if difference between current_time and the startTime of this entry is more than 1hr, then make this "Failure", else use original stageMessage
-        var color;
-        var hoursElapsed = (currentTime - startTime) / (60 * 60 * 1000)
-        
-        if (hoursElapsed > 1) {
-            stageMessage = 'Failed';
-        }
-
-        color = stageToColor[stageMessage];
-
-        //  tooltip
-        var tooltip = stageMessage + ' ' + startTimeString + ' - ' + endTimeString;
-        
-        //  add entry
-        currentRecordingEntries.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
-    }
-    return currentRecordingEntries;
-}
-
 function removeDuplicateObjects(objectArray) {
-    
-    // console.log("objectArray is ......");
-    // console.log(objectArray);
 
     var uniqueStringArray = new Set(objectArray.map(e => JSON.stringify(e)));
     var uniqueObjectArray = Array.from(uniqueStringArray).map(e => JSON.parse(e));
@@ -738,37 +601,15 @@ function populateTimeline(timeline, endpoint, index) {
     $.when(
 
         //  1. get data from recordingEndPoint
-        $.get(recordingEndPoint, function(recordingRawData) {
-            
-            if (!globalStore[endpoint.href]) {
-                globalStore[endpoint.href] = {};
-            }
-            
-            globalStore[endpoint.href]['recordingRawData'] = recordingRawData;
-        }),
+        $.get(recordingEndPoint),
 
         //  2. get data from blankEndPoint
-        $.get(blankEndPoint, function(blankRawData) {
-            
-            if (!globalStore[endpoint.href]) {
-                globalStore[endpoint.href] = {};
-            }
-            
-            globalStore[endpoint.href]['blankRawData'] = blankRawData;
-        })
+        $.get(blankEndPoint)
 
+    ).then(function(recordingEndPointResponse, blankEndPointResponse) {
 
-    ).then(function() {
-
-        console.log("Endpoint is ...");
-        console.log(endpoint.href);
-
-        var recordingRawData = globalStore[endpoint.href]['recordingRawData'];
-        var blankRawData = globalStore[endpoint.href]['blankRawData'];
-        // var filterRecordingTrackingRawData = globalStore[endpoint.href]['filterRecordingTrackingRawData'];
-
-        // console.log("blankRawData is.......");
-        // console.log(blankRawData);
+        var recordingRawData = recordingEndPointResponse[0];
+        var blankRawData = blankEndPointResponse[0];
 
         //  2. prepare data in the format to be feeded to the visualisation library.
         var formattedData = prepareDataForGoogleChartTimeline(recordingRawData, endpoint);
