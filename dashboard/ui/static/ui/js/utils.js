@@ -4,7 +4,7 @@
  * @param {string} endpoint - The API endpoint that serves the data.
  * @returns {Array} Response JSON array.
  */
-function getJSONSynchronous(endpoint) {
+const getJSONSynchronous = (endpoint) => {
     var data = [];
     $.ajax({
         type: 'GET',
@@ -26,7 +26,7 @@ function getJSONSynchronous(endpoint) {
  * @param {Date} dateObject - A JavaScript Date object whose corresponding `yyyy-mm-dd` we need
  * @returns {String} `yyyy-mm-dd` String.
  */
-function yyyy_mm_dd(dateObject) {
+const yyyy_mm_dd = (dateObject) => {
 
     var dd = dateObject.getDate();
     var mm = dateObject.getMonth() + 1; //Months are zero based
@@ -48,7 +48,7 @@ function yyyy_mm_dd(dateObject) {
  * @param {Date} dateObject - A JavaScript Date object whose corresponding `hh:mm:ss` we need
  * @returns {String} `hh:mm:ss` String.
  */
-function hh_mm_ss(dateObject) {
+const hh_mm_ss = (dateObject) => {
 
     var hh = dateObject.getHours();
     var mm = dateObject.getMinutes();
@@ -74,14 +74,15 @@ function hh_mm_ss(dateObject) {
  * @param {String} timeString - Time in `hh:mm:ss` format.
  * @returns {number} clipNumber corresponding to given time.
  */
-function getClipNumber(timeString) {
+const getClipNumber = (timeString) => {
 
     var hours = parseInt(timeString.split(":")[0]);
     var minutes = parseInt(timeString.split(":")[1]);
 
     var clipNumber = 2 * hours + 1;
 
-    if (minutes >= 29) {
+    if (minutes >= 29)
+     {
         clipNumber += 1;
     }
 
@@ -93,14 +94,12 @@ function getClipNumber(timeString) {
 }
 
 /**
- * Performs indexing on a given JSONArray as per given attribute.  
+ * Performs indexing on a given JSONArray as per given  
  * @param {Array} jsonArray - AN array of JSON 
- * @param {String} indexAttribute - Name of the index attribute.
- * @returns {String} Key-Value pair where 
- *                     Key = index_attribute value
- *                     Value = corresponding JSON Object
+ * @param {String} indexAttribute - A JavaScript Data object whose corresponding `yyyy-mm-dd` we need
+ * @returns {String} `yyyy-mm-dd` String.
  */
-function jsonIndexer(jsonArray, indexAttribute) {
+const jsonIndexer = (jsonArray, indexAttribute) => {
     
     var index = {};
     
@@ -115,11 +114,9 @@ function jsonIndexer(jsonArray, indexAttribute) {
 
 /** 
  * Adds GET Parameters to a base URL given
- * @param {String} baseEndPoint - The base URL to which GET Params need to be added.
- * @param {} GETParams - Key-Value pair with key being the parameter name and value being the corresponding parameter value.
- * @returns {URL} A URL Object which now has new URL with all GET parameters added to it.
+ * @param {String} baseEndPoint - The base URL to 
  */
-function addGETParameters(baseEndPoint, GETParams){
+const addGETParameters = (baseEndPoint, GETParams) => {
 
     var specificEndPoint = new URL(baseEndPoint);
     
@@ -128,4 +125,39 @@ function addGETParameters(baseEndPoint, GETParams){
     }
 
     return specificEndPoint;
+}
+
+
+const setColumns = (columnNames, addFooter = false) => {
+
+    rowHtml = '';
+
+    $.each(columnNames, function(i, columnName) {
+        columnHtml = '<th scope="col" class="' + columnName + '">' + columnName + '</th>';
+        rowHtml += columnHtml;
+    });
+
+    $('tr#header-row').html(rowHtml);
+    if (addFooter) {
+        $('tr#footer-row').html(rowHtml);
+    }
+}
+
+const createDataTable = (querySelector, data, addFooter, options) => {
+
+    let columnNames = Object.keys(data[0]);
+    setColumns(columnNames, addFooter);
+
+    let columns = [];
+    for (i = 0; i < columnNames.length; i++) {
+        columns.push({"data": columnNames[i]});
+    }
+
+    options['columns'] = columns;
+    options['data'] = data;
+
+    var table = $(querySelector).DataTable(options);
+
+    return table;
+
 }
