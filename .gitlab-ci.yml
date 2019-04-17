@@ -1,9 +1,10 @@
-image: python:3.6-alpine
+image: ubuntu
 
 pages:
   script:
-  - apk add mariadb-dev #Contains libmysqlclient (dependency for pip mysqlcleint)
-  - pip install -r requirements.txt
+  - sudo apt install libmysqlclient-dev #(dependency for pip mysqlclient)
+  - sudo apt install python3-pip
+  - pip3 install -r requirements.txt
   - cd docs
   - make html
   - mv _build/html/ ../public/
