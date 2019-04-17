@@ -2,6 +2,8 @@
 TV Recording Dashboard
 **********************
 
+![Build Status](https://gitlab.com/athenasowl-intern/ao-tv-recording-db-ui/badges/master/build.svg)
+
 Track and manage TV Recording Pipeline, from anywhere.
 
 Installation
@@ -40,9 +42,9 @@ Deployment on Apache
 
 Place the SSL certificate and key file in ``/etc/ssl/certs`` and ``/etc/ssl/keys`` 
 respectively.
-Copy the contents of dashboard.conf to ``/etc/apache2/sites-available/dashboard.conf``
+Copy the contents of [dashboard.conf](dashboard.conf) to ``/etc/apache2/sites-available/dashboard.conf``
 
-Enable ``dashboard.conf`` in apache2 and restart::
+Enable ``dashboard`` in apache2 and restart::
 
     sudo a2dissite 000-default
     sudo a2ensite dashboard
