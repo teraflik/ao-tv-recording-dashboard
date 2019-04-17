@@ -2,6 +2,7 @@ image: python:3.6-alpine
 
 pages:
   script:
+  - apk add libmysqlclient-dev
   - pip install -r requirements.txt
   - cd docs
   - make html
@@ -10,4 +11,4 @@ pages:
     paths:
     - public
   only:
-  - master
+  - feature-monitoring
