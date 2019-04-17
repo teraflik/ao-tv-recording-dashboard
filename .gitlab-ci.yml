@@ -2,8 +2,8 @@ image: ubuntu
 
 pages:
   script:
-  - sudo apt install libmysqlclient-dev #(dependency for pip mysqlclient)
-  - sudo apt install python3-pip
+  - apt install libmysqlclient-dev #(dependency for pip mysqlclient)
+  - apt install python3-pip
   - pip3 install -r requirements.txt
   - cd docs
   - make html
