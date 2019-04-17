@@ -5,6 +5,7 @@ pages:
   - apt-get update
   - apt-get install libmysqlclient-dev python3-pip -y #(dependency for pip mysqlclient)
   - pip3 install -r requirements.txt
+  - mkdir /var/.ao/
   - cp .parameters.ini /var/.ao/parameters.ini
   - cd docs
   - make html
