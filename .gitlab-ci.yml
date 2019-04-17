@@ -2,7 +2,7 @@ image: python:3.6-alpine
 
 pages:
   script:
-  - apk add libmysqlclient-dev
+  - apk add mariadb-dev #Contains libmysqlclient (dependency for pip mysqlcleint)
   - pip install -r requirements.txt
   - cd docs
   - make html
