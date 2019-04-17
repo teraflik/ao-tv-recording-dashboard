@@ -103,3 +103,16 @@ class RecordingTracking(models.Model):
     class Meta:
         managed = False
         db_table = 'recording_tracking'
+
+class ExpectedSlot(models.Model):
+    id = models.IntegerField(primary_key=True)
+    channel_value = models.ForeignKey(ChannelInfo, models.DO_NOTHING, db_column='channel_value', blank=True, null=True)
+    device_id = models.CharField(max_length=255, blank=True, null=True)
+    stage_message = models.CharField(max_length=255, blank=True, null=True)
+    expected_time = models.CharField(max_length=255, blank=True, null=True)
+    validity_start = models.DateTimeField(blank=True, null=True)
+    validity_stop = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'expected_slot'

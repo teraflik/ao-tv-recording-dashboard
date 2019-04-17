@@ -13,9 +13,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import (ChannelInfo, FilterRecordingTracking,
+from .models import (ChannelInfo, ExpectedSlot, FilterRecordingTracking,
                      InvalidFrameTracking, Recording, RecordingTracking)
-from .serializers import (ChannelInfoSerializer,
+from .serializers import (ChannelInfoSerializer, ExpectedSlotSerializer,
                           FilterRecordingTrackingSerializer,
                           InvalidFrameTrackingSerializer, RecordingSerializer,
                           RecordingTrackingSerializer)
@@ -196,6 +196,40 @@ class BlankView(APIView):
             invalid_frame_trackings = invalid_frame_trackings.filter(q)        
         
         serializer = InvalidFrameTrackingSerializer(invalid_frame_trackings, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        pass
+
+class ExpectedSlotView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+
+        # get the input params
+        input_date = request.GET.get('date') or str(datetime.datetime.date(datetime.datetime.now()))
+        channel_values = request.GET.getlist('channel_values') or ChannelInfo.objects.values_list('channel_value', flat=True)
+        device_id = request.GET.get('device_id') or 'both'
+        
+        utc_timezone = pytz.timezone('UTC')
+        filters = {}
+        # ensures channel_values is a list of integers
+        try:
+            channel_values_int = [int(x) for x in channel_values]
+            input_datetime_object = utc_timezone.localize(datetime.datetime.strptime(input_date, "%Y-%m-%d"))
+            
+            filters['channel_value__in'] = channel_values_int
+            filters['validity_start__lte'] = input_datetime_object
+            filters['validity_stop__gte'] = input_datetime_object
+        
+        except ValueError as error:
+            filters['channel_value__in'] = []
+
+        if device_id != 'both':
+            filters['device_id'] = device_id
+
+        expected_slots = ExpectedSlot.objects.filter(**filters)
+        serializer = ExpectedSlotSerializer(expected_slots, many=True)
         return Response(serializer.data)
     
     def post(self, request):

@@ -9,7 +9,7 @@ from django.contrib.auth.models import Group, User
 from django.db import models
 
 # Project related dependencies
-from .models import (ChannelInfo, FilterRecordingTracking,
+from .models import (ChannelInfo, ExpectedSlot, FilterRecordingTracking,
                      InvalidFrameTracking, Recording, RecordingTracking)
 
 
@@ -62,6 +62,20 @@ class InvalidFrameTrackingAdmin(admin.ModelAdmin):
 class FilterRecordingTrackingAdmin(admin.ModelAdmin):
     list_display = [field.name for field in FilterRecordingTracking._meta.fields]
     search_fields = ('request_id',)
+
+@admin.register(ExpectedSlot)
+class ExpectedSlotsAdmin(admin.ModelAdmin):
+
+    list_display = list(map(lambda x: 'get_channel_name' if x == 'channel_value' else x, 
+                            (field.name for field in ExpectedSlot._meta.fields)))
+    
+    list_filter = ('device_id', 'channel_value')
+
+    def get_channel_name(self, obj):
+        return obj.channel_value.channel_name
+    
+    get_channel_name.short_description = 'Channel Name'
+    get_channel_name.admin_order_field = 'channel_value__channel_name'
 
 
 admin.site.site_header = "Athenas Owl"

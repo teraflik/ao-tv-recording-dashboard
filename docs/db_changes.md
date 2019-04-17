@@ -47,6 +47,26 @@ This documents the changes made to the schema of tables used for TV Recording lo
       alter table sys1.channel_info
       add logo_url varchar(2000);
       ```
+3. **Purpose:-** Maintaining expected slots of TV Recording
+
+   **Changes done:-**
+
+   1. Adding a new table to the DB containing the slot information for each channel
+
+      ```sql
+      CREATE TABLE IF NOT EXISTS expected_slot(
+         id int primary key AUTO_INCREMENT,
+         channel_value int,
+         device_id VARCHAR(255),
+         stage_message VARCHAR(255),
+         expected_time VARCHAR(255),
+         validity_start TIMESTAMP,
+         validity_stop TIMESTAMP,
+         FOREIGN KEY (channel_value) REFERENCES channel_info(channel_value)
+      );
+  
+
+      ```
 
 
 
