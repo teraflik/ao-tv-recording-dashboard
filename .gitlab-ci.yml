@@ -1,8 +1,12 @@
-image: python:3.6-alpine
+image: ubuntu
 
 pages:
   script:
-  - pip install -r requirements.txt
+  - apt-get update
+  - apt-get install libmysqlclient-dev python3-pip -y #(dependency for pip mysqlclient)
+  - pip3 install -r requirements.txt
+  - mkdir /var/.ao/
+  - cp .parameters.ini /var/.ao/parameters.ini
   - cd docs
   - make html
   - mv _build/html/ ../public/
