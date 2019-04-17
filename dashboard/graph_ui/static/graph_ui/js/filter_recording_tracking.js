@@ -1,201 +1,13 @@
-google.charts.load('46', {'packages':['timeline']});
+let globalDataTable = {};
 
-var globalDataTable = {};
-
-var stageToColor = {
+let stageToColor = {
     "Start Recording":  'green',
-    // "Clipping Started":  'yellow',
-    // "Clipping Done":  'orange',
-    // "Uploading start":  'brown',
     "Uploading done":  'blue',
     "Stop Recording":  'black',
-    'empty':    'grey',
-    // 'Now Recording': 'lightblue',
-    // 'Failed':   'red'
+    'empty':    'grey'
 }
 
-var dataTableEnum  = Object.freeze({
-    "category"    :   0, 
-    "label"   :   1, 
-    "tooltip" :   2,
-    "color" :   3,
-    "startTime" :   4,
-    "endTime" :   5,
-});
-
-function dateTimeFromProcessingRequestID(request_id) {
-    
-    var date = request_id.split("_")[0];
-    var formattedDate = date[0] + date[1] + date[2] + date[3] + "-" + date[4] + date[5] + '-' + date[6] + date[7];
-    
-    var time = request_id.split("_")[2];
-    var formattedTime = time[0] + time[1] + ":" + time[2] + time[3] + ":" + time[4] + time[5];
-
-    var clipNumber = getClipNumber(formattedTime);
-    var nextTimeSeconds = clipNumber * 1800;
-
-    //  creating startTime object
-    var startTime = new Date(formattedDate + " " + formattedTime);
-
-    //  creating endTime object
-    var endTime = new Date(formattedDate + " " + "00:00:00");
-    endTime.setSeconds(nextTimeSeconds);
-    
-    return {
-        'start_time': startTime,
-        'end_time': endTime
-    }
-}
-
-function initializeDataTable() {
-
-    var dataTable = new google.visualization.DataTable();
-    dataTable.addColumn({ type: 'string', id: 'category' });
-    dataTable.addColumn({ type: 'string', id: 'Name' });
-    dataTable.addColumn({ type: 'string', id: 'color', role: 'tooltip' });
-    dataTable.addColumn({ type: 'string', id: 'color', role: 'style' });
-    dataTable.addColumn({ type: 'date', id: 'Start' });
-    dataTable.addColumn({ type: 'date', id: 'End' });
-    // dataTable.addRows([['Marker', todayDate, todayDate, 'grey', new Date(todayDate + " 00:00:00"), new Date(todayDate + " 23:59:59.999")]]);
-    
-    return dataTable;
-}
-
-function prepareStartStopEntries(startStopRawData, endpoint) {
-
-    var startStopDataTableContents = [];
-
-    for(var i = 0; i < startStopRawData.length; i++) {
-        var entry = startStopRawData[i];
-
-        var category;
-        var label;
-        var tooltip;
-        var color;
-        var startTimeTimeline;
-        var endTimeTimeline;
-        
-        var safeTyMargin = 2;
-
-        category = 'Recording';
-        label = '';
-        color = stageToColor[entry['stage_message']];
-            
-        startTimeTimeline = new Date(entry['timestamp']);
-
-        endTimeTimeline = new Date(entry['timestamp']);
-        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
-        
-        var startTimeString = hh_mm_ss(startTimeTimeline);
-        tooltip = entry['stage_message'] + ' ' + startTimeString;
-            
-        startStopDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
-    }
-
-    //  3. return it.
-    return startStopDataTableContents;
-}
-
-function prepareProcessingEntries(filterRawData, endpoint) {
-    
-    var processingDataTableContents = [];
-
-    for(var i = 0; i < filterRawData.length; i++) {
-        var entry = filterRawData[i];
-        
-        var category;                                       //  used to 
-        var label;                                          //  used for storing hidden data for each entry to be used later.
-        var tooltip;
-        var color;
-        var startTimeTimeline;
-        var endTimeTimeline;
-        
-        var safeTyMargin = 2;
-
-        category = 'Processing';
-        label = '';
-        color = 'blue';
-
-        times = dateTimeFromProcessingRequestID(entry['request_id']);
-        
-        var startTime = times['start_time'];
-        startTimeTimeline = new Date(startTime);
-        startTimeTimeline.setMinutes(startTimeTimeline.getMinutes() + safeTyMargin);
-        
-        var endTime = times['end_time'];
-        endTimeTimeline = new Date(endTime);
-        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
-
-
-        var endTime = new Date(startTime);
-        endTime.setMinutes(endTime.getMinutes() + entry['clip_duration']);
-
-        endTimeTimeline = new Date(endTime);
-        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
-
-        var startTimeString = hh_mm_ss(startTime);
-        var endTimeString = hh_mm_ss(endTime);
-        
-        tooltip = entry['device_id'] + ' ' + startTimeString + ' - ' + endTimeString;
-
-        if (startTimeTimeline < endTimeTimeline) {
-            processingDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
-        }
-    }
-
-    //  3. return it.
-    return processingDataTableContents;
-}
-
-function prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, endpoint) {
-
-    var date = endpoint.searchParams.get('date');
-    var startDate = new Date(date + " 00:00:00");
-    
-    var endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 1);
-
-    //  extract startStopRawData for device_id = 'a'
-    var startStopRawData = recordingRawData.filter(function(entry) {
-        return ((entry['device_id'] == 'a') && (entry['stage_number'] == 1 || entry['stage_number'] == 6));
-    });
-
-    if (startStopRawData.length == 0) {
-        startStopRawData = recordingRawData.filter(function(entry) {
-            return ((entry['device_id'] == 'b') && (entry['stage_number'] == 1 || entry['stage_number'] == 6));
-        });
-    }
-
-    console.log("startStopRawData is ....");
-    console.log(startStopRawData);
-
-    //  if no data recieved
-    if (!startStopRawData || startStopRawData.length == 0) {
-        return [['Empty', '', 'No filter recordings available', stageToColor['empty'], startDate, endDate]];
-    }
-
-    var startStopDataTableContents = prepareStartStopEntries(startStopRawData, endpoint);
-    
-    var processingDataTableContents = prepareProcessingEntries(filterRawData, endpoint);
-
-    var dataTableContents = startStopDataTableContents.concat(processingDataTableContents);
-
-    return dataTableContents;
-}
-
-function reverseJsonMapper(originalMapping) {
-    var reverseMapping = {};
-
-    for (key in originalMapping) {
-        if (originalMapping.hasOwnProperty(key)) {
-            reverseMapping[originalMapping[key]] = key;
-        }
-    }
-
-    return reverseMapping;
-}
-
-var summaryStatusEnum  = Object.freeze({
+let summaryStatusEnum  = Object.freeze({
     "ok"    :   1, 
     "empty"   :   2, 
     "error" :   3,
@@ -204,7 +16,7 @@ var summaryStatusEnum  = Object.freeze({
 });
 
 // Ref:- https://stackoverflow.com/questions/21346967/using-value-of-enum-as-key-in-another-enum-in-javascript
-var summaryStatusToGraphic = {
+let summaryStatusToGraphic = {
     [summaryStatusEnum.ok] : {
                             "bgcolor" : "lightgreen",
                             "innerHTML" : "&#10004;",
@@ -228,13 +40,135 @@ var summaryStatusToGraphic = {
 };
 
 
+function prepareStartStopEntries(startStopRawData, endpoint) {
+
+    let startStopDataTableContents = [];
+
+    for(let i = 0; i < startStopRawData.length; i++) {
+        let entry = startStopRawData[i];
+
+        let category;
+        let label;
+        let tooltip;
+        let color;
+        let startTimeTimeline;
+        let endTimeTimeline;
+        
+        let safeTyMargin = 2;
+
+        category = 'Recording';
+        label = '';
+        color = stageToColor[entry['stage_message']];
+            
+        startTimeTimeline = new Date(entry['timestamp']);
+
+        endTimeTimeline = new Date(entry['timestamp']);
+        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
+        
+        let startTimeString = hh_mm_ss(startTimeTimeline);
+        tooltip = entry['stage_message'] + ' ' + startTimeString;
+            
+        startStopDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+    }
+
+    //  3. return it.
+    return startStopDataTableContents;
+}
+
+function prepareProcessingEntries(filterRawData, endpoint) {
+    
+    let processingDataTableContents = [];
+
+    for(let i = 0; i < filterRawData.length; i++) {
+        let entry = filterRawData[i];
+        
+        let category;                                       //  used to 
+        let label;                                          //  used for storing hidden data for each entry to be used later.
+        let tooltip;
+        let color;
+        let startTimeTimeline;
+        let endTimeTimeline;
+        
+        let safeTyMargin = 2;
+
+        category = 'Processing';
+        label = '';
+        color = 'blue';
+
+        times = dateTimeFromProcessingRequestID(entry['request_id']);
+        
+        let startTime = times['start_time'];
+        startTimeTimeline = new Date(startTime);
+        startTimeTimeline.setMinutes(startTimeTimeline.getMinutes() + safeTyMargin);
+        
+        let endTime = times['end_time'];
+        endTimeTimeline = new Date(endTime);
+        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
+
+
+        endTime = new Date(startTime);
+        endTime.setMinutes(endTime.getMinutes() + entry['clip_duration']);
+
+        endTimeTimeline = new Date(endTime);
+        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
+
+        let startTimeString = hh_mm_ss(startTime);
+        let endTimeString = hh_mm_ss(endTime);
+        
+        tooltip = entry['device_id'] + ' ' + startTimeString + ' - ' + endTimeString;
+
+        if (startTimeTimeline < endTimeTimeline) {
+            processingDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+        }
+    }
+
+    //  3. return it.
+    return processingDataTableContents;
+}
+
+function prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, endpoint) {
+
+    let date = endpoint.searchParams.get('date');
+    let startDate = new Date(date + " 00:00:00");
+    
+    let endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+
+    //  extract startStopRawData for device_id = 'a'
+    let startStopRawData = recordingRawData.filter(function(entry) {
+        return ((entry['device_id'] == 'a') && (entry['stage_number'] == 1 || entry['stage_number'] == 6));
+    });
+
+    if (startStopRawData.length == 0) {
+        startStopRawData = recordingRawData.filter(function(entry) {
+            return ((entry['device_id'] == 'b') && (entry['stage_number'] == 1 || entry['stage_number'] == 6));
+        });
+    }
+
+    console.log("startStopRawData is ....");
+    console.log(startStopRawData);
+
+    //  if no data recieved
+    if (!startStopRawData || startStopRawData.length == 0) {
+        return [['Empty', '', 'No filter recordings available', stageToColor['empty'], startDate, endDate]];
+    }
+
+    let startStopDataTableContents = prepareStartStopEntries(startStopRawData, endpoint);
+    
+    let processingDataTableContents = prepareProcessingEntries(filterRawData, endpoint);
+
+    let dataTableContents = startStopDataTableContents.concat(processingDataTableContents);
+
+    return dataTableContents;
+}
+
 function updateSummaryTable(formattedData, blankRawData, endpoint) {
     
     //  create a colorToStage mapping
-    var colorToStage = reverseJsonMapper(stageToColor);
+    let colorToStage = reverseJsonMapper(stageToColor);
 
     //  check status
-    var status;
+    let status;
     if (!blankRawData || blankRawData.length == 0) {
         status = summaryStatusEnum.ok;
     }
@@ -242,9 +176,9 @@ function updateSummaryTable(formattedData, blankRawData, endpoint) {
         status = summaryStatusEnum.blank;
     }
 
-    for(var i = 0; i < formattedData.length; i++) {
-        var color = formattedData[i][dataTableEnum.color];
-        var stage = colorToStage[color];
+    for(let i = 0; i < formattedData.length; i++) {
+        let color = formattedData[i][dataTableEnum.color];
+        let stage = colorToStage[color];
 
         if (stage == 'empty') {
             status = summaryStatusEnum.empty;
@@ -266,34 +200,24 @@ function updateSummaryTable(formattedData, blankRawData, endpoint) {
         // }
     }
 
-    var innerHTML = summaryStatusToGraphic[status].innerHTML;
-    var bgcolor = summaryStatusToGraphic[status].bgcolor;
+    let innerHTML = summaryStatusToGraphic[status].innerHTML;
+    let bgcolor = summaryStatusToGraphic[status].bgcolor;
 
     // select the DOM element corresponding to summaryBox of this channel.
-    var deviceID = endpoint.searchParams.get('device_id');
-    var channelValue = endpoint.searchParams.get('channel_values');
-    var summaryBoxID = ['s', deviceID, channelValue].join("_");
-    var summaryBox = document.getElementById(summaryBoxID);
+    let deviceID = endpoint.searchParams.get('device_id');
+    let channelValue = endpoint.searchParams.get('channel_values');
+    let summaryBoxID = ['s', deviceID, channelValue].join("_");
+    let summaryBox = document.getElementById(summaryBoxID);
 
     // fill the DOM Element with the details.
     summaryBox.innerHTML = innerHTML;
     summaryBox.setAttribute('bgcolor', bgcolor);
 }
 
-function clipNoToInterval(dateString, clipNumber) {
-    var startTime = new Date(dateString + " 00:00:00");
-    var endTime = new Date(dateString + " 00:00:00");
-
-    startTime.setMinutes((clipNumber - 1) * 30);
-    endTime.setMinutes(clipNumber * 30);
-
-    return [startTime, endTime];
-}
-
 function getCurrentRecordingEntries(formattedData) {
 
     // Ref:- https://stackoverflow.com/questions/7486085/copy-array-by-value
-    var formattedData = formattedData.slice();
+    formattedData = formattedData.slice();
 
     //  IF NO ENTRIES (will not hit this case as of now)
     if (!formattedData) {
@@ -312,14 +236,14 @@ function getCurrentRecordingEntries(formattedData) {
         return 0;
     });
 
-    var colorToStage = reverseJsonMapper(stageToColor);
+    let colorToStage = reverseJsonMapper(stageToColor);
 
-    var lastRecordingEntry = null;
-    var lastStartRecordingEntry = null;
-    var lastProcessingEntry = null;
-    for (var i = 0; i < formattedData.length; i++) {
+    let lastRecordingEntry = null;
+    let lastStartRecordingEntry = null;
+    let lastProcessingEntry = null;
+    for (let i = 0; i < formattedData.length; i++) {
 
-        var entry = formattedData[i];
+        let entry = formattedData[i];
         
         //  if entry is of category Recording and its the first of this kind.
         if (!lastRecordingEntry && entry[dataTableEnum.category] == "Recording") {
@@ -345,10 +269,10 @@ function getCurrentRecordingEntries(formattedData) {
     }
 
     //  magic happens here.......
-    var currentRecordingEntries = [];
+    let currentRecordingEntries = [];
 
     //  1. get the latest clip number out of the formattedData entries
-    var lastProcessingClipNumber = 0;
+    let lastProcessingClipNumber = 0;
     if (!lastProcessingEntry) {
         lastProcessingClipNumber = 0;
     }
@@ -357,17 +281,17 @@ function getCurrentRecordingEntries(formattedData) {
     }
 
     //  2. find clip number corresponding to the latest start recording 
-    var lastStartRecordingClipNumber = getClipNumber(hh_mm_ss(lastStartRecordingEntry[dataTableEnum.startTime]));
+    let lastStartRecordingClipNumber = getClipNumber(hh_mm_ss(lastStartRecordingEntry[dataTableEnum.startTime]));
 
     //  3. take maximum of the above two
-    var startingClipNumber = Math.max(lastProcessingClipNumber, lastStartRecordingClipNumber);
+    let startingClipNumber = Math.max(lastProcessingClipNumber, lastStartRecordingClipNumber);
 
     //  4. find clip number corresponding to current time
-    var currentTime = new Date();
-    var currentTimeClipNumber = getClipNumber(hh_mm_ss(currentTime));
+    let currentTime = new Date();
+    let currentTimeClipNumber = getClipNumber(hh_mm_ss(currentTime));
 
     //  5. get the endingClipNumber
-    var endingClipNumber;
+    let endingClipNumber;
 
     //  a. if no stopRecording entry in the end
     if (lastRecordingEntry == lastStartRecordingEntry) {
@@ -379,33 +303,33 @@ function getCurrentRecordingEntries(formattedData) {
     }
 
     //  6. make entries for the missing clip numbers
-    var safeTyMargin = 2;
-    for (var i = startingClipNumber; i <= endingClipNumber; i++) {
+    let safeTyMargin = 2;
+    for (let i = startingClipNumber; i <= endingClipNumber; i++) {
         
-        var stageMessage = 'Now Recording';
+        let stageMessage = 'Now Recording';
         //  category
-        var category = 'Processing';
+        let category = 'Processing';
 
         //  label
-        var label = stageMessage;
+        let label = stageMessage;
 
-        var [startTime, endTime] = clipNoToInterval(yyyy_mm_dd(new Date()), i);
+        let [startTime, endTime] = clipNoToInterval(yyyy_mm_dd(new Date()), i);
 
-        var startTimeString = hh_mm_ss(startTime);
-        var endTimeString = hh_mm_ss(endTime);
+        let startTimeString = hh_mm_ss(startTime);
+        let endTimeString = hh_mm_ss(endTime);
         
         //  startTimeTimeline
-        var startTimeTimeline = new Date(startTime);
+        let startTimeTimeline = new Date(startTime);
         startTimeTimeline.setMinutes(startTimeTimeline.getMinutes() + safeTyMargin);
 
         //  endTimeTimeline
-        var endTimeTimeline = new Date(endTime);
+        let endTimeTimeline = new Date(endTime);
         endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
         
         //  color
         //  see if difference between current_time and the startTime of this entry is more than 1hr, then make this "Failure", else use original stageMessage
-        var color;
-        var hoursElapsed = (currentTime - startTime) / (60 * 60 * 1000)
+        let color;
+        let hoursElapsed = (currentTime - startTime) / (60 * 60 * 1000)
         
         if (hoursElapsed > 1) {
             stageMessage = 'Failed';
@@ -414,7 +338,7 @@ function getCurrentRecordingEntries(formattedData) {
         color = stageToColor[stageMessage];
 
         //  tooltip
-        var tooltip = stageMessage + ' ' + startTimeString + ' - ' + endTimeString;
+        let tooltip = stageMessage + ' ' + startTimeString + ' - ' + endTimeString;
         
         //  add entry
         currentRecordingEntries.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
@@ -422,23 +346,13 @@ function getCurrentRecordingEntries(formattedData) {
     return currentRecordingEntries;
 }
 
-function removeDuplicateObjects(objectArray) {
-    
-    // console.log("objectArray is ......");
-    // console.log(objectArray);
-
-    var uniqueStringArray = new Set(objectArray.map(e => JSON.stringify(e)));
-    var uniqueObjectArray = Array.from(uniqueStringArray).map(e => JSON.parse(e));
-    return uniqueObjectArray;
-}
-
 function updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint) {
 
     //  get the HTML DOM element where this is going to happen
-    var channelValue = endpoint.searchParams.get('channel_values');
-    var deviceID = endpoint.searchParams.get('device_id');
-    var divID = [deviceID, channelValue, "blank"].join("_");
-    var DOMElement = document.getElementById(divID);
+    let channelValue = endpoint.searchParams.get('channel_values');
+    let deviceID = endpoint.searchParams.get('device_id');
+    let divID = [deviceID, channelValue, "blank"].join("_");
+    let DOMElement = document.getElementById(divID);
     
     if (!recordingRawData || recordingRawData.length == 0) {
         DOMElement.innerHTML = "No recordings available.";
@@ -449,10 +363,10 @@ function updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint) {
         DOMElement.setAttribute('style', 'color: green');
     }
     else {
-        var uniqueBlankRawData = removeDuplicateObjects(blankRawData);
-        var totalBlankSeconds = 0;
-        for(var i = 0; i < uniqueBlankRawData.length; i++) {
-            var entry = uniqueBlankRawData[i];
+        let uniqueBlankRawData = removeDuplicateObjects(blankRawData);
+        let totalBlankSeconds = 0;
+        for(let i = 0; i < uniqueBlankRawData.length; i++) {
+            let entry = uniqueBlankRawData[i];
             totalBlankSeconds += parseFloat(entry['invalid_frame_to']) - parseFloat(entry['invalid_frame_from']);
         }
         DOMElement.innerHTML = "" + Math.round(totalBlankSeconds / 60) + " minutes of Blank Frames.";
@@ -462,13 +376,13 @@ function updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint) {
 
 function makeClipNoToProcessingEntry(processingEntries) {
     
-    var clipNoToProcessingEntry = {};
+    let clipNoToProcessingEntry = {};
     
-    for(var i = 0; i < processingEntries.length; i++) {
-        var entry = processingEntries[i];
-        var startTime = entry[dataTableEnum.startTime];
+    for(let i = 0; i < processingEntries.length; i++) {
+        let entry = processingEntries[i];
+        let startTime = entry[dataTableEnum.startTime];
 
-        var clipNumber = getClipNumber(hh_mm_ss(startTime));
+        let clipNumber = getClipNumber(hh_mm_ss(startTime));
         clipNoToProcessingEntry[clipNumber] = entry;
     }
 
@@ -485,17 +399,17 @@ function createRecordingSlots(startStopEntries, endpoint) {
     });
     
     //  extract date from endpoint and get today's date
-    var date = endpoint.searchParams.get('date');
-    var today = yyyy_mm_dd(new Date());
+    let date = endpoint.searchParams.get('date');
+    let today = yyyy_mm_dd(new Date());
 
-    var recordingSlots = [];
+    let recordingSlots = [];
 
-    var j = 0;
-    for(var i = 0; i < startStopEntries.length; ) {
+    let j = 0;
+    for(let i = 0; i < startStopEntries.length; ) {
         
-        var entry = {};
-        var startRecordingDateTime;
-        var stopRecordingDateTime;
+        let entry = {};
+        let startRecordingDateTime;
+        let stopRecordingDateTime;
         //  1. if the first entry is stop recording,
         //     then the slot will be from 
         //     dayStart - stopRecording
@@ -550,49 +464,49 @@ function createRecordingSlots(startStopEntries, endpoint) {
 
 function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
     
-    var dummyEntries = [];
-    var inputDate = endpoint.searchParams.get('date');
+    let dummyEntries = [];
+    let inputDate = endpoint.searchParams.get('date');
 
-    var currentTime = new Date();
+    let currentTime = new Date();
 
     //  loop over recording slots
-    for(var i = 0; i < recordingSlots.length; i++) {
+    for(let i = 0; i < recordingSlots.length; i++) {
         
         //  1. convert the start and end times to their corresponding clipNumbers
-        var startRecordingTime = recordingSlots[i]['startRecordingTime'];
-        var stopRecordingTime = recordingSlots[i]['stopRecordingTime'];
+        let startRecordingTime = recordingSlots[i]['startRecordingTime'];
+        let stopRecordingTime = recordingSlots[i]['stopRecordingTime'];
 
-        var startClipNumber = getClipNumber(hh_mm_ss(startRecordingTime));
-        var stopClipNumber = getClipNumber(hh_mm_ss(stopRecordingTime));
+        let startClipNumber = getClipNumber(hh_mm_ss(startRecordingTime));
+        let stopClipNumber = getClipNumber(hh_mm_ss(stopRecordingTime));
 
         // console.log("startClipNumber is........ " + startClipNumber);
 
-        var safeTyMargin = 2;
+        let safeTyMargin = 2;
 
         //  2. loop through the clipNumbers
-        for (var j = startClipNumber; j <= stopClipNumber; j++) {
+        for (let j = startClipNumber; j <= stopClipNumber; j++) {
 
             //  3. check if entry corresponding to that clipNumber is present in the mapping - clipNoToProcessingEntry
             if (!clipNoToProcessingEntry[j]) {
                 // console.log("clipNumber " + j + " is missing.");
 
                 //  4. if not, create a dummy entry.
-                var [startTime, endTime] = clipNoToInterval(inputDate, j);
-                var startTimeString = hh_mm_ss(startTime);
-                var endTimeString = hh_mm_ss(endTime);
+                let [startTime, endTime] = clipNoToInterval(inputDate, j);
+                let startTimeString = hh_mm_ss(startTime);
+                let endTimeString = hh_mm_ss(endTime);
 
-                var category = 'Processing';
+                let category = 'Processing';
 
-                var stageMessage = 'Now Recording';
-                var hoursElapsed = (currentTime - startTime) / (60 * 60 * 1000);
+                let stageMessage = 'Now Recording';
+                let hoursElapsed = (currentTime - startTime) / (60 * 60 * 1000);
                 
                 if (hoursElapsed > 1) {
                     stageMessage = 'Failed';
                 }
 
-                var label = stageMessage;
-                var tooltip = stageMessage + " - " + startTimeString + " - " + endTimeString;
-                var color = stageToColor[stageMessage];
+                let label = stageMessage;
+                let tooltip = stageMessage + " - " + startTimeString + " - " + endTimeString;
+                let color = stageToColor[stageMessage];
                 
                 startTime.setMinutes(startTime.getMinutes() + safeTyMargin);
                 endTime.setMinutes(endTime.getMinutes() - safeTyMargin);
@@ -609,18 +523,18 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
 
 function populateTimeline(timeline, endpoint, index) {
     
-    var filterEndPoint = new URL(endpoint.href);
+    let filterEndPoint = new URL(endpoint.href);
 
     //  1. making corresponding endpoint for recording table.
-    var recordingEndPoint = new URL(endpoint.href);
+    let recordingEndPoint = new URL(endpoint.href);
 
-    var url = document.createElement('a');
+    let url = document.createElement('a');
     url.href = endpoint.href;
-    var protocol = url.protocol;
-    var host = url.host;
-    var path = '/api/recording';
-    var searchParams = url.search;
-    var recordingEndPoint = new URL(protocol + "//" + host + path + searchParams);
+    let protocol = url.protocol;
+    let host = url.host;
+    let path = '/api/recording';
+    let searchParams = url.search;
+    recordingEndPoint = new URL(protocol + "//" + host + path + searchParams);
     // console.log("recordingEndPoint is .... " + recordingEndPoint.href);
 
     $.when(
@@ -633,8 +547,8 @@ function populateTimeline(timeline, endpoint, index) {
 
     ).then(function(filterEndPointResponse, recordingEndPointResponse) {
         
-        var filterRawData = filterEndPointResponse[0];
-        var recordingRawData = recordingEndPointResponse[0];
+        let filterRawData = filterEndPointResponse[0];
+        let recordingRawData = recordingEndPointResponse[0];
 
         console.log("filterRawData is.......");
         console.log(filterRawData);
@@ -643,13 +557,13 @@ function populateTimeline(timeline, endpoint, index) {
         console.log(recordingRawData);
 
         //  2. prepare data in the format to be feeded to the visualisation library.
-        var formattedData = prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, endpoint);
+        let formattedData = prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, endpoint);
 
         console.log("formattedData is.......");
         console.log(formattedData);
 
         // //  2.1 filter out recordingEntries and processingEntries
-        // var startStopEntries = recordingRawData.filter(function(entry) {
+        // let startStopEntries = recordingRawData.filter(function(entry) {
         //     return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
         // });
 
@@ -665,7 +579,7 @@ function populateTimeline(timeline, endpoint, index) {
         // console.log(startStopEntries);
 
         // //  2.3 filter the processing entries
-        // var processingEntries = formattedData.filter(function(dataTableEntry) {
+        // let processingEntries = formattedData.filter(function(dataTableEntry) {
         //     return dataTableEntry[dataTableEnum.category] == 'Processing';
         // });
 
@@ -673,26 +587,26 @@ function populateTimeline(timeline, endpoint, index) {
         // console.log(processingEntries);
 
         // //  2.4 create a mapping of clipNumber --> processingEntry
-        // var clipNoToProcessingEntry = makeClipNoToProcessingEntry(processingEntries);
+        // let clipNoToProcessingEntry = makeClipNoToProcessingEntry(processingEntries);
         // console.log("clipNoToProcessingEntry is........");
         // console.log(clipNoToProcessingEntry);
 
         // //  2.5 make recording slots
-        // var recordingSlots = createRecordingSlots(startStopEntries, endpoint);
+        // let recordingSlots = createRecordingSlots(startStopEntries, endpoint);
         // console.log("Recording Slots are......");
         // console.log(recordingSlots);
 
 
-        // var dummyEntries = getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint);
+        // let dummyEntries = getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint);
         // console.log("dummyEntries are.......");
         // console.log(dummyEntries);
 
 
         // //  3. If its today's date, then add current recordings
-        var date = endpoint.searchParams.get('date');
-        // var device_id = endpoint.searchParams.get('device_id');
-        // // var currentRecordingEntries = [];
-        // // var today = yyyy_mm_dd(new Date());
+        let date = endpoint.searchParams.get('date');
+        // let device_id = endpoint.searchParams.get('device_id');
+        // // let currentRecordingEntries = [];
+        // // let today = yyyy_mm_dd(new Date());
         
         // // if (date == today) {
         // //     currentRecordingEntries = getCurrentRecordingEntries(formattedData);
@@ -700,17 +614,17 @@ function populateTimeline(timeline, endpoint, index) {
 
         // // // currentRecordingEntries = getCurrentRecordingEntries(formattedData);
 
-        // // var totalFormattedData = formattedData.concat(currentRecordingEntries);
+        // // let totalFormattedData = formattedData.concat(currentRecordingEntries);
 
-        // var totalFormattedData = formattedData.concat(dummyEntries);
+        // let totalFormattedData = formattedData.concat(dummyEntries);
 
         // console.log("totalFormattedData is ....");
         // console.log(totalFormattedData);
 
-        var totalFormattedData = formattedData;
+        let totalFormattedData = formattedData;
 
         //  3. create dataTable object
-        var dataTable = initializeDataTable();
+        let dataTable = initializeDataTable();
 
         
         //  4. add the data to the dataTable object
@@ -718,12 +632,12 @@ function populateTimeline(timeline, endpoint, index) {
 
         
         //  5. define options.
-        var startDate = new Date(date + " 00:00:00");
+        let startDate = new Date(date + " 00:00:00");
         
-        var endDate = new Date(startDate);
+        let endDate = new Date(startDate);
         endDate.setDate(endDate.getDate() + 1);
 
-        var options = {
+        let options = {
             timeline: { showRowLabels: false, showBarLabels: false, barLabelStyle: { fontSize: 9 } },
             tooltip: { isHtml: false },
             hAxis: {
@@ -762,49 +676,21 @@ function populateTimeline(timeline, endpoint, index) {
 }
 
 function initializeTimeline(endpoint) {
-    var channelValue = endpoint.searchParams.get('channel_values');
+    let channelValue = endpoint.searchParams.get('channel_values');
     
-    var divID = "filter_" + channelValue;
-    var container = document.getElementById(divID);
+    let divID = "filter_" + channelValue;
+    let container = document.getElementById(divID);
     return new google.visualization.Timeline(container);
-}
-
-function getBaseEndPoint() {
-
-    //  Get the REST API endpoint to hit from current URL.
-    var baseEndPoint = new URL(document.URL.replace('graph_ui', 'api'));
-  
-    //  If no date passed, add today's date
-    if (!baseEndPoint.searchParams.get('date')) {
-        var yesterday = new Date();
-        yesterday.setDate(yesterday.getDate()  - 1);
-
-        baseEndPoint.searchParams.set('date', yyyy_mm_dd(yesterday));
-    }
-
-    //  Remove search parameters other than date.
-    var parameters = Array.from(baseEndPoint.searchParams.keys()).filter(x => x != 'date');
-    for (var i = 0; i < parameters.length; i++) {
-        baseEndPoint.searchParams.delete(parameters[i]);
-    }
-    console.log("baseEndPoint is :-> " + baseEndPoint.href);
-    return baseEndPoint;
-}
-
-function setDateInDatePicker(datePickerElementID, endpoint) {
-    var dateValue = endpoint.searchParams.get('date');
-    var dateElement = document.getElementById(datePickerElementID);
-    dateElement.value = dateValue;
 }
 
 function selectHandler(timeline, index) {
 
-    var selectedDataTable = globalDataTable[index];
-    var selection = timeline.getSelection()[0];
-    var rowNo = selection.row;
-    var label = selectedDataTable.getValue(rowNo, dataTableEnum.label);
+    let selectedDataTable = globalDataTable[index];
+    let selection = timeline.getSelection()[0];
+    let rowNo = selection.row;
+    let label = selectedDataTable.getValue(rowNo, dataTableEnum.label);
     
-    var labelJSON;
+    let labelJSON;
     
     //  if label isn't a JSON dump, then simply skip.
     try {
@@ -815,15 +701,15 @@ function selectHandler(timeline, index) {
     }
 
     //  a. this was for on-click: table-view redirect
-    var GETparams = labelJSON;
-    var redirectURL = new URL(window.location.origin + "/ui/recording_graph_ui_redirect");
+    let GETparams = labelJSON;
+    let redirectURL = new URL(window.location.origin + "/ui/recording_graph_ui_redirect");
 
     for (key in GETparams) {
         redirectURL.searchParams.set(key, GETparams[key]);
     }
 
     // //  b. this is for on-click: graph_view redirect
-    // var redirectURL = new URL(labelJSON['video_path'].replace("gs://", "https://storage.cloud.google.com/"));
+    // let redirectURL = new URL(labelJSON['video_path'].replace("gs://", "https://storage.cloud.google.com/"));
     // console.log(redirectURL.href);
 
 
@@ -831,16 +717,16 @@ function selectHandler(timeline, index) {
 }
 
 function setTimelineColorLabels() {
-    var table = document.getElementById("timeline-color-labels");
-    var trElement = table.childNodes[1].childNodes[1];
+    let table = document.getElementById("timeline-color-labels");
+    let trElement = table.childNodes[1].childNodes[1];
 
     for (key in stageToColor) {
         if (stageToColor.hasOwnProperty(key)) {
             
-            var stage = document.createElement("th");
+            let stage = document.createElement("th");
             stage.innerText = key;
 
-            var color = document.createElement("th");
+            let color = document.createElement("th");
             color.setAttribute("bgcolor", stageToColor[key]);
 
             trElement.appendChild(color);
@@ -850,18 +736,18 @@ function setTimelineColorLabels() {
 }
 
 function setSummaryColorLabels() {
-    var table = document.getElementById("summary-color-labels");
-    var trElement = table.childNodes[1].childNodes[1];
+    let table = document.getElementById("summary-color-labels");
+    let trElement = table.childNodes[1].childNodes[1];
 
-    var summaryReverseEnum = reverseJsonMapper(summaryStatusEnum)
+    let summaryReverseEnum = reverseJsonMapper(summaryStatusEnum)
 
     for (key in summaryStatusToGraphic) {
         if (summaryStatusToGraphic.hasOwnProperty(key)) {
             
-            var stage = document.createElement("th");
+            let stage = document.createElement("th");
             stage.innerText = summaryReverseEnum[key];
 
-            var color = document.createElement("th");
+            let color = document.createElement("th");
             color.setAttribute("bgcolor", summaryStatusToGraphic[key].bgcolor);
             color.innerHTML = summaryStatusToGraphic[key].innerHTML;
 
@@ -873,13 +759,13 @@ function setSummaryColorLabels() {
 
 function attachSummaryToTimeline() {
     
-    for(var i = 0; i < channelValues.length; i++) {
+    for(let i = 0; i < channelValues.length; i++) {
 
         //  self invoking function to make a local scope for the index value which'll be used during callback.
         (function(i){
 
-            var summaryBoxIDA = "#s_filter_" + channelValues[i];
-            var timelineIDA = "#filter_" + channelValues[i] + "_blank";
+            let summaryBoxIDA = "#s_filter_" + channelValues[i];
+            let timelineIDA = "#filter_" + channelValues[i] + "_blank";
     
             $(summaryBoxIDA).click(function() {
                 $('html,body').animate({
@@ -897,22 +783,22 @@ function linkToBlankFramesUI() {
     
     //  this one has bug
     //  recording.athenasowl.tv/graph_ui/recording?date=.... --> blank.athenasowl.tv/graph_ui/recording?date=...
-    //  var baseURL = new URL(document.URL.replace('recording', 'blank'));
+    //  let baseURL = new URL(document.URL.replace('recording', 'blank'));
 
     //  new logic
-    var protocol = window.location.protocol;
-    var host = window.location.host;
-    var path = window.location.pathname.replace('recording', 'blank');
-    var searchParams = window.location.search;
+    let protocol = window.location.protocol;
+    let host = window.location.host;
+    let path = window.location.pathname.replace('recording', 'blank');
+    let searchParams = window.location.search;
 
-    var baseURL = new URL(protocol + "//" + host + path + searchParams);
+    let baseURL = new URL(protocol + "//" + host + path + searchParams);
 
     //  loop for generating specific URLs
-    for(var i = 0; i < channelValues.length; i++) {
+    for(let i = 0; i < channelValues.length; i++) {
         //  device_id = 'a'
         //  get the corresponding anchor tag and set its href to the specific URL.
-        var aID = document.getElementById(channelValues[i] + '_blank');
-        var specificURL = new URL(baseURL.href);
+        let aID = document.getElementById(channelValues[i] + '_blank');
+        let specificURL = new URL(baseURL.href);
         specificURL.searchParams.set('scroll_to', '#' + channelValues[i] + "_blank");
         aID.setAttribute("href", specificURL.href);
     }
@@ -921,10 +807,10 @@ function linkToBlankFramesUI() {
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
-    var baseEndPoint = getBaseEndPoint();
+    let baseEndPoint = getBaseEndPoint(defaultDate = 'yesterday');
 
     //  patch:  set the date in the datepicker
-    setDateInDatePicker('date', baseEndPoint);
+    setDateInDatePicker('date', baseEndPoint.searchParams.get('date'));
 
     //  patch:  add color labels to page top
     setTimelineColorLabels();
@@ -939,14 +825,14 @@ google.charts.setOnLoadCallback(function() {
     // linkToBlankFramesUI();
 
     //  2. make specificEndPoints array
-    var specificEndPoints = [];
-    for (var i = 0; i < channelValues.length; i++) {
+    let specificEndPoints = [];
+    for (let i = 0; i < channelValues.length; i++) {
         specificEndPoints.push(addGETParameters(baseEndPoint.href, {'channel_values': channelValues[i]}));
     }
 
     //  3. initialize timeline
-    var timelines = [];
-    for (var i = 0; i < specificEndPoints.length; i++) {
+    let timelines = [];
+    for (let i = 0; i < specificEndPoints.length; i++) {
         //  self invoking function to make a local scope for the index value which'll be used during callback.
         (function(i){
             
@@ -961,12 +847,12 @@ google.charts.setOnLoadCallback(function() {
     }
 
     //  debug: print the specificEndPoints array
-    for (var i = 0; i < specificEndPoints.length; i++) {
+    for (let i = 0; i < specificEndPoints.length; i++) {
         // console.log("specificEndpoint Number " + i + " is " + specificEndPoints[i].href);
     }
 
     //  4. populate charts with periodic refreshing
-    for (var i = 0; i < timelines.length; i++) {
+    for (let i = 0; i < timelines.length; i++) {
         populateTimeline(timelines[i], specificEndPoints[i], i);
         //  Since this isn't live tracking, no need to refresh every 5 mins. Manual refresh is enough.
     }
