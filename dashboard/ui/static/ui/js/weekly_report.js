@@ -1,46 +1,17 @@
-let globalTable;
-
-const postWeeklyDataTableExport = () => {
-
-    let startDate = new URL(document.URL).searchParams.get('start_date');
-    let endDate = new URL(document.URL).searchParams.get('end_date');
-
-    //  0. retrieve data from form
-    let sendMailFormID = "sendMailForm";
-    let sendMailForm = document.forms[sendMailFormID];
-    let receiverMail = sendMailForm.elements['recipient-mail'].value;
-    
-    //  1. replace modal content with inprogress
-    replaceModalContentWithInProgress();
-
-    let dataTableExport = globalTable.buttons.exportData();
-    let filename = startDate + '_' + endDate + '_weekly_report.csv';
-    let reportType = 'Weekly';
-    let dates = startDate + " to " + endDate;
-
-    postDataTableExport(receiverMail, dataTableExport, filename, reportType, dates)
-        .done((response, status) => {
-            replaceModalContentWithSuccess();
-        })
-        .fail((response, status) => {
-            replaceModalContentWithFailure();
-        });
-}
-
-let globalData;
+var globalTable;
 
 $(document).ready(function(){
 
-    $('body').on('submit','#sendMailForm', postWeeklyDataTableExport);
+    $('body').on('submit','#sendMailForm', () => { prepareDataTableExport("weekly")});
 
     //  1. get date from URL params
     let startDate = new URL(document.URL).searchParams.get('start_date');
     let endDate = new URL(document.URL).searchParams.get('end_date');
 
-    //  2. insert inProgress HTML to page and wait for 200ms (for the inProgressHTML to render properly)
+    //  2. insert inProgress HTML to page
     $("#example").html(`<center><i class="fa fa-spinner fa-pulse fa-3x fa-fw" style="font-size:150px"></i> <br><br> <h3> Getting Weekly Report... </h3> </center>`);
         
-        //  3. Get Daily Report data.
+    //  3. Get Daily Report data.
     generateWeeklyReport(startDate, endDate)
     .then((data) => {
         if (data.length == 0) {
