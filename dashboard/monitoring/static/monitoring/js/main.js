@@ -13,6 +13,9 @@ Vue.component('node', {
         show_cron() {
             this.bus.$emit('show_cron')
         },
+        show_recording_guide() {
+            this.bus.$emit('show_recording_guide')
+        }
     },
     template:
     `<tr class="node"
@@ -54,6 +57,7 @@ Vue.component('node', {
         <td v-if="ping" class="node-actions">
             <button @click="show_screenshot()" title="Screenshot" class="btn btn-lg btn-outline-secondary"><i class="fas fa-camera"></i></button>
             <button @click="show_cron()" title="Cron" class="btn btn-lg btn-outline-secondary"><i class="fas fa-hourglass-start"></i></button>
+            <button @click="show_recording_guide()" title="Recording Guide" class="btn btn-lg btn-outline-secondary"><i class="fas fa-video"></i></button>
         </td>
         <screenshot v-if="ping"
             :bus="bus"
@@ -67,6 +71,12 @@ Vue.component('node', {
             :ip_address="ip_address"
             :label="label"
             :cron="cron"></cron>
+        <recording_guide v-if="ping"
+            :bus="bus"
+            :id="id"
+            :ip_address="ip_address"
+            :label="label"
+            :cron="cron"></recording_guide>
     </tr>`
 })
 
@@ -237,6 +247,48 @@ Vue.component('cron', {
                         </tr>
                     </table>
                     <code v-else>No Tasks Scheduled</code>
+                </div>
+                <div class="modal-footer">
+                    <h4 class="modal-title mr-auto">{{ label }} <small><code>[{{ ip_address}}]</code></small></h4>
+                    <button type="button" class="btn btn-secondary" @click="close()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>`
+})
+
+Vue.component('recording_guide', {
+    props: ['bus', 'id', 'ip_address', 'label', 'cron'],
+    data () {
+        return {
+            visible: false,
+        }
+    },
+    methods: {
+        open () {
+            this.$root.modal = true
+            this.visible = true
+        },
+        close () {
+            this.$root.modal = false
+            this.visible = false
+        },
+    },
+    mounted () {
+        this.bus.$on('show_recording_guide', this.open)
+    },
+    template:
+    `<div v-show="visible" class="modal node-modal" style="display: block">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Recording Guide</h5>
+                    <button type="button" class="close" @click="close()">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Something
                 </div>
                 <div class="modal-footer">
                     <h4 class="modal-title mr-auto">{{ label }} <small><code>[{{ ip_address}}]</code></small></h4>
