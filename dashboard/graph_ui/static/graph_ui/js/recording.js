@@ -12,7 +12,58 @@ let stageToColor = {
     'Failed':   'red'
 }
 
-let summaryStatusEnum  = Object.freeze({
+const timelineStagesEnum = Object.freeze({
+    "Start Recording"   :  1,
+    "Clipping Started"  :  2,
+    "Clipping Done"     :  3,
+    "Uploading start"   :  4,
+    "Uploading done"    :  5,
+    "Stop Recording"    :  6,
+    "empty"             :  7,
+    "Now Recording"     :  8,
+    "Failed"            :  9,
+});
+
+const timelineStageToGraphic = Object.freeze({
+    [timelineStagesEnum["Start Recording"]]   :  {
+                                                    'bgcolor': 'green',
+                                                    'innerHTML': '',
+                                                },
+    [timelineStagesEnum["Clipping Started"]]  :  {
+                                                    'bgcolor': 'yellow',
+                                                    'innerHTML': '',
+                                                },  
+    [timelineStagesEnum["Clipping Done"]]     :  {
+                                                    'bgcolor': 'orange',
+                                                    'innerHTML': '',
+                                                },
+    [timelineStagesEnum["Uploading start"]]   :  {
+                                                    'bgcolor': 'brown',
+                                                    'innerHTML': '',
+                                                },
+    [timelineStagesEnum["Uploading done"]]    :  {
+                                                    'bgcolor': 'blue',
+                                                    'innerHTML': '',
+                                                },
+    [timelineStagesEnum["Stop Recording"]]    :  {
+                                                    'bgcolor': 'black',
+                                                    'innerHTML': '',
+                                                },
+    [timelineStagesEnum["empty"]]             :  {
+                                                    'bgcolor': 'grey',
+                                                    'innerHTML': '',
+                                                }, 
+    [timelineStagesEnum["Now Recording"]]     :  {
+                                                    'bgcolor': 'lightblue',
+                                                    'innerHTML': '',
+                                                },
+    [timelineStagesEnum["Failed"]]            :  {
+                                                    'bgcolor': 'red',
+                                                    'innerHTML': '',
+                                                },
+});
+
+const summaryStagesEnum  = Object.freeze({
     "ok"    :   1, 
     "empty"   :   2, 
     "error" :   3,
@@ -20,31 +71,31 @@ let summaryStatusEnum  = Object.freeze({
     "blank" : 5
 });
 
-// Ref:- https://stackoverflow.com/questions/21346967/using-value-of-enum-as-key-in-another-enum-in-javascript
-let summaryStatusToGraphic = {
-    [summaryStatusEnum.ok] : {
+const summaryStagesToGraphic = Object.freeze({
+    [summaryStagesEnum['ok']] : {
                             "bgcolor" : "lightgreen",
                             "innerHTML" : "&#10004;",
                             },
-    [summaryStatusEnum.empty] : {
+    [summaryStagesEnum['empty']] : {
                             "bgcolor" : "lightgrey",
                             "innerHTML" : "NA",
                             },
-    [summaryStatusEnum.error] : {
+    [summaryStagesEnum['error']] : {
                             "bgcolor" : "red",
                             "innerHTML" : "&#10008;",
                             },
-    [summaryStatusEnum.inprogress] : {
+    [summaryStagesEnum['inprogress']] : {
                             "bgcolor" : "lightblue",
                             "innerHTML" : "&#10017;",
                             },
-    [summaryStatusEnum.blank] : {
+    [summaryStagesEnum['blank']] : {
                             "bgcolor" : "brown",
                             "innerHTML" : "&#10004;",
                             },
-};
+});
 
-function getHighestStageNumberEntries(rawData) {
+
+const getHighestStageNumberEntries = (rawData) => {
 
     //  1. sort by stage_number (desc)
     rawData.sort( (r1, r2) => {
@@ -76,7 +127,7 @@ function getHighestStageNumberEntries(rawData) {
     return highestStageNumberEntries;
 }
 
-function prepareDataForGoogleChartTimeline(rawData, endpoint) {
+const prepareDataForGoogleChartTimeline = (rawData, endpoint) => {
 
     let date = endpoint.searchParams.get('date');
     let startDate = new Date(date + " 00:00:00");
@@ -92,9 +143,6 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
     let highestStageNumberEntries = getHighestStageNumberEntries(rawData);    
 
     let dataTableContents = [];
-    // console.log("Highest stage number entries are :-");
-    // console.log(highestStageNumberEntries);
-    // console.log("");
 
     for(let i = 0; i < highestStageNumberEntries.length; i++) {
         let entry = highestStageNumberEntries[i];
@@ -185,7 +233,7 @@ function prepareDataForGoogleChartTimeline(rawData, endpoint) {
     return dataTableContents;
 }
 
-function updateSummaryTable(formattedData, blankRawData, endpoint) {
+const updateSummaryTable = (formattedData, blankRawData, endpoint) => {
     
     //  create a colorToStage mapping
     let colorToStage = reverseJsonMapper(stageToColor);
@@ -193,10 +241,10 @@ function updateSummaryTable(formattedData, blankRawData, endpoint) {
     //  check status
     let status;
     if (!blankRawData || blankRawData.length == 0) {
-        status = summaryStatusEnum.ok;
+        status = summaryStagesEnum.ok;
     }
     else {
-        status = summaryStatusEnum.blank;
+        status = summaryStagesEnum.blank;
     }
 
     for(let i = 0; i < formattedData.length; i++) {
@@ -204,27 +252,27 @@ function updateSummaryTable(formattedData, blankRawData, endpoint) {
         let stage = colorToStage[color];
 
         if (stage == 'empty') {
-            status = summaryStatusEnum.empty;
+            status = summaryStagesEnum.empty;
             break;
         }
         else if (stage == "Start Recording" || stage == "Stop Recording") {
             continue;
         }
         else if (stage == 'Failed') {
-            status = summaryStatusEnum.error;
+            status = summaryStagesEnum.error;
             break;
         }
         else if (stage != 'Uploading done') {
-            status = summaryStatusEnum.inprogress;
+            status = summaryStagesEnum.inprogress;
         }
         // else if (stage == 'Now Recording') {
         //     console.log("Now Recording Hitted!!");
-        //     status = summaryStatusEnum.inprogress;
+        //     status = summaryStagesEnum.inprogress;
         // }
     }
 
-    let innerHTML = summaryStatusToGraphic[status].innerHTML;
-    let bgcolor = summaryStatusToGraphic[status].bgcolor;
+    let innerHTML = summaryStagesToGraphic[status].innerHTML;
+    let bgcolor = summaryStagesToGraphic[status].bgcolor;
 
     // select the DOM element corresponding to summaryBox of this channel.
     let deviceID = endpoint.searchParams.get('device_id');
@@ -237,7 +285,7 @@ function updateSummaryTable(formattedData, blankRawData, endpoint) {
     summaryBox.setAttribute('bgcolor', bgcolor);
 }
 
-function updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint) {
+const updateTotalBlankMinutes = (recordingRawData, blankRawData, endpoint) => {
 
     //  get the HTML DOM element where this is going to happen
     let channelValue = endpoint.searchParams.get('channel_values');
@@ -265,7 +313,7 @@ function updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint) {
     }
 }
 
-function makeClipNoToProcessingEntry(processingEntries) {
+const makeClipNoToProcessingEntry = (processingEntries) => {
     
     let clipNoToProcessingEntry = {};
     
@@ -280,7 +328,7 @@ function makeClipNoToProcessingEntry(processingEntries) {
     return clipNoToProcessingEntry;
 }
 
-function createRecordingSlots(startStopEntries, endpoint) {
+const createRecordingSlots = (startStopEntries, endpoint) => {
     
     //  sort the startStopEntries according to timestamp in ASC order.
     startStopEntries.sort( (r1, r2) => {
@@ -363,7 +411,7 @@ function createRecordingSlots(startStopEntries, endpoint) {
     return recordingSlots;
 }
 
-function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
+const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, endpoint) => {
     
     let dummyEntries = [];
     let inputDate = endpoint.searchParams.get('date');
@@ -432,7 +480,7 @@ function getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint) {
     return dummyEntries;
 }
 
-function populateTimeline(timeline, endpoint, index) {
+const populateTimeline = (timeline, endpoint, index) => {
     
     //  1. get the endpoint for recording_table
     let recordingEndPoint = new URL(endpoint.href);
@@ -472,7 +520,7 @@ function populateTimeline(timeline, endpoint, index) {
         //  2. get data from blankEndPoint
         $.get(blankEndPoint)
 
-    ).then(function(recordingEndPointResponse, blankEndPointResponse) {
+    ).then((recordingEndPointResponse, blankEndPointResponse) => {
 
         let recordingRawData = recordingEndPointResponse[0];
         let blankRawData = blankEndPointResponse[0];
@@ -484,7 +532,7 @@ function populateTimeline(timeline, endpoint, index) {
         // console.log(formattedData);
 
         //  2.1 filter out recordingEntries and processingEntries
-        let startStopEntries = recordingRawData.filter(function(entry) {
+        let startStopEntries = recordingRawData.filter((entry) => {
             return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
         });
 
@@ -496,7 +544,7 @@ function populateTimeline(timeline, endpoint, index) {
         });
 
         //  2.3 filter the processing entries
-        let processingEntries = formattedData.filter(function(dataTableEntry) {
+        let processingEntries = formattedData.filter((dataTableEntry) => {
             return dataTableEntry[dataTableEnum.category] == 'Processing';
         });
 
@@ -600,7 +648,7 @@ function populateTimeline(timeline, endpoint, index) {
     });
 }
 
-function initializeTimeline(endpoint) {
+const initializeTimeline = (endpoint) => {
     let deviceID = endpoint.searchParams.get('device_id');
     let channelValue = endpoint.searchParams.get('channel_values');
     
@@ -609,7 +657,7 @@ function initializeTimeline(endpoint) {
     return new google.visualization.Timeline(container);
 }
 
-function selectHandler(timeline, index) {
+const selectHandler = (timeline, index) => {
 
     let selectedDataTable = globalDataTable[index];
     let selection = timeline.getSelection()[0];
@@ -642,58 +690,17 @@ function selectHandler(timeline, index) {
     window.open(redirectURL);
 }
 
-function setTimelineColorLabels() {
-    let table = document.getElementById("timeline-color-labels");
-    let trElement = table.childNodes[1].childNodes[1];
-
-    for (key in stageToColor) {
-        if (stageToColor.hasOwnProperty(key)) {
-            
-            let stage = document.createElement("th");
-            stage.innerText = key;
-
-            let color = document.createElement("th");
-            color.setAttribute("bgcolor", stageToColor[key]);
-
-            trElement.appendChild(color);
-            trElement.appendChild(stage);
-        }
-    }
-}
-
-function setSummaryColorLabels() {
-    let table = document.getElementById("summary-color-labels");
-    let trElement = table.childNodes[1].childNodes[1];
-
-    let summaryReverseEnum = reverseJsonMapper(summaryStatusEnum)
-
-    for (key in summaryStatusToGraphic) {
-        if (summaryStatusToGraphic.hasOwnProperty(key)) {
-            
-            let stage = document.createElement("th");
-            stage.innerText = summaryReverseEnum[key];
-
-            let color = document.createElement("th");
-            color.setAttribute("bgcolor", summaryStatusToGraphic[key].bgcolor);
-            color.innerHTML = summaryStatusToGraphic[key].innerHTML;
-
-            trElement.appendChild(color);
-            trElement.appendChild(stage);
-        }
-    }
-}
-
-function attachSummaryToTimeline() {
+const attachSummaryToTimeline = () => {
     
     for(let i = 0; i < channelValues.length; i++) {
 
-        //  self invoking function to make a local scope for the index value which'll be used during callback.
-        (function(i){
+        //  self invoking const to make a local scope for the index value which'll be used during callback.
+        ((i) => {
 
             let summaryBoxIDA = "#s_a_" + channelValues[i];
             let timelineIDA = "#a_" + channelValues[i] + "_blank";
     
-            $(summaryBoxIDA).click(function() {
+            $(summaryBoxIDA).click(() => {
                 $('html,body').animate({
                     scrollTop: $(timelineIDA).offset().top},
                     'slow');
@@ -702,7 +709,7 @@ function attachSummaryToTimeline() {
             let summaryBoxIDB = "#s_b_" + channelValues[i];
             let timelineIDB = "#b_" + channelValues[i] + "_blank";
     
-            $(summaryBoxIDB).click(function() {
+            $(summaryBoxIDB).click(() => {
                 $('html,body').animate({
                     scrollTop: $(timelineIDB).offset().top},
                     'slow');
@@ -712,7 +719,7 @@ function attachSummaryToTimeline() {
     }
 }
 
-function linkToBlankFramesUI() {
+const linkToBlankFramesUI = () => {
     
     //  get the current URL & change it to get the URL for blank UI
     
@@ -746,7 +753,7 @@ function linkToBlankFramesUI() {
     }
 }
 
-google.charts.setOnLoadCallback(function() {
+google.charts.setOnLoadCallback(() => {
     
     //  1. get baseEndPoint
     let baseEndPoint = getBaseEndPoint(defaultDate = 'today');
@@ -754,11 +761,11 @@ google.charts.setOnLoadCallback(function() {
     //  patch:  set the date in the datepicker
     setDateInDatePicker('date', baseEndPoint.searchParams.get('date'));
 
-    //  patch:  add color labels to page top
-    setTimelineColorLabels();
+    //  patch:  add timeline-color-labels labels to page top.
+    setColorLabels('#timeline-color-labels', timelineStagesEnum, timelineStageToGraphic);
 
     //  patch:  add summaryColorLabels at top of summaryTable.
-    setSummaryColorLabels();
+    setColorLabels('#summary-color-labels', summaryStagesEnum, summaryStagesToGraphic);
 
     //  patch:  attach summaryTable to timelines
     attachSummaryToTimeline();
@@ -776,11 +783,11 @@ google.charts.setOnLoadCallback(function() {
     //  3. initialize timeline
     let timelines = [];
     for (let i = 0; i < specificEndPoints.length; i++) {
-        //  self invoking function to make a local scope for the index value which'll be used during callback.
-        (function(i){
+        //  self invoking const to make a local scope for the index value which'll be used during callback.
+        ((i) => {
             
             timelines.push(initializeTimeline(specificEndPoints[i]));
-            google.visualization.events.addListener(timelines[i], 'select', function() {
+            google.visualization.events.addListener(timelines[i], 'select', () => {
                 selectHandler(timelines[i], i);
             });
         

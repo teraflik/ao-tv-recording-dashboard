@@ -105,3 +105,30 @@ const getBaseEndPoint = (defaultDate) => {
     }
     return baseEndPoint;
 }
+
+const setColorLabels = (querySelector, stagesEnum, stageToGraphic) => {
+    let table = document.querySelector(querySelector);
+    let trElement = table.childNodes[1].childNodes[1];
+
+    Object.entries(stagesEnum).forEach(([stageName, stageNumber]) => {
+        let stage = document.createElement("th");
+        stage.innerText = stageName;
+
+        let color = document.createElement("th");
+        color.setAttribute("bgcolor", stageToGraphic[stageNumber].bgcolor);
+        color.innerHTML = stageToGraphic[stageNumber].innerHTML;
+
+        trElement.appendChild(color);
+        trElement.appendChild(stage);
+    });
+    
+}
+
+// const initializeTimeline = (endpoint) => {
+//     let deviceID = endpoint.searchParams.get('device_id');
+//     let channelValue = endpoint.searchParams.get('channel_values');
+    
+//     let divID = deviceID + "_" + channelValue;
+//     let container = document.getElementById(divID);
+//     return new google.visualization.Timeline(container);
+// }

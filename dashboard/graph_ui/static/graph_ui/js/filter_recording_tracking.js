@@ -7,38 +7,37 @@ let stageToColor = {
     'empty':    'grey'
 }
 
-let summaryStatusEnum  = Object.freeze({
-    "ok"    :   1, 
-    "empty"   :   2, 
-    "error" :   3,
+const summaryStagesEnum  = Object.freeze({
+    "ok"        :   1, 
+    "empty"     :   2, 
+    "error"     :   3,
     "inprogress":   4,
-    "blank" : 5
+    "blank"     :   5
 });
 
 // Ref:- https://stackoverflow.com/questions/21346967/using-value-of-enum-as-key-in-another-enum-in-javascript
-let summaryStatusToGraphic = {
-    [summaryStatusEnum.ok] : {
+const summaryStagesToGraphic = Object.freeze({
+    [summaryStagesEnum.ok] : {
                             "bgcolor" : "lightgreen",
                             "innerHTML" : "&#10004;",
                             },
-    [summaryStatusEnum.empty] : {
+    [summaryStagesEnum.empty] : {
                             "bgcolor" : "lightgrey",
                             "innerHTML" : "NA",
                             },
-    [summaryStatusEnum.error] : {
+    [summaryStagesEnum.error] : {
                             "bgcolor" : "red",
                             "innerHTML" : "&#10008;",
                             },
-    [summaryStatusEnum.inprogress] : {
+    [summaryStagesEnum.inprogress] : {
                             "bgcolor" : "lightblue",
                             "innerHTML" : "&#10017;",
                             },
-    [summaryStatusEnum.blank] : {
+    [summaryStagesEnum.blank] : {
                             "bgcolor" : "brown",
                             "innerHTML" : "&#10004;",
                             },
-};
-
+});
 
 function prepareStartStopEntries(startStopRawData, endpoint) {
 
@@ -170,10 +169,10 @@ function updateSummaryTable(formattedData, blankRawData, endpoint) {
     //  check status
     let status;
     if (!blankRawData || blankRawData.length == 0) {
-        status = summaryStatusEnum.ok;
+        status = summaryStagesEnum.ok;
     }
     else {
-        status = summaryStatusEnum.blank;
+        status = summaryStagesEnum.blank;
     }
 
     for(let i = 0; i < formattedData.length; i++) {
@@ -181,27 +180,27 @@ function updateSummaryTable(formattedData, blankRawData, endpoint) {
         let stage = colorToStage[color];
 
         if (stage == 'empty') {
-            status = summaryStatusEnum.empty;
+            status = summaryStagesEnum.empty;
             break;
         }
         else if (stage == "Start Recording" || stage == "Stop Recording") {
             continue;
         }
         else if (stage == 'Failed') {
-            status = summaryStatusEnum.error;
+            status = summaryStagesEnum.error;
             break;
         }
         else if (stage != 'Uploading done') {
-            status = summaryStatusEnum.inprogress;
+            status = summaryStagesEnum.inprogress;
         }
         // else if (stage == 'Now Recording') {
         //     console.log("Now Recording Hitted!!");
-        //     status = summaryStatusEnum.inprogress;
+        //     status = summaryStagesEnum.inprogress;
         // }
     }
 
-    let innerHTML = summaryStatusToGraphic[status].innerHTML;
-    let bgcolor = summaryStatusToGraphic[status].bgcolor;
+    let innerHTML = summaryStagesToGraphic[status].innerHTML;
+    let bgcolor = summaryStagesToGraphic[status].bgcolor;
 
     // select the DOM element corresponding to summaryBox of this channel.
     let deviceID = endpoint.searchParams.get('device_id');
@@ -716,46 +715,6 @@ function selectHandler(timeline, index) {
     window.open(redirectURL);
 }
 
-function setTimelineColorLabels() {
-    let table = document.getElementById("timeline-color-labels");
-    let trElement = table.childNodes[1].childNodes[1];
-
-    for (key in stageToColor) {
-        if (stageToColor.hasOwnProperty(key)) {
-            
-            let stage = document.createElement("th");
-            stage.innerText = key;
-
-            let color = document.createElement("th");
-            color.setAttribute("bgcolor", stageToColor[key]);
-
-            trElement.appendChild(color);
-            trElement.appendChild(stage);
-        }
-    }
-}
-
-function setSummaryColorLabels() {
-    let table = document.getElementById("summary-color-labels");
-    let trElement = table.childNodes[1].childNodes[1];
-
-    let summaryReverseEnum = reverseJsonMapper(summaryStatusEnum)
-
-    for (key in summaryStatusToGraphic) {
-        if (summaryStatusToGraphic.hasOwnProperty(key)) {
-            
-            let stage = document.createElement("th");
-            stage.innerText = summaryReverseEnum[key];
-
-            let color = document.createElement("th");
-            color.setAttribute("bgcolor", summaryStatusToGraphic[key].bgcolor);
-            color.innerHTML = summaryStatusToGraphic[key].innerHTML;
-
-            trElement.appendChild(color);
-            trElement.appendChild(stage);
-        }
-    }
-}
 
 function attachSummaryToTimeline() {
     
@@ -813,7 +772,7 @@ google.charts.setOnLoadCallback(function() {
     setDateInDatePicker('date', baseEndPoint.searchParams.get('date'));
 
     //  patch:  add color labels to page top
-    setTimelineColorLabels();
+    setColorLabels("#timeline-color-labels", summaryStagesEnum, summaryStagesToGraphic);
 
     //  patch:  add summaryColorLabels at top of summaryTable.
     // setSummaryColorLabels();
