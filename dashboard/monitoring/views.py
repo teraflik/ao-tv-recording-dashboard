@@ -1,5 +1,6 @@
 import io
 import os
+import datetime
 from contextlib import redirect_stdout
 
 from ansi2html import Ansi2HTMLConverter
@@ -10,6 +11,7 @@ from django.template.response import TemplateResponse
 
 from .ao_inventory import AOInventoryManager, OBSWebsocket
 from .models import Node
+from rest_api.models import RecordingGuide
 
 @login_required
 def index(request):
@@ -43,6 +45,7 @@ def nodes(request, node_id=None):
             - ``cron``: The output of ``crontab -l`` command on the Node (might need to be sanitized).
             - ``screenshot_url``: A URL to the screenshot that was last captured on the Node``s primary display.
             - ``netdata_host``: The host:port combination on which Node's Netdata daemon is exposed.
+            - ``slots``: The active entries in Recording Guide correspondng to this node.
         
         Note:
             If ping fails, the fields following ping will be empty.
@@ -64,11 +67,27 @@ def nodes(request, node_id=None):
                 "uptime": inv.get_uptime(node.ip_address, node.username, node.password),
                 "cron": inv.get_cron(node.ip_address, node.username, node.password),
                 "screenshot_url": node.screenshot_url,
-                "netdata_host": node.netdata_host
+                "netdata_host": node.netdata_host,
+                "slots": list(RecordingGuide.objects.filter(
+                    node=node, 
+                    validity_end__gte=datetime.date.today()
+                    ).values(
+                        "channel_value_id__channel_name",
+                        "device_id",
+                        "start_time",
+                        "stop_time",
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday",
+                    )),
             })
         else:
             nodes.append({
-                "id": node.pk,
+                "id": node.pk,  
                 "ip_address": node.ip_address,
                 "label": node.label,
                 "ping": False,
@@ -76,7 +95,8 @@ def nodes(request, node_id=None):
                 "uptime": None,
                 "cron": None,
                 "screenshot_url": None,
-                "netdata_host": None
+                "netdata_host": None,
+                "slots": None,
             })
     
     return JsonResponse(data = {"nodes": nodes})

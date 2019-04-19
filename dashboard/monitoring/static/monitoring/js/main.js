@@ -1,5 +1,5 @@
 Vue.component('node', {
-    props: ['id', 'ip_address', 'label', 'ping', 'channel_id', 'uptime', 'cron', 'screenshot_url', 'netdata_host'],
+    props: ['id', 'ip_address', 'label', 'ping', 'channel_id', 'uptime', 'cron', 'screenshot_url', 'netdata_host', 'slots'],
     data () {
         return {
             hover: false,
@@ -76,7 +76,7 @@ Vue.component('node', {
             :id="id"
             :ip_address="ip_address"
             :label="label"
-            :cron="cron"></recording_guide>
+            :slots="slots"></recording_guide>
     </tr>`
 })
 
@@ -258,7 +258,7 @@ Vue.component('cron', {
 })
 
 Vue.component('recording_guide', {
-    props: ['bus', 'id', 'ip_address', 'label', 'cron'],
+    props: ['bus', 'id', 'ip_address', 'label', 'slots'],
     data () {
         return {
             visible: false,
@@ -288,17 +288,30 @@ Vue.component('recording_guide', {
                     </button>
                 </div>
                 <div class="modal-body">
-                    <table class="table table-borderless">
+                    <table class="table table-striped">
                         <thead>
-                            <th>ID</th>
+                            <th>Channel</th>
                             <th>Start Time</th>
                             <th>End Time</th>
-                            <th>Comments</th>
+                            <th>Mon</th>
+                            <th>Tue</th>
+                            <th>Wed</th>
+                            <th>Thu</th>
+                            <th>Fri</th>
+                            <th>Sat</th>
+                            <th>Sun</th>
                         </thead>
                         <tr v-for="slot in slots">
-                            <td>{{ slot.id }}</td>
+                            <td>{{ slot.channel_value_id__channel_name }}</td>
                             <td>{{ slot.start_time }}</td>
-                            <td><code>{{ slot.end_time }}</code></td>
+                            <td>{{ slot.stop_time }}</td>
+                            <td><i v-if="slot.monday" class="fas fa-check-circle text-success"></i></td>
+                            <td><i v-if="slot.tuesday" class="fas fa-check-circle text-success"></i></td>
+                            <td><i v-if="slot.wednesday" class="fas fa-check-circle text-success"></i></td>
+                            <td><i v-if="slot.thursday" class="fas fa-check-circle text-success"></i></td>
+                            <td><i v-if="slot.friday" class="fas fa-check-circle text-success"></i></td>
+                            <td><i v-if="slot.saturday" class="fas fa-check-circle text-success"></i></td>
+                            <td><i v-if="slot.sunday" class="fas fa-check-circle text-success"></i></td>
                         </tr>
                     </table>
                 </div>
