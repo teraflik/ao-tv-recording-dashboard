@@ -1,5 +1,12 @@
 google.charts.load('46', {'packages':['timeline']});
 
+const DBNAME_TO_URL_PATHNAME_MAPPING = Object.freeze({
+    "RECORDING"                 :   "/api/recording", 
+    "RECORDING_GUIDE"           :   "/api/recording_guide", 
+    "FILTER_RECORDING_TRACKING" :   "/api/filter_recording_tracking",
+    "INVALID_FRAME_TRACKING"    :   "/api/blank"
+});
+
 const dataTableEnum  = Object.freeze({
     "category"    :   0, 
     "label"   :   1, 
@@ -74,36 +81,9 @@ const removeDuplicateObjects = (objectArray) => {
     return uniqueObjectArray;
 }
 
-const setDateInDatePicker = (datePickerElementID, dateValue) => {
-    let dateElement = document.getElementById(datePickerElementID);
-    dateElement.value = dateValue;
-}
-
-const getBaseEndPoint = (defaultDate) => {
-
-    //  Get the REST API endpoint to hit from current URL.
-    var baseEndPoint = new URL(document.URL.replace('graph_ui', 'api'));
-  
-    //  If no date passed
-    if (!baseEndPoint.searchParams.get('date')) {
-        
-        if (defaultDate == 'today') {
-            baseEndPoint.searchParams.set('date', yyyy_mm_dd(new Date()));
-        }
-        else if (defaultDate == 'yesterday') {
-            var yesterday = new Date();
-            yesterday.setDate(yesterday.getDate()  - 1);
-    
-            baseEndPoint.searchParams.set('date', yyyy_mm_dd(yesterday));
-        }
-    }
-
-    //  Remove search parameters other than date.
-    var parameters = Array.from(baseEndPoint.searchParams.keys()).filter(x => x != 'date');
-    for (var i = 0; i < parameters.length; i++) {
-        baseEndPoint.searchParams.delete(parameters[i]);
-    }
-    return baseEndPoint;
+const setDateInDatePicker = (datePickerElementQuerySelector, dateValue) => {
+    let datePickerElement = document.querySelector(datePickerElementQuerySelector);
+    datePickerElement.value = dateValue;
 }
 
 const setColorLabels = (querySelector, stagesEnum, stageToGraphic) => {
@@ -191,3 +171,23 @@ const createRecordingSlotsFromRecordingGuideEntries = (recordingGuideRawData, da
 //     let container = document.getElementById(divID);
 //     return new google.visualization.Timeline(container);
 // }
+
+const getBaseEndPoint = (tableName) => {
+
+    let currentURL = new URL(document.URL);
+
+    let protocol = window.location.protocol;
+    let host = window.location.host;
+    let pathname = DBNAME_TO_URL_PATHNAME_MAPPING[tableName]; 
+    let baseEndPoint = new URL(protocol + "//" + host + pathname);
+
+    //  setting date
+    let date = currentURL.searchParams.get("date") ? currentURL.searchParams.get("date") : yyyy_mm_dd(new Date());
+    
+    console.log("date is ...");
+    console.log(date);
+    
+    baseEndPoint.searchParams.set("date", date);
+
+    return baseEndPoint;
+}

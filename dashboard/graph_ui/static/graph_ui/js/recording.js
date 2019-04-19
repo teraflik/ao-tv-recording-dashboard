@@ -756,10 +756,10 @@ const linkToBlankFramesUI = () => {
 google.charts.setOnLoadCallback(() => {
     
     //  1. get baseEndPoint
-    let baseEndPoint = getBaseEndPoint(defaultDate = 'today');
+    let baseEndPoint = getBaseEndPoint(tableName = 'RECORDING');
 
     //  patch:  set the date in the datepicker
-    setDateInDatePicker('date', baseEndPoint.searchParams.get('date'));
+    setDateInDatePicker('#date', baseEndPoint.searchParams.get('date'));
 
     //  patch:  add timeline-color-labels labels to page top.
     setColorLabels('#timeline-color-labels', timelineStagesEnum, timelineStageToGraphic);

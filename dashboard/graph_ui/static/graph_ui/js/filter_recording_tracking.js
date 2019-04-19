@@ -260,10 +260,10 @@ const populateTimeline = (timeline, endpoint, index) => {
         let recordingRawData = recordingEndPointResponse[0];
         let recordingGuideRawData = recordingGuideEndPointResponse[0];
 
-        let recordingSlots = createRecordingSlotsFromRecordingGuideEntries(recordingGuideRawData, endpoint.searchParams.get('date'));
+        // let recordingSlots = createRecordingSlotsFromRecordingGuideEntries(recordingGuideRawData, endpoint.searchParams.get('date') || yyyy_mm_dd(new Date()) );
 
         //  2. prepare data in the format to be feeded to the visualisation library.
-        let dataTableEntries = prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, recordingGuideRawData , endpoint.searchParams.get('date'));
+        let dataTableEntries = prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, recordingGuideRawData , endpoint.searchParams.get('date')  || yyyy_mm_dd(new Date()));
 
         //  3. create dataTable object
         let dataTable = initializeDataTable();
@@ -308,10 +308,14 @@ const initializeTimeline = (endpoint) => {
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
-    let baseEndPoint = getBaseEndPoint(defaultDate = 'yesterday');
+    let baseEndPoint = getBaseEndPoint(tableName = 'FILTER_RECORDING_TRACKING');
+
+    // let filterBaseEndPoint = getBaseEndPoint(tableName = 'FILTER_RECORDING_TRACKING', defaultDate = 'yesterday');
+    // let recordingBaseEndPoint = getBaseEndPoint(tableName = 'RECORDING', defaultDate = 'yesterday');
+    // let recordingGuideBaseEndPoint = getBaseEndPoint(tableName = 'RECORDING_GUIDE', defaultDate = 'yesterday');
 
     //  patch:  set the date in the datepicker
-    setDateInDatePicker('date', baseEndPoint.searchParams.get('date'));
+    setDateInDatePicker('#date', baseEndPoint.searchParams.get('date'));
 
     //  patch:  add color labels to page top
     setColorLabels("#timeline-color-labels", timelineStagesEnum, timelineStagesToGraphic);
@@ -336,11 +340,6 @@ google.charts.setOnLoadCallback(function() {
             // });
         
         })(i);
-    }
-
-    //  debug: print the specificEndPoints array
-    for (let i = 0; i < specificEndPoints.length; i++) {
-        // console.log("specificEndpoint Number " + i + " is " + specificEndPoints[i].href);
     }
 
     //  4. populate charts with periodic refreshing

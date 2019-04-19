@@ -573,10 +573,10 @@ function selectHandler(timeline, index) {
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
-    let baseEndPoint = getBaseEndPoint(defaultDate = 'today');
+    let baseEndPoint = getBaseEndPoint(tableName = 'INVALID_FRAME_TRACKING');
 
     //  patch:  set the date in the datepicker
-    setDateInDatePicker('date', baseEndPoint.searchParams.get('date'));
+    setDateInDatePicker('#date', baseEndPoint.searchParams.get('date'));
 
     //  patch:  add color labels to page top
     setColorLabels("#timeline-color-labels", timelineStagesEnum, timelineStageToGraphic);
