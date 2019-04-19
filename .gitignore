@@ -5,3 +5,4 @@ __pycache__
 .vscode
 /dashboard/static
 /dashboard/media
+/docs/_build

@@ -1,8 +1,6 @@
 from django.db import models
 from django.core.files.base import ContentFile
 
-# Create your models here.
-
 class Node(models.Model):
     """
     Store information and credentials of a Node.
@@ -32,9 +30,9 @@ class Node(models.Model):
     ip_address = models.GenericIPAddressField(verbose_name="IP Address", blank=False)
     username = models.CharField(verbose_name="SSH Username", max_length=50, default="user", blank=False)
     password = models.CharField(verbose_name="SSH Password", max_length=100, default="12345", blank=False)
-    mac_address = models.CharField(max_length=20, verbose_name="MAC Address", blank=True)
+    mac_address = models.CharField(verbose_name="MAC Address", max_length=20, blank=True)
     screenshot = models.ImageField(verbose_name="Last Screenshot", upload_to='screenshots', blank=True)
-    netdata_host = models.CharField(max_length=50, verbose_name="Netdata Host", blank=False, unique=True)
+    netdata_host = models.CharField(verbose_name="Netdata Host", max_length=200, blank=True)
 
     def __str__(self):
         """Provide a string representation to the object."""

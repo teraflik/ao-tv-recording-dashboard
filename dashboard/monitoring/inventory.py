@@ -1,48 +1,81 @@
+# -*- coding: utf-8 -*-
+"""
+Methods to monitor and control machines on a local network using SSH.
+"""
 import logging
 import os
-from collections import namedtuple
 import subprocess
+from collections import namedtuple
 from tempfile import NamedTemporaryFile
 
 import jinja2
 import paramiko
 from ansible.executor.playbook_executor import PlaybookExecutor
-from ansible.inventory.manager import InventoryManager as AnsibleInventoryManager
+from ansible.inventory.manager import \
+    InventoryManager as AnsibleInventoryManager
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars.manager import VariableManager
 
+logging.basicConfig(level=logging.ERROR, filename="/tmp/monitoring.log",
+                    format='%(asctime)s | %(levelname)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-logging.basicConfig(level=logging.ERROR, filename="/tmp/monitoring.log", format='%(asctime)s | %(levelname)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 class AnsibleInventoryFile():
     """
-    Creates a temporary file to hold the inventory to be used by Ansible.
-    
-    Usage:
-    ```python
-        nodes = [{
-                'ip_address': 192.168.0.1,
-                'username': user
-            }]
-        inventory_file = AnsibleInventoryFile(nodes)
-        print(inventory_file.path)
-    ```
+    Creates a temporary inventory file to be used by Ansible.
 
-    Use the `dump()` method to dump the contents of the file to stdout. Use `destroy()` method to delete the file after use.
+    Args:
+        nodes (list/dict): A list of dictionaries or any other data structure,
+            containing a mapping of fields as required by the template.
+        template (str): A Jinja2 template string that can parse the given ``nodes``.
+        
+    Note:
+        If you use the following template for your inventory file::
+            
+            [nodes]\n
+            {% for node in nodes %}
+            {{ node.ip_address }} ansible_user={{ node.username }}\n
+            {% endfor %}
+        
+        Then you can pass ``nodes`` as a list of dictionaries::
+
+            nodes = [
+                        {
+                            'ip_address': '192.168.0.1',
+                            'username': 'user'
+                        },
+                    ...
+                    ]
+
+        This works because ``jinja2_template.render(nodes)`` is called under the hood.
+
+    Example:
+        >>> nodes = [{
+                    'ip_address': 192.168.0.1,
+                    'username': user
+                }]
+        >>> inventory_file = AnsibleInventoryFile(nodes)
+        >>> print(inventory_file.path)
+    
+    Warning:
+        Dont't forget to call :func:`destroy()` after the inventory
+        file is no longer required.
     """
-    def __init__(self, 
-                nodes, 
-                template = (
-                    '[nodes]\n'
-                    '{% for node in nodes %}'
-                    '{{ node.ip_address }} ansible_user={{ node.username }}\n'
-                    '{% endfor %}')
-            ):
+
+    def __init__(self,
+                 nodes,
+                 template=(
+                     '[nodes]\n'
+                     '{% for node in nodes %}'
+                     '{{ node.ip_address }} ansible_user={{ node.username }}\n'
+                     '{% endfor %}')
+                 ):
         self.nodes = nodes
         self.template = template
 
-        jinja2_template = jinja2.Template(self.template, lstrip_blocks=True, trim_blocks=True)
-        inventory = jinja2_template.render(nodes = self.nodes)
+        jinja2_template = jinja2.Template(
+            self.template, lstrip_blocks=True, trim_blocks=True)
+        inventory = jinja2_template.render(nodes=self.nodes)
 
         self.inventory_file = NamedTemporaryFile(mode='w+t', delete=False)
         self.inventory_file.write(inventory)
@@ -50,11 +83,11 @@ class AnsibleInventoryFile():
 
     @property
     def path(self):
-        """Get the path of inventory file"""
+        """Get the system path of the temporary inventory file."""
         return self.inventory_file.name
-    
+
     def dump(self):
-        """Prints the contents of inventory file to stdout"""
+        """Prints the contents of inventory file to stdout."""
         try:
             with open(self.inventory_file.name, 'r') as fin:
                 print(fin.read())
@@ -65,12 +98,24 @@ class AnsibleInventoryFile():
         """Deletes the temporary file from OS"""
         os.remove(self.inventory_file.name)
 
+
 class InventoryManager():
     """
-    Provides methods to manage hosts over SSH.
+    Provides methods to manage remote hosts over SSH.
+
+    Uses :class:`Paramiko.SSHClient` to establish SSH Connection to the host and
+    do things like:
+
+        - run an ansible playbook
+        - execute shell commands
+        - fetch contents of files
+        - grab the realtime screenshot
+
+    This class can be extended to include more methods or to implement specific 
+    use-cases.
     """
     log = logging.getLogger(__name__)
-    
+
     def __init__(self):
         # Suppress security warnings generated by Paramiko SSH Client
         import warnings
@@ -79,39 +124,56 @@ class InventoryManager():
     def ansible_run(self, host, username, password, playbook):
         """
         Runs an ansible playbook against the specified remote host.
-        Returns 0 if the playbook run was successful.
 
-        Note: The Ansible python API is constanly evolving, and thus the code snippet
-        below may not function as intended. For the latest version refer:
-        https://docs.ansible.com/ansible/latest/dev_guide/developing_api.html
+        The details of the run are printed to stdout by Ansible in ANSI color coded
+        text.
+        
+        Warning:
+            The Ansible python API is constanly evolving, and hence this method may not 
+            function as intended. For the latest version of the API, refer:
+            https://docs.ansible.com/ansible/latest/dev_guide/developing_api.html
+
+        Args:
+            host (str): hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
+            playbook (str): The path to the playbook file ``[.yml]`` on the server.
+        
+        Returns:
+            int: The playbook execution status. Status is ``0`` if the run was successful.
+
+        Raises:
+            ValueError: If the path to the playbook is invalid.
         """
-        Options = namedtuple('Options', ['listtags', 'listtasks', 'listhosts', 
-                                'syntax', 'module_path', 'become', 
-                                'become_method', 'become_user', 
-                                'check', 'diff', 'forks', 
-                                'verbosity', 'connection'])
+        Options = namedtuple('Options', ['listtags', 'listtasks', 'listhosts',
+                                         'syntax', 'module_path', 'become',
+                                         'become_method', 'become_user',
+                                         'check', 'diff', 'forks',
+                                         'verbosity', 'connection'])
         options = Options(listtags=False, listtasks=False, listhosts=False,
-                             syntax=False, module_path=None, become=False, 
-                             become_method='sudo', become_user='root', 
-                             check=False, diff=False, forks=100, 
-                             verbosity=3, connection='ssh')
+                          syntax=False, module_path=None, become=False,
+                          become_method='sudo', become_user='root',
+                          check=False, diff=False, forks=100,
+                          verbosity=3, connection='ssh')
 
         nodes = [{
-                'ip_address': host,
-                'username': username
-            }]
+            'ip_address': host,
+            'username': username
+        }]
         passwords = {
-            'conn_pass': password, 
+            'conn_pass': password,
             'become_pass': password
         }
         inventory_file = AnsibleInventoryFile(nodes)
 
         loader = DataLoader()
-        inventory = AnsibleInventoryManager(loader=loader, sources=inventory_file.path)
+        inventory = AnsibleInventoryManager(
+            loader=loader, sources=inventory_file.path)
         variable_manager = VariableManager(loader=loader, inventory=inventory)
 
         if not os.path.exists(playbook):
-            self.log.error("ansible_run() failed for %s@%s, playbook: %s not found.")
+            self.log.error(
+                "ansible_run() failed for %s@%s, playbook: %s not found.")
             raise ValueError("Playbook {} not found".format(playbook))
 
         pbex = PlaybookExecutor(playbooks=[playbook],
@@ -126,9 +188,18 @@ class InventoryManager():
 
     def ping(self, host, timeout=3):
         """
-        Returns True if host `<String>` responds to a ping request within the specified `timeout`.
+        Send a ping (ICMP) request to a remote host.
 
-        Note: a host may not respond to a ping (ICMP) request even if the host name is valid.
+        Args:
+            host (str): Hostname or IP address.
+            timeout (int): Ping request timeout (in seconds).
+
+        Returns:
+            bool: The ping response. ``True`` if the host responds to a ping request 
+                within the specified timeout period. ``False`` otherwise.
+
+        Note:
+            A host may not respond to a ping (ICMP) request even if the host name is valid.
         """
         # Building the command. Ex: "ping -c 1 google.com"
         command = ['ping', '-c', '1', host]
@@ -137,64 +208,94 @@ class InventoryManager():
             subprocess.run(command, check=True, timeout=timeout)
             return True
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-            self.log.warning("Failed to ping host: %s with timeout: %d", host, timeout)
+            self.log.warning(
+                "Failed to ping host: %s with timeout: %d", host, timeout)
             return False
-    
+
     # TODO: Modify function to not use the linux cat command.
     def get_file_contents(self, host, username, password, file_path):
         """
-        Gets the contents of a (text) file from remote host, given the file path.
-        Raises `ConnectionError` if SSH Connection is unsuccessful or `OSError` if the file does not exist.
+        Gets the contents of a text file from remote host, given the file path.
+
+        Args:
+            host (str): Hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
+            file_path (str): Absolute path to the file on the remote host.
+        
+        Returns:
+            str: The contents of the remote file.
+
+        Raises:
+            ConnectionError: If SSH Connection cannot be established.
+            OSError: If there is an error reading the file from the remote host.
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
             ssh.connect(host, username=username, password=password)
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("cat {0}".format(file_path))
+            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
+                "cat {0}".format(file_path))
         except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError) as e:
-            self.log.exception("get_file_contents() failed for %s@%s file_path: %s", username, host, file_path)
+            self.log.exception(
+                "get_file_contents() failed for %s@%s file_path: %s", username, host, file_path)
             raise ConnectionError(e)
         if ssh_stdout.channel.recv_exit_status() > 0:
             error = ssh_stderr.read().decode('utf-8').strip()
-            self.log.error("get_file_contents() failed for %s@%s file_path: %s with error: %s", username, host, file_path, error)
+            self.log.error("get_file_contents() failed for %s@%s file_path: %s with error: %s",
+                           username, host, file_path, error)
             raise OSError(error)
-        
+
         return ssh_stdout.read().decode('utf-8').strip()
-    
+
     def get_screengrab(self, host, username, password):
         """
-        Captures the full screen of remote host and returns the image as file object. 
-        
-        Usage:
-        ```
-            inv = InventoryManager()
-            f = inv.get_screengrab("192.168.2.35", "user", "12345")
-            with open("test.png", "w+b") as image:
-                image.write(f)
-        ```
+        Captures a fullscreen screenshot of the specified remote host. 
+
+        Example:
+            >>> inv = InventoryManager()
+            >>> f = inv.get_screengrab("192.168.2.35", "user", "12345")
+            >>> with open("test.png", "w+b") as image:
+                    image.write(f)
+
+        Args:
+            host (str): Hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
+
+        Returns:
+            str
+
+        Raises:
+            ConnectionError: If SSH Connection cannot be established.
+            OSError: If there is an error taking the screenshot on the remote host.
+
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        
+
         try:
             ssh.connect(host, username=username, password=password)
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("DISPLAY=:0.0 import -window root .shot.png")
+            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
+                "DISPLAY=:0.0 import -window root .shot.png")
             sftp = ssh.open_sftp()
         except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError) as e:
-            self.log.exception("get_screengrab() failed for %s@%s", username, host)
+            self.log.exception(
+                "get_screengrab() failed for %s@%s", username, host)
             raise ConnectionError(e)
         if ssh_stdout.channel.recv_exit_status() > 0:
             error = ssh_stderr.read().decode('utf-8').strip()
-            self.log.error("get_screengrab() failed for %s@%s with error: %s", username, host, error)
+            self.log.error(
+                "get_screengrab() failed for %s@%s with error: %s", username, host, error)
             raise OSError(error)
 
         try:
-            # ? Sometimes fails to read the whole image. Socket might be getting closed before reading.
             with sftp.open('.shot.png') as image:
                 screengrab = image.read()
         except (FileNotFoundError, IOError) as e:
-            self.log.exception("get_screengrab() failed for: %s@%s", username, host)
+            self.log.exception(
+                "get_screengrab() failed for: %s@%s", username, host)
             raise
         finally:
             sftp.close()
@@ -203,7 +304,17 @@ class InventoryManager():
     def run_command(self, host, username, password, command):
         """
         Runs the given command string on remote host.
-        Raises `ConnectionError` if SSH Connection is unsuccessful.
+        
+        Args:
+            host (str): Hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
+            command (str): Command to execute.
+
+        Raises:
+            ConnectionError: If SSH Connection can't be established.
+            OSError: If there is an error running the command on the remote host.
+        
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -211,11 +322,13 @@ class InventoryManager():
             ssh.connect(host, username=username, password=password)
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
         except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError) as e:
-            self.log.exception("run_command() failed for %s@%s, command: %s", username, host, command)
+            self.log.exception(
+                "run_command() failed for %s@%s, command: %s", username, host, command)
             raise ConnectionError(e)
         if ssh_stdout.channel.recv_exit_status() > 0:
             error = ssh_stderr.read().decode('utf-8').strip()
-            self.log.error("run_command() failed for %s@%s, command: %s with error: %s", username, host, command, error)
+            self.log.error(
+                "run_command() failed for %s@%s, command: %s with error: %s", username, host, command, error)
             raise OSError(error)
-        
+
         return ssh_stdout.read().decode('utf-8').strip()

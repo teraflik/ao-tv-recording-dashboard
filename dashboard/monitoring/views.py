@@ -23,23 +23,29 @@ def nodes(request, node_id=None):
     If no `node_id` is specified, returns information about all the nodes in database.
 
     Args:
-        request: An HTTPRequest parameter. Can be used in future to parse custom GET Requests
-        node_id: The unique ID of the Node, for which information is required. If `None`, returns
-            returns info about all the nodes in the database.
+        request (:obj:`django.http.request.Request`): An HTTPRequest parameter. 
+            Can be used in future to parse custom GET parameters.
+        node_id (int): The unique ID of the Node, for which information is required. 
+            If `None`, returns returns info about all the nodes in the database.
     
     Returns:
-        JSONResponse containing information about the desired nodes as a list.
+        :obj:`django.http.JSONResponse` object containing information about the 
+        desired nodes as a list.
 
-        Each item in the list is a dictionary with the following schema:
-            **id**: The unique integer ID of the Node,
-            **ip_address**: IP address or hostname of the Node,
-            **label**: The custom label for the Node,
-            **ping**: Whether the Node responded to a Ping (ICMP) request,
-            **channel_id**: The channel ID currently configured on the Node's `/home/user/Desktop/TV/scripts/channel_value.txt` file,
-            **uptime**: The total uptime of the Node in HH:MM format,
-            **cron**: The output of `crontab -l` command on the Node (might need to be sanitized),
-            **screenshot_url**: A URL to the screenshot that was last captured on the Node's primary display,
-            **netdata_host**: The host:port combination on which Node's Netdata daemon is exposed
+        Each item in the list is a dictionary with the following keys:
+
+            - ``id``: The unique integer ID of the Node.
+            - ``ip_address``: IP address or hostname of the Node.
+            - ``label``: The custom label for the Node.
+            - ``ping``: Whether the Node responded to a Ping (ICMP) request.
+            - ``channel_id``: The channel ID currently configured on the Node's ``/home/user/Desktop/TV/scripts/channel_value.txt`` file. 
+            - ``uptime``: The total uptime of the Node in HH:MM format.
+            - ``cron``: The output of ``crontab -l`` command on the Node (might need to be sanitized).
+            - ``screenshot_url``: A URL to the screenshot that was last captured on the Node``s primary display.
+            - ``netdata_host``: The host:port combination on which Node's Netdata daemon is exposed.
+        
+        Note:
+            If ping fails, the fields following ping will be empty.
 
     """
     nodes = []
@@ -66,6 +72,11 @@ def nodes(request, node_id=None):
                 "ip_address": node.ip_address,
                 "label": node.label,
                 "ping": False,
+                "channel_id": None,
+                "uptime": None,
+                "cron": None,
+                "screenshot_url": None,
+                "netdata_host": None
             })
     
     return JsonResponse(data = {"nodes": nodes})
@@ -73,8 +84,8 @@ def nodes(request, node_id=None):
 @login_required
 def screenshot(request, node_id):
     """
-    Take screenshot and return as `content_type=image` response.
-    If `?response=json` is specified, returns the `screenshot_url` as JsonResponse.
+    Take screenshot and return as ``content_type=image`` response.
+    If ``?response=json`` is specified, returns the ``screenshot_url`` as JsonResponse.
     """
     try:
         node = Node.objects.get(pk=node_id)
@@ -90,10 +101,26 @@ def screenshot(request, node_id):
 @login_required
 def obs(request, node_id):
     """
-    Manages OBS running on a node via OBSWebsocket instance.
-    GET parameter `action` supports many arguments.
-    Response is True on successful completion of the specified action.
-    In absence of the action parameter, returns the current recording status of OBS.
+    Manages OBS running on a remote machine via OBSWebsocket.
+
+    Args:
+        request (:obj:`django.http.request.Request`): An HTTPRequest, containing 
+            GET parameter ``action`` with one of the following values:
+                
+                - ``?action=is_running``: Checks if obs is running.
+                - ``?action=is_recording``: Checks if obs is recording.
+                - ``?action=start_recording``: Sends a command to start recording.
+                - ``?action=stop_recording``: Sends a command to stop recording.
+                - ``?action=reset_source``: Sends a command to reset source.
+
+            If any other value is specified, the default response is returned.
+
+        node_id (int): The unique ID of the Node, on which the action is to be performed.
+            OBS must be running on the Node for desired results.
+
+    Returns:
+        Result of the specified action. In absence of the action parameter, returns 
+        the current recording status of OBS (Default Response).
     """
     try:
         node = Node.objects.get(pk=node_id)
