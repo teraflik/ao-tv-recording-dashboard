@@ -124,6 +124,65 @@ const setColorLabels = (querySelector, stagesEnum, stageToGraphic) => {
     
 }
 
+const createRecordingSlotsFromRecordingGuideEntries = (recordingGuideRawData, date) => {
+    
+    let recordingSlots = [];
+
+    const SAFETY_MARGIN_MINUTES = 2;
+
+    recordingGuideRawData.forEach((recordingGuideEntry, index) => {
+        
+        let startTimeString = recordingGuideEntry['start_time'];
+        let stopTimeString = recordingGuideEntry['stop_time'];
+
+        if (startTimeString < stopTimeString) {
+
+            //  This corresponds to a single slot spanning from (startTime - stopTime)
+            let startRecordingTime = new Date([date, startTimeString].join(" "));
+            let stopRecordingTime = new Date([date, stopTimeString].join(" "));
+            
+            //  patch: to prevent entering the next clipNumber
+            stopRecordingTime.setMinutes(stopRecordingTime.getMinutes() - SAFETY_MARGIN_MINUTES);
+ 
+            recordingSlots.push({
+                "startRecordingTime"    :   startRecordingTime,
+                "stopRecordingTime"     :   stopRecordingTime
+            });
+        }
+        else {
+
+            //  This corresponds to 2 slots
+
+            //  1 from (00:00:00 - stopTime)
+            let startRecordingTimeFirst = new Date([date, "00:00:00"].join(" "));
+            let stopRecordingTimeFirst = new Date([date, stopTimeString].join(" "));
+            
+            //  patch: to prevent entering the next clipNumber
+            stopRecordingTimeFirst.setMinutes(stopRecordingTimeFirst.getMinutes() - SAFETY_MARGIN_MINUTES);
+
+            recordingSlots.push({
+                "startRecordingTime"    :   startRecordingTimeFirst,
+                "stopRecordingTime"     :   stopRecordingTimeFirst
+            });
+
+
+            //  2 from (startTime - 24:00:00)
+            let startRecordingTimeSecond = new Date([date, startTimeString].join(" "));
+            let stopRecordingTimeSecond = new Date([date, "24:00:00"].join(" "));
+            
+            //  patch: to prevent entering the next clipNumber
+            stopRecordingTimeSecond.setMinutes(stopRecordingTimeSecond.getMinutes() - SAFETY_MARGIN_MINUTES);
+
+            recordingSlots.push({
+                "startRecordingTime"    :   startRecordingTimeSecond,
+                "stopRecordingTime"     :   stopRecordingTimeSecond
+            });       
+        }
+    });
+
+    return recordingSlots;
+}
+
 // const initializeTimeline = (endpoint) => {
 //     let deviceID = endpoint.searchParams.get('device_id');
 //     let channelValue = endpoint.searchParams.get('channel_values');
