@@ -7,36 +7,31 @@ let stageToColor = {
     'empty':    'grey'
 }
 
-const summaryStagesEnum  = Object.freeze({
-    "ok"        :   1, 
-    "empty"     :   2, 
-    "error"     :   3,
-    "inprogress":   4,
-    "blank"     :   5
+const timelineStagesEnum  = Object.freeze({
+    "Start Recording"    :   1, 
+    "Uploading done"     :   2, 
+    "Stop Recording"     :   3,
+    "empty"              :   4
 });
 
 // Ref:- https://stackoverflow.com/questions/21346967/using-value-of-enum-as-key-in-another-enum-in-javascript
-const summaryStagesToGraphic = Object.freeze({
-    [summaryStagesEnum.ok] : {
-                            "bgcolor" : "lightgreen",
-                            "innerHTML" : "&#10004;",
+const timelineStagesToGraphic = Object.freeze({
+    [timelineStagesEnum['Start Recording']] : {
+                            "bgcolor" : "green",
+                            "innerHTML" : "",
                             },
-    [summaryStagesEnum.empty] : {
-                            "bgcolor" : "lightgrey",
-                            "innerHTML" : "NA",
+    [timelineStagesEnum['Uploading done']] : {
+                            "bgcolor" : "blue",
+                            "innerHTML" : "",
                             },
-    [summaryStagesEnum.error] : {
-                            "bgcolor" : "red",
-                            "innerHTML" : "&#10008;",
+    [timelineStagesEnum['Stop Recording']] : {
+                            "bgcolor" : "black",
+                            "innerHTML" : "",
                             },
-    [summaryStagesEnum.inprogress] : {
-                            "bgcolor" : "lightblue",
-                            "innerHTML" : "&#10017;",
-                            },
-    [summaryStagesEnum.blank] : {
-                            "bgcolor" : "brown",
-                            "innerHTML" : "&#10004;",
-                            },
+    [timelineStagesEnum['empty']] : {
+                            "bgcolor" : "grey",
+                            "innerHTML" : "",
+                            }
 });
 
 function prepareStartStopEntries(startStopRawData, endpoint) {
@@ -772,7 +767,7 @@ google.charts.setOnLoadCallback(function() {
     setDateInDatePicker('date', baseEndPoint.searchParams.get('date'));
 
     //  patch:  add color labels to page top
-    setColorLabels("#timeline-color-labels", summaryStagesEnum, summaryStagesToGraphic);
+    setColorLabels("#timeline-color-labels", timelineStagesEnum, timelineStagesToGraphic);
 
     //  patch:  add summaryColorLabels at top of summaryTable.
     // setSummaryColorLabels();
