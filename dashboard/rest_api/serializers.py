@@ -7,8 +7,9 @@ __credits__ = ["Quantiphi Analytics"]
 from rest_framework import serializers
 
 # project dependencies
-from .models import (ChannelInfo, ExpectedSlot, FilterRecordingTracking,
-                     InvalidFrameTracking, Recording, RecordingTracking)
+from .models import (ChannelInfo, FilterRecordingTracking,
+                     InvalidFrameTracking, Recording, RecordingGuide,
+                     RecordingTracking)
 
 
 class ChannelInfoSerializer(serializers.ModelSerializer):
@@ -43,8 +44,8 @@ class RecordingTrackingSerializer(serializers.ModelSerializer):
         model = RecordingTracking
         fields = '__all__'
 
-class ExpectedSlotSerializer(serializers.ModelSerializer):
+class RecordingGuideSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = ExpectedSlot
+        model = RecordingGuide
         fields = '__all__'

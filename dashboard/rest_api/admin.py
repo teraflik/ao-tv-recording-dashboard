@@ -9,8 +9,9 @@ from django.contrib.auth.models import Group, User
 from django.db import models
 
 # Project related dependencies
-from .models import (ChannelInfo, ExpectedSlot, FilterRecordingTracking,
-                     InvalidFrameTracking, Recording, RecordingTracking)
+from .models import (ChannelInfo, FilterRecordingTracking,
+                     InvalidFrameTracking, Recording, RecordingGuide,
+                     RecordingTracking)
 
 
 # Register your models here.
@@ -63,11 +64,11 @@ class FilterRecordingTrackingAdmin(admin.ModelAdmin):
     list_display = [field.name for field in FilterRecordingTracking._meta.fields]
     search_fields = ('request_id',)
 
-@admin.register(ExpectedSlot)
-class ExpectedSlotsAdmin(admin.ModelAdmin):
+@admin.register(RecordingGuide)
+class RecordingGuideAdmin(admin.ModelAdmin):
 
     list_display = list(map(lambda x: 'get_channel_name' if x == 'channel_value' else x, 
-                            (field.name for field in ExpectedSlot._meta.fields)))
+                            (field.name for field in RecordingGuide._meta.fields)))
     
     list_filter = ('device_id', 'channel_value')
 

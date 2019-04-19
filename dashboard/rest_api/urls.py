@@ -13,5 +13,5 @@ urlpatterns = [
     url(r'^blank/', views.BlankView.as_view(), name='api-blank'),
     url(r'^filter_recording_tracking/', views.FilterRecordingTrackingView.as_view(), name='api-filter-recording-tracking'),
     url(r'^recording_tracking/', views.RecordingTrackingView.as_view(), name='api-recording-tracking'),
-    url(r'^expected_slot/', views.ExpectedSlotView.as_view(), name='api-expected-slot'),
+    url(r'^recording_guide/', views.RecordingGuideView.as_view(), name='api-recording-guide'),
 ]
