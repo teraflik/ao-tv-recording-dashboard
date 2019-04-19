@@ -288,7 +288,19 @@ Vue.component('recording_guide', {
                     </button>
                 </div>
                 <div class="modal-body">
-                    Something
+                    <table class="table table-borderless">
+                        <thead>
+                            <th>ID</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Comments</th>
+                        </thead>
+                        <tr v-for="slot in slots">
+                            <td>{{ slot.id }}</td>
+                            <td>{{ slot.start_time }}</td>
+                            <td><code>{{ slot.end_time }}</code></td>
+                        </tr>
+                    </table>
                 </div>
                 <div class="modal-footer">
                     <h4 class="modal-title mr-auto">{{ label }} <small><code>[{{ ip_address}}]</code></small></h4>

@@ -161,6 +161,10 @@ class AOInventoryManager(InventoryManager):
             return self.get_file_contents(host, username, password, "/home/user/Desktop/TV/scripts/channel_value.txt")
         except (ConnectionError, OSError) as e:
             return str(e)
+    
+    # TODO
+    def set_cron(self, host, username, password):
+        pass
 
     # * Might need sudo. Not tested
     def reboot(self, host, username, password):
