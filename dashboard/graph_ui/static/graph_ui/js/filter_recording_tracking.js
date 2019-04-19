@@ -1,33 +1,43 @@
 let globalDataTable = {};
 
 const timelineStagesEnum  = Object.freeze({
-    "Start Recording"    :   1, 
-    "Uploading done"     :   2, 
-    "Stop Recording"     :   3,
-    "empty"              :   4
+    "Expected Start Recording"  :   1,
+    "Expected Stop Recording"   :   2,
+    "Start Recording"           :   3, 
+    "Uploading done"            :   4, 
+    "Stop Recording"            :   5,
+    "empty"                     :   6
 });
 
 // Ref:- https://stackoverflow.com/questions/21346967/using-value-of-enum-as-key-in-another-enum-in-javascript
 const timelineStagesToGraphic = Object.freeze({
+    [timelineStagesEnum['Expected Start Recording']] : {
+                            "bgcolor" : "pink",
+                            "innerHTML" : "",
+                            },
+    [timelineStagesEnum['Expected Stop Recording']]  : {
+                            "bgcolor" : "violet",
+                            "innerHTML" : "",
+                            },
     [timelineStagesEnum['Start Recording']] : {
                             "bgcolor" : "green",
                             "innerHTML" : "",
                             },
-    [timelineStagesEnum['Uploading done']] : {
+    [timelineStagesEnum['Uploading done']]  : {
                             "bgcolor" : "blue",
                             "innerHTML" : "",
                             },
-    [timelineStagesEnum['Stop Recording']] : {
+    [timelineStagesEnum['Stop Recording']]  : {
                             "bgcolor" : "black",
                             "innerHTML" : "",
                             },
-    [timelineStagesEnum['empty']] : {
+    [timelineStagesEnum['empty']]           : {
                             "bgcolor" : "grey",
                             "innerHTML" : "",
                             }
 });
 
-function prepareStartStopEntries(startStopRawData, endpoint) {
+const prepareStartStopDataTableEntries = (startStopRawData, date) => {
 
     let startStopDataTableContents = [];
 
@@ -62,7 +72,7 @@ function prepareStartStopEntries(startStopRawData, endpoint) {
     return startStopDataTableContents;
 }
 
-function prepareProcessingEntries(filterRawData, endpoint) {
+const prepareProcessingDataTableEntries = (filterRawData, date) => {
     
     let processingDataTableContents = [];
 
@@ -113,13 +123,70 @@ function prepareProcessingEntries(filterRawData, endpoint) {
     return processingDataTableContents;
 }
 
-function prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, endpoint) {
+const prepareRecordingGuideDataTableEntries = (recordingGuideRawData, date) => {
 
-    let date = endpoint.searchParams.get('date');
-    let startDate = new Date(date + " 00:00:00");
+    let recordingGuideDataTableEntries = [];
+
+    recordingGuideRawData.forEach((recordingGuideEntry, index) => {
+        
+        //  corresponding to each entry in recoringGuideRawData, there will be two entries.
+        //  1 for START
+        //  2 for STOP
+
+        let category;
+        let label;
+        let tooltip;
+        let color;
+        let startTimeTimeline;
+        let endTimeTimeline;
+
+
+        //  START ENTRY
+        category = 'Expected';
+        label = '';
+        color = timelineStagesToGraphic[timelineStagesEnum[['Expected Start Recording']]].bgcolor;
+        
+        startTimeTimeline = new Date([date, recordingGuideEntry['start_time']].join(" "));
+
+        endTimeTimeline = new Date(startTimeTimeline);
+        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
+        
+        tooltip = "Expected Start Recording" + ' ' + hh_mm_ss(startTimeTimeline);
+
+        console.log("date is ...");
+        console.log(date);
+
+        console.log("recordingGuideEntry['start_time'] is ....");
+        console.log(recordingGuideEntry['start_time']);
+
+        console.log("startTimeTimeline is ...");
+        console.log(startTimeTimeline);
+
+        recordingGuideDataTableEntries.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+
+
+        //  STOP ENTRY
+        color = timelineStagesToGraphic[timelineStagesEnum[['Expected Stop Recording']]].bgcolor;
+        
+        startTimeTimeline = new Date([date, recordingGuideEntry['stop_time']].join(" "));
+
+        endTimeTimeline = new Date(startTimeTimeline);
+        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
+        
+        tooltip = "Expected Stop Recording" + ' ' + hh_mm_ss(startTimeTimeline);
+            
+        recordingGuideDataTableEntries.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+    });
+
+    return recordingGuideDataTableEntries;
+}
+
+const prepareDataForGoogleChartTimeline = (recordingRawData, filterRawData, recordingGuideRawData, date) => {
+
+    let emptyEntryStartDate = new Date(date + " 00:00:00");
     
-    let endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 1);
+    let emptyEntryEndDate = new Date(emptyEntryStartDate);
+    emptyEntryEndDate.setDate(emptyEntryEndDate.getDate() + 1);
 
     //  extract startStopRawData for device_id = 'a'
     let startStopRawData = recordingRawData.filter(function(entry) {
@@ -132,24 +199,23 @@ function prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, endp
         });
     }
 
-    // console.log("startStopRawData is ....");
-    // console.log(startStopRawData);
-
     //  if no data recieved
-    if (!startStopRawData || startStopRawData.length == 0) {
-        return [['Empty', '', 'No filter recordings available', timelineStagesToGraphic[timelineStagesEnum[['empty']]].bgcolor, startDate, endDate]];
+    if (!recordingGuideRawData || recordingGuideRawData.length == 0) {
+        return [['Empty', '', 'No filter recordings available', timelineStagesToGraphic[timelineStagesEnum[['empty']]].bgcolor, emptyEntryStartDate, emptyEntryEndDate]];
     }
 
-    let startStopDataTableContents = prepareStartStopEntries(startStopRawData, endpoint);
+    let startStopDataTableEntries = prepareStartStopDataTableEntries(startStopRawData, date);
     
-    let processingDataTableContents = prepareProcessingEntries(filterRawData, endpoint);
+    let processingDataTableEntries = prepareProcessingDataTableEntries(filterRawData, date);
 
-    let dataTableContents = startStopDataTableContents.concat(processingDataTableContents);
+    let recordingGuideDataTableEntries = prepareRecordingGuideDataTableEntries(recordingGuideRawData, date);
 
-    return dataTableContents;
+    let dataTableEntries = recordingGuideDataTableEntries.concat(startStopDataTableEntries).concat(processingDataTableEntries);
+
+    return dataTableEntries;
 }
 
-function populateTimeline(timeline, endpoint, index) {
+const populateTimeline = (timeline, endpoint, index) => {
     
     let filterEndPoint = new URL(endpoint.href);
 
@@ -194,54 +260,32 @@ function populateTimeline(timeline, endpoint, index) {
         let recordingRawData = recordingEndPointResponse[0];
         let recordingGuideRawData = recordingGuideEndPointResponse[0];
 
-        // console.log("filterRawData is.......");
-        // console.log(filterRawData);
-
-        // console.log("recordingRawData is.......");
-        // console.log(recordingRawData);
-
-        console.log("recordingGuideData is .........");
-        console.log(recordingGuideRawData);
-
-
         let recordingSlots = createRecordingSlotsFromRecordingGuideEntries(recordingGuideRawData, endpoint.searchParams.get('date'));
 
-        console.log("recorgingSlots are ...");
-        console.log(recordingSlots);
-
         //  2. prepare data in the format to be feeded to the visualisation library.
-        let formattedData = prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, endpoint);
-
-        // console.log("formattedData is.......");
-        // console.log(formattedData);
-
-        // //  3. If its today's date, then add current recordings
-
-        let totalFormattedData = formattedData;
+        let dataTableEntries = prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, recordingGuideRawData , endpoint.searchParams.get('date'));
 
         //  3. create dataTable object
         let dataTable = initializeDataTable();
 
         //  4. add the data to the dataTable object
-        dataTable.addRows(totalFormattedData);
+        dataTable.addRows(dataTableEntries);
         
         //  5. define options.
         let date = endpoint.searchParams.get('date');
-        let startDate = new Date(date + " 00:00:00");        
-        let endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 1);
+        let startDateTimeline = new Date(date + " 00:00:00");        
+        let endDateTimeline = new Date(startDateTimeline);
+        endDateTimeline.setDate(endDateTimeline.getDate() + 1);
 
         let options = {
             timeline: { showRowLabels: false, showBarLabels: false, barLabelStyle: { fontSize: 9 } },
             tooltip: { isHtml: false },
             hAxis: {
-                    minValue: startDate,
-                    maxValue: endDate,
-                    gridlines: {color: 'pink', count: 4},
-                    // format: 'HH'
+                    minValue: startDateTimeline,
+                    maxValue: endDateTimeline,
                 },
             width: '100%',
-            height: '140'
+            height: '145'
         };
         
         //  6. feed data to the timeline.
@@ -253,7 +297,7 @@ function populateTimeline(timeline, endpoint, index) {
     });
 }
 
-function initializeTimeline(endpoint) {
+const initializeTimeline = (endpoint) => {
     let channelValue = endpoint.searchParams.get('channel_values');
     
     let divID = "filter_" + channelValue;
