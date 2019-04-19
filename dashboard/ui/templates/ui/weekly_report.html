@@ -38,7 +38,7 @@
   <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <form id="sendMailForm" onsubmit="event.preventDefault(); sendMailHandler()" action="#" data-ajax="false">
+            <form id="sendMailForm" onsubmit="event.preventDefault(); prepareDataTableExport('weekly')" action="#" data-ajax="false">
                 
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Email Report</h5>
@@ -76,5 +76,6 @@
     </script>
     <script src="{% static "ui/js/utils.js" %}"></script>
     <script src="{% static "ui/js/report.js" %}"></script>
+    <script src="{% static "ui/js/report_common_utils.js" %}"></script>
     <script src="{% static "ui/js/weekly_report.js" %}"></script>
 {% endblock %}

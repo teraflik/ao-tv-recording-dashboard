@@ -3,6 +3,7 @@ __author__ = "Asutosh Sahoo"
 __copyright__ = "Copyright (©) 2019. Athenas Owl. All rights reserved."
 __credits__ = ["Quantiphi Analytics"]
 
+import calendar
 import datetime
 
 import pytz
@@ -14,10 +15,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import (ChannelInfo, FilterRecordingTracking,
-                     InvalidFrameTracking, Recording, RecordingTracking)
+                     InvalidFrameTracking, Recording, RecordingGuide,
+                     RecordingTracking)
 from .serializers import (ChannelInfoSerializer,
                           FilterRecordingTrackingSerializer,
-                          InvalidFrameTrackingSerializer, RecordingSerializer,
+                          InvalidFrameTrackingSerializer,
+                          RecordingGuideSerializer, RecordingSerializer,
                           RecordingTrackingSerializer)
 
 
@@ -196,6 +199,43 @@ class BlankView(APIView):
             invalid_frame_trackings = invalid_frame_trackings.filter(q)        
         
         serializer = InvalidFrameTrackingSerializer(invalid_frame_trackings, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        pass
+
+class RecordingGuideView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+
+        # get the input params
+        input_date = request.GET.get('date') or str(datetime.datetime.date(datetime.datetime.now()))
+        channel_values = request.GET.getlist('channel_values') or ChannelInfo.objects.values_list('channel_value', flat=True)
+        device_id = request.GET.get('device_id') or 'both'
+        
+        utc_timezone = pytz.timezone('UTC')
+        filters = {}
+        
+        # ensures channel_values is a list of integers
+        try:
+            channel_values_int = [int(x) for x in channel_values]
+            input_datetime_object = utc_timezone.localize(datetime.datetime.strptime(input_date, "%Y-%m-%d"))
+            
+            filters['channel_value__in'] = channel_values_int
+            filters['validity_start__lte'] = input_datetime_object
+            filters['validity_end__gte'] = input_datetime_object
+
+            filters[calendar.day_name[input_datetime_object.weekday()].lower()] = True
+        
+        except ValueError as error:
+            filters['channel_value__in'] = []
+
+        if device_id != 'both':
+            filters['device_id'] = device_id
+
+        recording_guides = RecordingGuide.objects.filter(**filters)
+        serializer = RecordingGuideSerializer(recording_guides, many=True)
         return Response(serializer.data)
     
     def post(self, request):

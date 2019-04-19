@@ -10,7 +10,7 @@ import pytz
 
 # django dependencies
 from django.db import models
-
+from monitoring.models import Node
 
 
 class ChannelInfo(models.Model):
@@ -103,3 +103,24 @@ class RecordingTracking(models.Model):
     class Meta:
         managed = False
         db_table = 'recording_tracking'
+
+class RecordingGuide(models.Model):
+    channel_value = models.ForeignKey(ChannelInfo, models.DO_NOTHING, db_column='channel_value', blank=False)
+    device_id = models.CharField(blank=False, max_length=255)
+    start_time = models.TimeField(blank=False)
+    stop_time = models.TimeField(blank=False)
+    validity_start = models.DateField(blank=False, default=datetime.date.today)
+    validity_end = models.DateField(blank=False, default=datetime.date.max)
+    monday = models.BooleanField(blank=False, default=True)
+    tuesday = models.BooleanField(blank=False, default=True)
+    wednesday = models.BooleanField(blank=False, default=True)
+    thursday = models.BooleanField(blank=False, default=True)
+    friday = models.BooleanField(blank=False, default=True)
+    saturday = models.BooleanField(blank=False, default=True)
+    sunday = models.BooleanField(blank=False, default=True)
+    node = models.ForeignKey(Node, null=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        managed = False
+        db_table = 'recording_guide'
+

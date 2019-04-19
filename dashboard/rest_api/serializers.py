@@ -8,7 +8,8 @@ from rest_framework import serializers
 
 # project dependencies
 from .models import (ChannelInfo, FilterRecordingTracking,
-                     InvalidFrameTracking, Recording, RecordingTracking)
+                     InvalidFrameTracking, Recording, RecordingGuide,
+                     RecordingTracking)
 
 
 class ChannelInfoSerializer(serializers.ModelSerializer):
@@ -41,4 +42,10 @@ class RecordingTrackingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecordingTracking
+        fields = '__all__'
+
+class RecordingGuideSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RecordingGuide
         fields = '__all__'
