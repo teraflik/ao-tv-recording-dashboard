@@ -1,6 +1,6 @@
+import datetime
 import io
 import os
-import datetime
 from contextlib import redirect_stdout
 
 from ansi2html import Ansi2HTMLConverter
@@ -9,9 +9,11 @@ from django.http import (HttpResponse, HttpResponseNotFound,
                          HttpResponseServerError, JsonResponse)
 from django.template.response import TemplateResponse
 
-from .ao_inventory import AOInventoryManager, OBSWebsocket
-from .models import Node
 from rest_api.models import RecordingGuide
+
+from .ao_inventory import AOInventoryManager, OBSWebsocket
+from .models import CaptureCard, Node, System, VideoSource
+
 
 @login_required
 def index(request):
@@ -57,17 +59,17 @@ def nodes(request, node_id=None):
     queryset = Node.objects.filter(pk=node_id) if node_id else Node.objects.all()
     
     for node in queryset:
-        if inv.ping(node.ip_address):
+        if inv.ping(node.system.ip_address):
             nodes.append({
                 "id": node.pk,
-                "ip_address": node.ip_address,
-                "label": node.label,
+                "ip_address": node.system.ip_address,
+                "label": node.__str__(),
                 "ping": True,
-                "channel_id": inv.get_channel_id(node.ip_address, node.username, node.password),
-                "uptime": inv.get_uptime(node.ip_address, node.username, node.password),
-                "cron": inv.get_cron(node.ip_address, node.username, node.password),
-                "screenshot_url": node.screenshot_url,
-                "netdata_host": node.netdata_host,
+                "channel_id": inv.get_channel_id(node.system.ip_address, node.system.username, node.system.password),
+                "uptime": inv.get_uptime(node.system.ip_address, node.system.username, node.system.password),
+                "cron": inv.get_cron(node.system.ip_address, node.system.username, node.system.password),
+                "screenshot_url": node.system.screenshot_url,
+                "netdata_host": node.system.netdata_host,
                 "slots": list(RecordingGuide.objects.filter(
                     node=node, 
                     validity_end__gte=datetime.date.today()
@@ -88,8 +90,8 @@ def nodes(request, node_id=None):
         else:
             nodes.append({
                 "id": node.pk,  
-                "ip_address": node.ip_address,
-                "label": node.label,
+                "ip_address": node.system.ip_address,
+                "label": node.__str__(),
                 "ping": False,
                 "channel_id": None,
                 "uptime": None,
@@ -112,10 +114,10 @@ def screenshot(request, node_id):
     except Node.DoesNotExist:
         return HttpResponseNotFound()
     inv = AOInventoryManager()
-    image = inv.get_screengrab(node.ip_address, node.username, node.password)
-    node.update_screenshot(image)
+    image = inv.get_screengrab(node.system.ip_address, node.system.username, node.system.password)
+    node.system.update_screenshot(image)
     if request.GET.get("response") == "json":
-        return JsonResponse(data = {"screenshot_url": node.screenshot_url})
+        return JsonResponse(data = {"screenshot_url": node.system.screenshot_url})
     return HttpResponse(image, content_type="image/jpeg")
 
 @login_required
@@ -148,7 +150,7 @@ def obs(request, node_id):
         return HttpResponseNotFound()
 
     try:
-        obs = OBSWebsocket(node.ip_address)
+        obs = OBSWebsocket(node.system.ip_address)
         if request.GET.get("action") == "is_running":
             response = True
         elif request.GET.get("action") == "is_recording":

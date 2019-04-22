@@ -1,14 +1,34 @@
 from django.contrib import admin
 
-from .models import Node
+from .models import CaptureCard, Node, System, VideoSource
 
+
+class SystemAdmin(admin.ModelAdmin):
+    """
+    Configure the admin dashboard for `System` model.
+    """
+    list_display = ['__str__', 'ip_address', 'username',
+                    'password', 'mac_address', 'screenshot', 'netdata_host']
+
+class CaptureCardAdmin(admin.ModelAdmin):
+    """
+    Configure the admin dashboard for `CaptureCard` model.
+    """
+    list_display = ['__str__', 'manufacturer', 'model', 'identifier']
+
+class VideoSourceAdmin(admin.ModelAdmin):
+    """
+    Configure the admin dashboard for `VideoSource` model.
+    """
+    list_display = ['__str__', 'source_type', 'manufacturer', 'model', 'identifier']
 
 class NodeAdmin(admin.ModelAdmin):
     """
     Configure the admin dashboard for `Node` model.
     """
-    list_display = ['label', 'ip_address', 'username',
-                    'password', 'mac_address', 'screenshot', 'netdata_host']
+    list_display = ['__str__', 'system', 'capture_card', 'video_source']
 
-
+admin.site.register(CaptureCard, CaptureCardAdmin)
+admin.site.register(VideoSource, VideoSourceAdmin)
+admin.site.register(System, SystemAdmin)
 admin.site.register(Node, NodeAdmin)
