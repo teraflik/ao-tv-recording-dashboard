@@ -168,7 +168,7 @@ const getBaseEndPoint = (tableName) => {
     let protocol = window.location.protocol;
     let host = window.location.host;
     let pathname = DBNAME_TO_URL_PATHNAME_MAPPING[tableName];
-    let searchParams = url.search;
+    let searchParams = window.location.search;
     let baseEndPoint = new URL(protocol + "//" + host + pathname + searchParams);
 
     return baseEndPoint;
@@ -176,8 +176,13 @@ const getBaseEndPoint = (tableName) => {
 
 const setDefaultDate = (endpoint) => {
 
-    let date = endpoint.searchParams.get("date") || yyyy_mm_dd(new Date());
-    return new URL(endpoint).searchParams.set("date", date);
+    let newEndPoint = new URL(endpoint);
+
+    if(!newEndPoint.searchParams.get("date")) {
+        newEndPoint.searchParams.set("date", yyyy_mm_dd(new Date()));
+    }
+
+    return newEndPoint;
 }
 
 
