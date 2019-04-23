@@ -365,34 +365,6 @@ function updateSummaryTable(formattedData, endpoint) {
     summaryBox.setAttribute('bgcolor', bgcolor);
 }
 
-function updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint) {
-
-    //  get the HTML DOM element where this is going to happen
-    let channelValue = endpoint.searchParams.get('channel_values');
-    let deviceID = endpoint.searchParams.get('device_id');
-    let divID = [deviceID, channelValue, "blank"].join("_");
-    let DOMElement = document.getElementById(divID);
-    
-    if (!recordingRawData || recordingRawData.length == 0) {
-        DOMElement.innerHTML = "No recordings available.";
-        DOMElement.setAttribute('style', 'color: blue');
-    }
-    else if (!blankRawData || blankRawData.length == 0) {
-        DOMElement.innerHTML = "No blank frames.";
-        DOMElement.setAttribute('style', 'color: green');
-    }
-    else {
-        let uniqueBlankRawData = removeDuplicateObjects(blankRawData);
-        let totalBlankSeconds = 0;
-        for(let i = 0; i < uniqueBlankRawData.length; i++) {
-            let entry = uniqueBlankRawData[i];
-            totalBlankSeconds += parseFloat(entry['invalid_frame_to']) - parseFloat(entry['invalid_frame_from']);
-        }
-        DOMElement.innerHTML = "" + (totalBlankSeconds / 60).toFixed(2) + " minutes of Blank Frames.";
-        DOMElement.setAttribute('style', 'color: red');
-    }
-}
-
 function populateTimeline(timeline, endpoint, index) {
 
     let blankEndPoint = new URL(endpoint.href);
@@ -402,26 +374,18 @@ function populateTimeline(timeline, endpoint, index) {
     $.when(
 
         //  1. get data from recordingEndPoint
-        $.get(recordingEndPoint),
+        getValidResponse(recordingEndPoint),
 
         //  2. get data from blankEndPoint
-        $.get(blankEndPoint)
+        getValidResponse(blankEndPoint)
 
-    ).then(function(recordingEndPointResponse, blankEndPointResponse) {
-
-        let recordingRawData = recordingEndPointResponse[0];
-        let blankRawData = blankEndPointResponse[0];
-
+    ).then(function(recordingRawData, blankRawData) {
         
         //  2. prepare data in the format to be feeded to the visualisation library.
         let formattedData = prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpoint);
 
         //  3. create dataTable object
         let dataTable = initializeDataTable();
-
-        
-        // console.log("formattedData is ....");
-        // console.log(formattedData);
 
         //  4. add the data to the dataTable object
         dataTable.addRows(formattedData);
@@ -451,7 +415,6 @@ function populateTimeline(timeline, endpoint, index) {
         //  6. feed data to the timeline.
         timeline.draw(dataTable, options);
 
-        
         //  7. updating the globalDataTable lookup
         globalDataTable[index] = dataTable;
 
@@ -461,53 +424,7 @@ function populateTimeline(timeline, endpoint, index) {
 
         //  9. add total blank minutes
         updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint);
-
-        
-        //  8. debugging
-        // console.log("Endpoint is :- " + endpoint.href);
-        // console.log(formattedData);
-        // console.log("formattedData is ");
-        // console.log(formattedData);
-
     });
-}
-
-function initializeTimeline(endpoint) {
-    let deviceID = endpoint.searchParams.get('device_id');
-    let channelValue = endpoint.searchParams.get('channel_values');
-    
-    let divID = deviceID + "_" + channelValue;
-    let container = document.getElementById(divID);
-    return new google.visualization.Timeline(container);
-}
-
-function attachSummaryToTimeline() {
-    
-    for(let i = 0; i < channelValues.length; i++) {
-
-        //  self invoking function to make a local scope for the index value which'll be used during callback.
-        (function(i){
-
-            let summaryBoxIDA = "#s_a_" + channelValues[i];
-            let timelineIDA = "#a_" + channelValues[i] + "_blank";
-    
-            $(summaryBoxIDA).click(function() {
-                $('html,body').animate({
-                    scrollTop: $(timelineIDA).offset().top},
-                    'slow');
-            });
-    
-            let summaryBoxIDB = "#s_b_" + channelValues[i];
-            let timelineIDB = "#b_" + channelValues[i] + "_blank";
-    
-            $(summaryBoxIDB).click(function() {
-                $('html,body').animate({
-                    scrollTop: $(timelineIDB).offset().top},
-                    'slow');
-            });
-    
-        })(i);
-    }
 }
 
 function scrollToGivenID() {
@@ -600,7 +517,8 @@ google.charts.setOnLoadCallback(function() {
         //  self invoking function to make a local scope for the index value which'll be used during callback.
         (function(i){
             
-            timelines.push(initializeTimeline(specificEndPoints[i]));
+            let timelineQuerySelector = "#" + specificEndPoints[i].searchParams.get('device_id') + "_" + specificEndPoints[i].searchParams.get('channel_values');
+            timelines.push(initializeTimeline(timelineQuerySelector));
 
             google.visualization.events.addListener(timelines[i], 'select', function() {
                 selectHandler(timelines[i], i);

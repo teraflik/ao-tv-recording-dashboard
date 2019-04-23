@@ -232,7 +232,8 @@ const populateTimeline = (timeline, endpoint, index) => {
     // console.log("recordingEndPoint is .... " + recordingEndPoint.href);
 
     //  2. making corresponding endpoint for recording_guide table.
-    let recordingGuideEndPoint = new URL(endpoint.href);
+    let recordingGuideEndPointA = new URL(endpoint.href);
+    let recordingGuideEndPointB = new URL(endpoint.href);
 
     url = document.createElement('a');
     url.href = endpoint.href;
@@ -240,30 +241,30 @@ const populateTimeline = (timeline, endpoint, index) => {
     host = url.host;
     path = '/api/recording_guide';
     searchParams = url.search;
-    recordingGuideEndPoint = new URL(protocol + "//" + host + path + searchParams);
-    recordingGuideEndPoint = addGETParameters(recordingGuideEndPoint, {'device_id': 'a'});
+
+    recordingGuideEndPointA = new URL(protocol + "//" + host + path + searchParams);
+    recordingGuideEndPointA = addGETParameters(recordingGuideEndPointA, {'device_id': 'a'});
+
+    recordingGuideEndPointB = new URL(protocol + "//" + host + path + searchParams);
+    recordingGuideEndPointB = addGETParameters(recordingGuideEndPointB, {'device_id': 'b'});
 
     $.when(
 
         //  1. get data from filterEndPoint
-        $.get(filterEndPoint),
+        getValidResponse(filterEndPoint),
 
         //  2. get data from recordingEndPoint
-        $.get(recordingEndPoint),
+        getValidResponse(recordingEndPoint),
 
         //  3. get data from recordingGuideEndPoint
-        $.get(recordingGuideEndPoint)
+        getValidResponse([recordingGuideEndPointA, recordingGuideEndPointB])
 
-    ).then(function(filterEndPointResponse, recordingEndPointResponse, recordingGuideEndPointResponse) {
+    ).then(function(filterRawData, recordingRawData, recordingGuideRawData) {
         
-        let filterRawData = filterEndPointResponse[0];
-        let recordingRawData = recordingEndPointResponse[0];
-        let recordingGuideRawData = recordingGuideEndPointResponse[0];
-
         // let recordingSlots = createRecordingSlotsFromRecordingGuideEntries(recordingGuideRawData, endpoint.searchParams.get('date') || yyyy_mm_dd(new Date()) );
 
         //  2. prepare data in the format to be feeded to the visualisation library.
-        let dataTableEntries = prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, recordingGuideRawData , endpoint.searchParams.get('date')  || yyyy_mm_dd(new Date()));
+        let dataTableEntries = prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, recordingGuideRawData , endpoint.searchParams.get('date'));
 
         //  3. create dataTable object
         let dataTable = initializeDataTable();
@@ -297,14 +298,6 @@ const populateTimeline = (timeline, endpoint, index) => {
     });
 }
 
-const initializeTimeline = (endpoint) => {
-    let channelValue = endpoint.searchParams.get('channel_values');
-    
-    let divID = "filter_" + channelValue;
-    let container = document.getElementById(divID);
-    return new google.visualization.Timeline(container);
-}
-
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
@@ -331,8 +324,9 @@ google.charts.setOnLoadCallback(function() {
     for (let i = 0; i < specificEndPoints.length; i++) {
         //  self invoking function to make a local scope for the index value which'll be used during callback.
         (function(i){
-            
-            timelines.push(initializeTimeline(specificEndPoints[i]));
+
+            let timelineQuerySelector = "#filter_" + specificEndPoints[i].searchParams.get('channel_values');
+            timelines.push(initializeTimeline(timelineQuerySelector));
 
             //  no eventHandler required as of now.
             // google.visualization.events.addListener(timelines[i], 'select', function() {

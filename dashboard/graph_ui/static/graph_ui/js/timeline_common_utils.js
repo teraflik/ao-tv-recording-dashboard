@@ -163,31 +163,115 @@ const createRecordingSlotsFromRecordingGuideEntries = (recordingGuideRawData, da
     return recordingSlots;
 }
 
-// const initializeTimeline = (endpoint) => {
-//     let deviceID = endpoint.searchParams.get('device_id');
-//     let channelValue = endpoint.searchParams.get('channel_values');
-    
-//     let divID = deviceID + "_" + channelValue;
-//     let container = document.getElementById(divID);
-//     return new google.visualization.Timeline(container);
-// }
-
 const getBaseEndPoint = (tableName) => {
-
-    let currentURL = new URL(document.URL);
 
     let protocol = window.location.protocol;
     let host = window.location.host;
-    let pathname = DBNAME_TO_URL_PATHNAME_MAPPING[tableName]; 
-    let baseEndPoint = new URL(protocol + "//" + host + pathname);
-
-    //  setting date
-    let date = currentURL.searchParams.get("date") ? currentURL.searchParams.get("date") : yyyy_mm_dd(new Date());
-    
-    console.log("date is ...");
-    console.log(date);
-    
-    baseEndPoint.searchParams.set("date", date);
+    let pathname = DBNAME_TO_URL_PATHNAME_MAPPING[tableName];
+    let searchParams = url.search;
+    let baseEndPoint = new URL(protocol + "//" + host + pathname + searchParams);
 
     return baseEndPoint;
+}
+
+const setDefaultDate = (endpoint) => {
+
+    let date = endpoint.searchParams.get("date") || yyyy_mm_dd(new Date());
+    return new URL(endpoint).searchParams.set("date", date);
+}
+
+
+/**
+ * Takes an array of endpoints, loops through them sequentially
+ * @param {Array} endpoints 
+ */
+const getValidResponse = (endpoints) => {
+
+    return new Promise((resolve, reject) => {
+        
+        if (Array.isArray(endpoints)) {
+            const arrayLength = endpoints.length;
+            endpoints.forEach((endpoint, index) => {
+    
+                $.get(endpoint).then((response) => {
+                    
+                    if (response.length > 0) {
+                        resolve(response);
+                    }
+                    else if (index == arrayLength - 1) {
+                        resolve([]);
+                    }
+                });
+            });
+        } 
+        
+        else {
+            $.get(endpoints).then((response) => {
+                resolve(response);
+            });
+        }
+    });
+}
+
+const initializeTimeline = (timelineQuerySelector) => {
+
+    let container = document.querySelector(timelineQuerySelector);
+    return new google.visualization.Timeline(container);
+}
+
+const attachSummaryToTimeline = () => {
+    
+    for(let i = 0; i < channelValues.length; i++) {
+
+        //  self invoking const to make a local scope for the index value which'll be used during callback.
+        ((i) => {
+
+            let summaryBoxIDA = "#s_a_" + channelValues[i];
+            let timelineIDA = "#a_" + channelValues[i] + "_blank";
+    
+            $(summaryBoxIDA).click(() => {
+                $('html,body').animate({
+                    scrollTop: $(timelineIDA).offset().top},
+                    'slow');
+            });
+    
+            let summaryBoxIDB = "#s_b_" + channelValues[i];
+            let timelineIDB = "#b_" + channelValues[i] + "_blank";
+    
+            $(summaryBoxIDB).click(() => {
+                $('html,body').animate({
+                    scrollTop: $(timelineIDB).offset().top},
+                    'slow');
+            });
+    
+        })(i);
+    }
+}
+
+const updateTotalBlankMinutes = (recordingRawData, blankRawData, endpoint) => {
+
+    //  get the HTML DOM element where this is going to happen
+    let channelValue = endpoint.searchParams.get('channel_values');
+    let deviceID = endpoint.searchParams.get('device_id');
+    let divID = [deviceID, channelValue, "blank"].join("_");
+    let DOMElement = document.getElementById(divID);
+    
+    if (!recordingRawData || recordingRawData.length == 0) {
+        DOMElement.innerHTML = "No recordings available.";
+        DOMElement.setAttribute('style', 'color: blue');
+    }
+    else if (!blankRawData || blankRawData.length == 0) {
+        DOMElement.innerHTML = "No blank frames.";
+        DOMElement.setAttribute('style', 'color: green');
+    }
+    else {
+        let uniqueBlankRawData = removeDuplicateObjects(blankRawData);
+        let totalBlankSeconds = 0;
+        for(let i = 0; i < uniqueBlankRawData.length; i++) {
+            let entry = uniqueBlankRawData[i];
+            totalBlankSeconds += parseFloat(entry['invalid_frame_to']) - parseFloat(entry['invalid_frame_from']);
+        }
+        DOMElement.innerHTML = "" + (totalBlankSeconds / 60).toFixed(2) + " minutes of Blank Frames.";
+        DOMElement.setAttribute('style', 'color: red');
+    }
 }

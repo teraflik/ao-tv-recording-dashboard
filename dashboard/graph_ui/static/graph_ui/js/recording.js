@@ -285,34 +285,6 @@ const updateSummaryTable = (formattedData, blankRawData, endpoint) => {
     summaryBox.setAttribute('bgcolor', bgcolor);
 }
 
-const updateTotalBlankMinutes = (recordingRawData, blankRawData, endpoint) => {
-
-    //  get the HTML DOM element where this is going to happen
-    let channelValue = endpoint.searchParams.get('channel_values');
-    let deviceID = endpoint.searchParams.get('device_id');
-    let divID = [deviceID, channelValue, "blank"].join("_");
-    let DOMElement = document.getElementById(divID);
-    
-    if (!recordingRawData || recordingRawData.length == 0) {
-        DOMElement.innerHTML = "No recordings available.";
-        DOMElement.setAttribute('style', 'color: blue');
-    }
-    else if (!blankRawData || blankRawData.length == 0) {
-        DOMElement.innerHTML = "No blank frames.";
-        DOMElement.setAttribute('style', 'color: green');
-    }
-    else {
-        let uniqueBlankRawData = removeDuplicateObjects(blankRawData);
-        let totalBlankSeconds = 0;
-        for(let i = 0; i < uniqueBlankRawData.length; i++) {
-            let entry = uniqueBlankRawData[i];
-            totalBlankSeconds += parseFloat(entry['invalid_frame_to']) - parseFloat(entry['invalid_frame_from']);
-        }
-        DOMElement.innerHTML = "" + (totalBlankSeconds / 60).toFixed(2) + " minutes of Blank Frames.";
-        DOMElement.setAttribute('style', 'color: red');
-    }
-}
-
 const makeClipNoToProcessingEntry = (processingEntries) => {
     
     let clipNoToProcessingEntry = {};
@@ -326,89 +298,6 @@ const makeClipNoToProcessingEntry = (processingEntries) => {
     }
 
     return clipNoToProcessingEntry;
-}
-
-const createRecordingSlots = (startStopEntries, endpoint) => {
-    
-    //  sort the startStopEntries according to timestamp in ASC order.
-    startStopEntries.sort( (r1, r2) => {
-        if (r1.timestamp < r2.timestamp) return -1;
-        if (r1.timestamp > r2.timestamp) return 1;
-        return 0;
-    });
-    
-    //  extract date from endpoint and get today's date
-    let date = endpoint.searchParams.get('date');
-    let today = yyyy_mm_dd(new Date());
-
-    let recordingSlots = [];
-
-    let j = 0;
-    for(let i = 0; i < startStopEntries.length; ) {
-        
-        let entry = {};
-        let startRecordingDateTime;
-        let stopRecordingDateTime;
-
-        //  1. if the first entry is stop recording,
-        //     and corresponding clipNumber is 1, then skip it.
-
-        //  1. if the first entry is stop recording,
-        //     then the slot will be from 
-        //     dayStart - stopRecording
-        if (startStopEntries[i]['stage_message'] == 'Stop Recording') {
-
-            startRecordingDateTime = new Date(date + " 00:00:00");
-            stopRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
-            
-            if (getClipNumber(hh_mm_ss(stopRecordingDateTime)) == 1) {
-                i++;
-                continue;
-            }
-            else {
-                //  jugaad: to prevent entering the next clipNumber
-                stopRecordingDateTime.setMinutes(stopRecordingDateTime.getMinutes() - 2);
-                i++;
-            }
-        }
-        //  2. if this entry is the last entry and its start recording,
-        else if (i == startStopEntries.length - 1) {
-            //  a. if its today, then the slot will be from
-            //  startRecording - currentTime
-            if (date == today) {
-                startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
-                stopRecordingDateTime = new Date();
-            }
-
-            //  b. if its not today, then the slot will be from
-            //  startRecording - dayEnd
-            else {
-                startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
-                stopRecordingDateTime = new Date(date + " 00:00:00");
-                stopRecordingDateTime.setDate(stopRecordingDateTime.getDate() + 1);
-    
-                //  jugaad: to prevent entering the next clipNumber
-                stopRecordingDateTime.setMinutes(stopRecordingDateTime.getMinutes() - 2);
-            }
-            
-            i++;
-        }
-        else {
-            startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
-            stopRecordingDateTime = new Date(startStopEntries[i+1]['timestamp']);
-
-            //  jugaad: to prevent entering the next clipNumber
-            stopRecordingDateTime.setMinutes(stopRecordingDateTime.getMinutes() - 2);
-
-            i += 2;
-        }
-
-        entry['startRecordingTime'] = startRecordingDateTime;
-        entry['stopRecordingTime'] = stopRecordingDateTime;
-
-        recordingSlots.push(entry);
-    }
-    return recordingSlots;
 }
 
 const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, endpoint) => {
@@ -473,8 +362,6 @@ const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, endpoint) => {
                 }
             }
         }
-
-        // console.log("stopClipNumber is........ " + stopClipNumber);
     }
 
     return dummyEntries;
@@ -515,21 +402,15 @@ const populateTimeline = (timeline, endpoint, index) => {
     $.when(
 
         //  1. get data from recordingEndPoint
-        $.get(recordingEndPoint),
+        getValidResponse(recordingEndPoint),
 
         //  2. get data from blankEndPoint
-        $.get(blankEndPoint)
+        getValidResponse(blankEndPoint)
 
-    ).then((recordingEndPointResponse, blankEndPointResponse) => {
-
-        let recordingRawData = recordingEndPointResponse[0];
-        let blankRawData = blankEndPointResponse[0];
+    ).then((recordingRawData, blankRawData) => {
 
         //  2. prepare data in the format to be feeded to the visualisation library.
         let formattedData = prepareDataForGoogleChartTimeline(recordingRawData, endpoint);
-
-        // console.log("formattedData is.......");
-        // console.log(formattedData);
 
         //  2.1 filter out recordingEntries and processingEntries
         let startStopEntries = recordingRawData.filter((entry) => {
@@ -561,7 +442,7 @@ const populateTimeline = (timeline, endpoint, index) => {
         console.log(startStopEntries);
 
         //  2.5 make recording slots
-        let recordingSlots = createRecordingSlots(startStopEntries, endpoint);
+        let recordingSlots = createRecordingSlots(startStopEntries, endpoint.searchParams.get("date"));
         console.log("Recording Slots are......");
         console.log(recordingSlots);
 
@@ -648,15 +529,6 @@ const populateTimeline = (timeline, endpoint, index) => {
     });
 }
 
-const initializeTimeline = (endpoint) => {
-    let deviceID = endpoint.searchParams.get('device_id');
-    let channelValue = endpoint.searchParams.get('channel_values');
-    
-    let divID = deviceID + "_" + channelValue;
-    let container = document.getElementById(divID);
-    return new google.visualization.Timeline(container);
-}
-
 const selectHandler = (timeline, index) => {
 
     let selectedDataTable = globalDataTable[index];
@@ -690,42 +562,9 @@ const selectHandler = (timeline, index) => {
     window.open(redirectURL);
 }
 
-const attachSummaryToTimeline = () => {
-    
-    for(let i = 0; i < channelValues.length; i++) {
-
-        //  self invoking const to make a local scope for the index value which'll be used during callback.
-        ((i) => {
-
-            let summaryBoxIDA = "#s_a_" + channelValues[i];
-            let timelineIDA = "#a_" + channelValues[i] + "_blank";
-    
-            $(summaryBoxIDA).click(() => {
-                $('html,body').animate({
-                    scrollTop: $(timelineIDA).offset().top},
-                    'slow');
-            });
-    
-            let summaryBoxIDB = "#s_b_" + channelValues[i];
-            let timelineIDB = "#b_" + channelValues[i] + "_blank";
-    
-            $(summaryBoxIDB).click(() => {
-                $('html,body').animate({
-                    scrollTop: $(timelineIDB).offset().top},
-                    'slow');
-            });
-    
-        })(i);
-    }
-}
-
 const linkToBlankFramesUI = () => {
     
     //  get the current URL & change it to get the URL for blank UI
-    
-    //  this one has bug
-    //  recording.athenasowl.tv/graph_ui/recording?date=.... --> blank.athenasowl.tv/graph_ui/recording?date=...
-    //  let baseURL = new URL(document.URL.replace('recording', 'blank'));
 
     //  new logic
     let protocol = window.location.protocol;
@@ -755,8 +594,11 @@ const linkToBlankFramesUI = () => {
 
 google.charts.setOnLoadCallback(() => {
     
-    //  1. get baseEndPoint
+    //  1. get baseEndPoint for corresponding table.
     let baseEndPoint = getBaseEndPoint(tableName = 'RECORDING');
+
+    //  2. set date.
+    baseEndPoint = setDefaultDate(baseEndPoint);
 
     //  patch:  set the date in the datepicker
     setDateInDatePicker('#date', baseEndPoint.searchParams.get('date'));
@@ -786,7 +628,9 @@ google.charts.setOnLoadCallback(() => {
         //  self invoking const to make a local scope for the index value which'll be used during callback.
         ((i) => {
             
-            timelines.push(initializeTimeline(specificEndPoints[i]));
+            let timelineQuerySelector = "#" + specificEndPoints[i].searchParams.get('device_id') + "_" + specificEndPoints[i].searchParams.get('channel_values');
+            timelines.push(initializeTimeline(timelineQuerySelector));
+
             google.visualization.events.addListener(timelines[i], 'select', () => {
                 selectHandler(timelines[i], i);
             });
