@@ -5,26 +5,26 @@ from .models import CaptureCard, Node, System, VideoSource
 
 class SystemAdmin(admin.ModelAdmin):
     """
-    Configure the admin dashboard for `System` model.
+    Configure the admin dashboard for :py:class:`models.System` model.
     """
     list_display = ['__str__', 'ip_address', 'username',
                     'password', 'mac_address', 'screenshot', 'netdata_host']
 
 class CaptureCardAdmin(admin.ModelAdmin):
     """
-    Configure the admin dashboard for `CaptureCard` model.
+    Configure the admin dashboard for :py:class:`models.CaptureCard` model.
     """
     list_display = ['__str__', 'manufacturer', 'model', 'identifier']
 
 class VideoSourceAdmin(admin.ModelAdmin):
     """
-    Configure the admin dashboard for `VideoSource` model.
+    Configure the admin dashboard for :py:class:`models.VideoSource` model.
     """
     list_display = ['__str__', 'source_type', 'manufacturer', 'model', 'identifier']
 
 class NodeAdmin(admin.ModelAdmin):
     """
-    Configure the admin dashboard for `Node` model.
+    Configure the admin dashboard for :py:class:`models.Node` model.
     """
     list_display = ['__str__', 'system', 'capture_card', 'video_source']
 

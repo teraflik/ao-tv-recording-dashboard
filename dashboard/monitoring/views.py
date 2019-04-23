@@ -17,6 +17,9 @@ from .models import CaptureCard, Node, System, VideoSource
 
 @login_required
 def index(request):
+    """
+    Renders the index page.
+    """
     return TemplateResponse(request, 'monitoring/monitoring.html')
 
 @login_required

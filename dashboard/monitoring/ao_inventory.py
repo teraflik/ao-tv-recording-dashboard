@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Methods specific to AthenasOwl use cases, building on top of :class:`monitoring.inventory.InventoryManager` 
 and extended to include management of OBS.
