@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-__author__ = "Asutosh Sahoo"
-__copyright__ = "Copyright (©) 2019. Athenas Owl. All rights reserved."
-__credits__ = ["Quantiphi Analytics"]
+__author__ = 'Asutosh Sahoo'
+__copyright__ = 'Copyright (©) 2019. Athenas Owl. All rights reserved.'
+__credits__ = ['Quantiphi Analytics']
 """
 Django settings for ao_db_ui project.
 """
@@ -18,12 +18,33 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 config = configparser.ConfigParser()
 config.read(Constant.PARAMETERS_INI_PATH)
+DEFAULT = configparser.DEFAULTSECT
 
-stage = "UI-APP-CONFIG"
-SECRET_KEY = config.get(stage, 'SECRET_KEY')
-DEBUG = config.get(stage, "DEBUG") == "True"
-ALLOWED_HOSTS = config.get(stage, "ALLOWED_HOSTS").split(",")
+SECRET_KEY = config.get(DEFAULT, 'SECRET_KEY', fallback='(*&y98hsdfa89y238h')
+DEBUG = config.getboolean(DEFAULT, 'DEBUG', fallback='False')
+ALLOWED_HOSTS = config.get(DEFAULT, 'ALLOWED_HOSTS', fallback='*').split(',')
 
+#Populating Databases from parameters.ini
+DATABASES = {
+    'default': {
+        'ENGINE': config.get(DEFAULT, 'DB_ENGINE', fallback='django.db.backends.mysql'),
+        'HOST': config.get(DEFAULT, 'DB_HOST', fallback='localhost'),
+        'USER': config.get(DEFAULT, 'DB_USERNAME', fallback='root'),
+        'PASSWORD': config.get(DEFAULT, 'DB_PASSWORD', fallback='12345'),
+        'NAME': config.get(DEFAULT, 'DB_NAME', fallback='sys'),
+        'PORT': config.get(DEFAULT, 'DB_PORT', fallback='3306'),
+    },
+}
+
+for section in ['monitoring', 'rest_api']:
+    DATABASES[section] = {
+        'ENGINE': config.get(section, 'DB_ENGINE'),
+        'HOST': config.get(section, 'DB_HOST'),
+        'USER': config.get(section, 'DB_USERNAME'),
+        'PASSWORD': config.get(section, 'DB_PASSWORD'),
+        'NAME': config.get(section, 'DB_NAME'),
+        'PORT': config.get(section, 'DB_PORT'),
+    }
 
 # Application definition
 
@@ -76,22 +97,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ao_db_ui.wsgi.application'
 
-stage = "LOCAL"
-DB_ENGINE_LOCAL = config.get(stage, 'DB_ENGINE')
-DB_HOST_LOCAL = config.get(stage, 'DB_HOST')  # your host
-DB_USERNAME_LOCAL = config.get(stage, 'DB_USERNAME')  # username
-DB_PASSWORD_LOCAL = config.get(stage, 'DB_PASSWORD')  # password
-DB_NAME_LOCAL = config.get(stage, 'DB_NAME')
-DB_PORT_LOCAL = config.get(stage, 'DB_PORT')
+# stage = 'LOCAL'
+# DB_ENGINE_LOCAL = config.get(stage, 'DB_ENGINE')
+# DB_HOST_LOCAL = config.get(stage, 'DB_HOST')  # your host
+# DB_USERNAME_LOCAL = config.get(stage, 'DB_USERNAME')  # username
+# DB_PASSWORD_LOCAL = config.get(stage, 'DB_PASSWORD')  # password
+# DB_NAME_LOCAL = config.get(stage, 'DB_NAME')
+# DB_PORT_LOCAL = config.get(stage, 'DB_PORT')
 
 
-stage = "BARC-PROD"
-DB_ENGINE_BARC_PROD = config.get(stage, 'DB_ENGINE')
-DB_HOST_BARC_PROD = config.get(stage, 'DB_HOST')  # your host
-DB_USERNAME_BARC_PROD = config.get(stage, 'DB_USERNAME')  # username
-DB_PASSWORD_BARC_PROD = config.get(stage, 'DB_PASSWORD')  # password
-DB_NAME_BARC_PROD = config.get(stage, 'DB_NAME')
-DB_PORT_BARC_PROD = config.get(stage, 'DB_PORT')
+# stage = 'BARC-PROD'
+# DB_ENGINE_BARC_PROD = config.get(stage, 'DB_ENGINE')
+# DB_HOST_BARC_PROD = config.get(stage, 'DB_HOST')  # your host
+# DB_USERNAME_BARC_PROD = config.get(stage, 'DB_USERNAME')  # username
+# DB_PASSWORD_BARC_PROD = config.get(stage, 'DB_PASSWORD')  # password
+# DB_NAME_BARC_PROD = config.get(stage, 'DB_NAME')
+# DB_PORT_BARC_PROD = config.get(stage, 'DB_PORT')
 
 
 # Database
@@ -99,24 +120,24 @@ DB_PORT_BARC_PROD = config.get(stage, 'DB_PORT')
 
 DATABASE_ROUTERS = ('rest_api.dbrouters.CloudDBRouter',)
 
-DATABASES = {
-    'default': {
-        'ENGINE': DB_ENGINE_LOCAL,
-        'NAME': DB_NAME_LOCAL,
-        'USER': DB_USERNAME_LOCAL,
-        'PASSWORD': DB_PASSWORD_LOCAL,
-        'HOST': DB_HOST_LOCAL,
-        'PORT': DB_PORT_LOCAL,
-    },
-    'barc-prod': {
-        'ENGINE': DB_ENGINE_BARC_PROD,
-        'NAME': DB_NAME_BARC_PROD,
-        'USER': DB_USERNAME_BARC_PROD,
-        'PASSWORD': DB_PASSWORD_BARC_PROD,
-        'HOST': DB_HOST_BARC_PROD,
-        'PORT': DB_PORT_BARC_PROD,
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': DB_ENGINE_LOCAL,
+#         'NAME': DB_NAME_LOCAL,
+#         'USER': DB_USERNAME_LOCAL,
+#         'PASSWORD': DB_PASSWORD_LOCAL,
+#         'HOST': DB_HOST_LOCAL,
+#         'PORT': DB_PORT_LOCAL,
+#     },
+#     'barc-prod': {
+#         'ENGINE': DB_ENGINE_BARC_PROD,
+#         'NAME': DB_NAME_BARC_PROD,
+#         'USER': DB_USERNAME_BARC_PROD,
+#         'PASSWORD': DB_PASSWORD_BARC_PROD,
+#         'HOST': DB_HOST_BARC_PROD,
+#         'PORT': DB_PORT_BARC_PROD,
+#     }
+# }
 
 
 # Password validation
