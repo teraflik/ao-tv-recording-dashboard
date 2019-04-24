@@ -93,21 +93,21 @@ DATABASES = {
     'default': DB_DEFAULT
 }
 
-for section in ['monitoring', 'rest_api']:
+for section in ['db_monitoring', 'db_rest_api']:
     if section in config.sections():
         DATABASES[section] = {
-            'ENGINE': config.get(section, 'DB_ENGINE'),
-            'HOST': config.get(section, 'DB_HOST'),
-            'USER': config.get(section, 'DB_USERNAME'),
-            'PASSWORD': config.get(section, 'DB_PASSWORD'),
-            'NAME': config.get(section, 'DB_NAME'),
-            'PORT': config.get(section, 'DB_PORT'),
+            'ENGINE': config.get(section, 'ENGINE'),
+            'HOST': config.get(section, 'HOST'),
+            'USER': config.get(section, 'USERNAME'),
+            'PASSWORD': config.get(section, 'PASSWORD'),
+            'NAME': config.get(section, 'NAME'),
+            'PORT': config.get(section, 'PORT'),
         }
     else:
         DATABASES[section] = DB_DEFAULT
 
 
-DATABASE_ROUTERS = ('dashboard.dbrouters.CloudDBRouter',)
+DATABASE_ROUTERS = ('dashboard.dbrouters.CloudDBRouter', 'dashboard.dbrouters.MonitoringDBRouter')
 
 
 # Password validation
