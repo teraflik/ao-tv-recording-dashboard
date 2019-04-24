@@ -79,26 +79,33 @@ WSGI_APPLICATION = 'dashboard.wsgi.application'
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
 #Populating Databases from parameters.ini
+DB_DEFAULT = {
+    'ENGINE': config.get(DEFAULT, 'DB_ENGINE', fallback='django.db.backends.mysql'),
+    'HOST': config.get(DEFAULT, 'DB_HOST', fallback='localhost'),
+    'USER': config.get(DEFAULT, 'DB_USERNAME', fallback='root'),
+    'PASSWORD': config.get(DEFAULT, 'DB_PASSWORD', fallback='12345'),
+    'NAME': config.get(DEFAULT, 'DB_NAME', fallback='sys'),
+    'PORT': config.get(DEFAULT, 'DB_PORT', fallback='3306'),
+}
+
+
 DATABASES = {
-    'default': {
-        'ENGINE': config.get(DEFAULT, 'DB_ENGINE', fallback='django.db.backends.mysql'),
-        'HOST': config.get(DEFAULT, 'DB_HOST', fallback='localhost'),
-        'USER': config.get(DEFAULT, 'DB_USERNAME', fallback='root'),
-        'PASSWORD': config.get(DEFAULT, 'DB_PASSWORD', fallback='12345'),
-        'NAME': config.get(DEFAULT, 'DB_NAME', fallback='sys'),
-        'PORT': config.get(DEFAULT, 'DB_PORT', fallback='3306'),
-    },
+    'default': DB_DEFAULT
 }
 
 for section in ['monitoring', 'rest_api']:
-    DATABASES[section] = {
-        'ENGINE': config.get(section, 'DB_ENGINE'),
-        'HOST': config.get(section, 'DB_HOST'),
-        'USER': config.get(section, 'DB_USERNAME'),
-        'PASSWORD': config.get(section, 'DB_PASSWORD'),
-        'NAME': config.get(section, 'DB_NAME'),
-        'PORT': config.get(section, 'DB_PORT'),
-    }
+    if section in config.sections():
+        DATABASES[section] = {
+            'ENGINE': config.get(section, 'DB_ENGINE'),
+            'HOST': config.get(section, 'DB_HOST'),
+            'USER': config.get(section, 'DB_USERNAME'),
+            'PASSWORD': config.get(section, 'DB_PASSWORD'),
+            'NAME': config.get(section, 'DB_NAME'),
+            'PORT': config.get(section, 'DB_PORT'),
+        }
+    else:
+        DATABASES[section] = DB_DEFAULT
+
 
 DATABASE_ROUTERS = ('dashboard.dbrouters.CloudDBRouter',)
 

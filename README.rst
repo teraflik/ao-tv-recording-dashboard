@@ -2,9 +2,9 @@
 TV Recording Dashboard
 **********************
 
-.. image:: https://gitlab.com/athenasowl-intern/ao-tv-recording-db-ui/badges/master/pipeline.svg
+.. image:: https://gitlab.com/athenasowl-intern/ao-tv-recording-dashboard/badges/master/pipeline.svg
    :alt: Pipeline Status [Master]
-   :target: https://gitlab.com/athenasowl-intern/ao-tv-recording-db-ui/commits/master
+   :target: https://gitlab.com/athenasowl-intern/ao-tv-recording-dashboard/commits/master
 
 Track and manage TV Recording Pipeline, from anywhere.
 

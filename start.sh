@@ -18,17 +18,17 @@ cd /var/www/html
 # create /var/.ao directory where parameters.ini will be stored
 sudo mkdir /var/.ao
 # download the file from bucket (needs permission to download from bucket)
-sudo gsutil cp gs://ao-parameters-dev/ao-tv-recording-db-ui/parameters.ini /var/.ao/parameters.ini
+sudo gsutil cp gs://ao-parameters-dev/ao-tv-recording-dashboard/parameters.ini /var/.ao/parameters.ini
 
 # download the certificates from the bucket
-sudo gsutil cp gs://ao-parameters-dev/ao-tv-recording-db-ui/athenasowl.key /etc/ssl/private/
-sudo gsutil cp gs://ao-parameters-dev/ao-tv-recording-db-ui/a5b52472eb2ead2f.crt /etc/ssl/certs/
+sudo gsutil cp gs://ao-parameters-dev/ao-tv-recording-dashboard/athenasowl.key /etc/ssl/private/
+sudo gsutil cp gs://ao-parameters-dev/ao-tv-recording-dashboard/a5b52472eb2ead2f.crt /etc/ssl/certs/
 
 
 # Clone the GitHub Repo (private repo, needs authentication)
-sudo git clone https://gitlab.com/athenasowl-intern/ao-tv-recording-db-ui.git
+sudo git clone https://gitlab.com/athenasowl-intern/ao-tv-recording-dashboard.git
 # move into the repo
-cd ao-tv-recording-db-ui/
+cd ao-tv-recording-dashboard/
 # checkout the development branch
 sudo git checkout development
 # create a virtualenv using python3
@@ -55,7 +55,7 @@ endpoint_restrictions=$(cat <<-EOF
 EOF
 )
 
-# create a new file ao-tv-recording-db-ui.conf in the /etc/apache2/sites-available/ folder.
+# create a new file dashboard.conf in the /etc/apache2/sites-available/ folder.
 touch /etc/apache2/sites-available/dashboard.conf
 # setup the conf file
 cat > /etc/apache2/sites-available/dashboard.conf << EOF
@@ -69,19 +69,19 @@ cat > /etc/apache2/sites-available/dashboard.conf << EOF
 		ServerName recording.athenasowl.tv
 		ServerAdmin raghav.khandelwal@quantiphi.com
 			
-		<Directory /home/user/Documents/ao-tv-recording-db-ui/dashboard/dashboard>
+		<Directory /home/user/Documents/ao-tv-recording-dashboard/dashboard/dashboard>
 			<Files wsgi.py>
 				Require all granted
 			</Files>
 		</Directory>
 			
-		Alias /static /home/user/Documents/ao-tv-recording-db-ui/dashboard/static
-		<Directory /home/user/Documents/ao-tv-recording-db-ui/dashboard/static>
+		Alias /static /home/user/Documents/ao-tv-recording-dashboard/dashboard/static
+		<Directory /home/user/Documents/ao-tv-recording-dashboard/dashboard/static>
 			Require all granted
 		</Directory>
 		
-		Alias /media /home/user/Documents/ao-tv-recording-db-ui/dashboard/media
-		<Directory /home/user/Documents/ao-tv-recording-db-ui/dashboard/media>
+		Alias /media /home/user/Documents/ao-tv-recording-dashboard/dashboard/media
+		<Directory /home/user/Documents/ao-tv-recording-dashboard/dashboard/media>
 			Require all granted
 		</Directory>
 	
@@ -105,9 +105,9 @@ cat > /etc/apache2/sites-available/dashboard.conf << EOF
         
 	        ProxyPassMatch "^/monitoring/netdata/([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)/(.*)" "http://$1.$2.$3.$4:19999/$5" connectiontimeout=5 timeout=30 keepalive=on
 
-		WSGIDaemonProcess dashboard python-path=/home/user/Documents/ao-tv-recording-db-ui/dashboard python-home=/home/user/Documents/ao-tv-recording-db-ui/env user=user
+		WSGIDaemonProcess dashboard python-path=/home/user/Documents/ao-tv-recording-dashboard/dashboard python-home=/home/user/Documents/ao-tv-recording-dashboard/env user=user
 		WSGIProcessGroup dashboard
-		WSGIScriptAlias / /home/user/Documents/ao-tv-recording-db-ui/dashboard/dashboard/wsgi.py
+		WSGIScriptAlias / /home/user/Documents/ao-tv-recording-dashboard/dashboard/dashboard/wsgi.py
 
 
 	</VirtualHost>
