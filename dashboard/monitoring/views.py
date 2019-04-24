@@ -16,11 +16,11 @@ from .models import CaptureCard, Node, System, VideoSource
 
 
 @login_required
-def index(request):
+def nodes_index(request):
     """
-    Renders the index page.
+    Renders the Nodes page.
     """
-    return TemplateResponse(request, 'monitoring/monitoring.html')
+    return TemplateResponse(request, 'monitoring/nodes.html')
 
 @login_required
 def nodes(request, node_id=None):
@@ -173,6 +173,19 @@ def obs(request, node_id):
             response = "Not Running"
 
     return JsonResponse(data = {"response": response})
+
+@login_required
+def recording_guides_index(request):
+    """
+    Renders the Recording Guides page.
+    """
+    return TemplateResponse(request, 'monitoring/recording_guides.html')
+
+@login_required
+def recording_guides(request):
+    guides = list(RecordingGuide.objects.all().values())
+
+    return JsonResponse(data = {"guides": guides})
 
 @login_required
 def deploy(request, node_id):

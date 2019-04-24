@@ -384,9 +384,9 @@ Vue.component('obs', {
 })
 
 new Vue({
-    el: '#monitoring',
+    el: '#nodes',
     data: {
-        apiURL: 'nodes/',
+        apiURL: 'data/',
         nodes: [],
         loading: true,
         errored: false,

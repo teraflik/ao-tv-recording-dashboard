@@ -1,0 +1,79 @@
+{% extends 'monitoring/base.html' %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+<link href="{% static 'monitoring/css/main.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<main id="recording_guides">
+    <section v-if="errored">
+        <div class="alert alert-danger text-center">
+            <p>Unable to retrieve information at the moment.</p>
+        </div>
+    </section>
+    <section v-else>
+        <div v-if="loading">
+            <div class="spinner">
+                <div class="rect1"></div>
+                <div class="rect2"></div>
+                <div class="rect3"></div>
+                <div class="rect4"></div>
+                <div class="rect5"></div>
+                Loading...
+            </div>
+        </div>
+        <div v-else>
+            <table class="table table-hover">
+                <thead class="thead-dark text-center">
+                    <th>Id</th>
+                    <th>Channel name</th>
+                    <th>Device id</th>
+                    <th>Start time</th>
+                    <th>Stop time</th>
+                    <th>Validity start</th>
+                    <th>Validity end</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                    <th>Saturday</th>
+                    <th>Sunday</th>
+                    <th>Node</th>
+                </thead>
+                <tbody>
+                    <tr
+                        is="recording_guide"
+                        v-for="guide in guides" :key="guide.id"
+                        :id="guide.id"
+                        :channel_name="guide.channel_name"
+                        :device_id="guide.device_id"
+                        :start_time="guide.start_time"
+                        :stop_time="guide.stop_time"
+                        :validity_start="guide.validity_start"
+                        :validity_end="guide.validity_end"
+                        :monday="guide.monday"
+                        :tuesday="guide.tuesday"
+                        :wednesday="guide.wednesday"
+                        :thursday="guide.thursday"
+                        :friday="guide.friday"
+                        :saturday="guide.saturday"
+                        :sunday="guide.sunday"
+                        :node="guide.node"
+                        ></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <div v-if="modal" class="modal-backdrop show"></div>
+</main>
+
+<script>var netdataNoBootstrap = true;</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script type="text/javascript" src="{% static 'monitoring/js/recording_guides.js' %}"></script>
+{% endblock %}
