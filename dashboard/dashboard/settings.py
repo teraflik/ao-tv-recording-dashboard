@@ -55,7 +55,7 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-ROOT_URLCONF = 'ao_db_ui.urls'
+ROOT_URLCONF = 'dashboard.urls'
 
 TEMPLATES = [
     {
@@ -73,7 +73,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ao_db_ui.wsgi.application'
+WSGI_APPLICATION = 'dashboard.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
@@ -100,7 +100,7 @@ for section in ['monitoring', 'rest_api']:
         'PORT': config.get(section, 'DB_PORT'),
     }
 
-DATABASE_ROUTERS = ('ao_db_ui.dbrouters.CloudDBRouter',)
+DATABASE_ROUTERS = ('dashboard.dbrouters.CloudDBRouter',)
 
 
 # Password validation
