@@ -11,7 +11,7 @@ import os
 import configparser
 
 # Project related dependencies
-from .constant import Constant
+from common.util.constants import Constant
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'rest_api.apps.RestApiConfig',
     'ui.apps.UiConfig',
     'graph_ui.apps.GraphUiConfig',
-    'monitoring.apps.MonitoringConfig'
+    'schedule_api.apps.ScheduleApiConfig',
+    'monitoring.apps.MonitoringConfig',
 ]
 
 MIDDLEWARE = [
@@ -107,7 +108,11 @@ for section in ['db_monitoring', 'db_rest_api']:
         DATABASES[section] = DB_DEFAULT
 
 
-DATABASE_ROUTERS = ('dashboard.dbrouters.CloudDBRouter', 'dashboard.dbrouters.MonitoringDBRouter')
+DATABASE_ROUTERS = (
+    'rest_api.dbrouters.CloudDBRouter',
+    'monitoring.dbrouters.MonitoringDBRouter',
+    'schedule_api.dbrouters.ScheduleAPIDBRouter',
+)
 
 
 # Password validation
@@ -146,8 +151,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "common/static"),
+]
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+
 
 # Media Files
 MEDIA_URL = '/media/'

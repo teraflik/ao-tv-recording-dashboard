@@ -1,6 +1,7 @@
 import datetime
 import io
 import os
+import json
 from contextlib import redirect_stdout
 
 from ansi2html import Ansi2HTMLConverter
@@ -8,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import (HttpResponse, HttpResponseNotFound,
                          HttpResponseServerError, JsonResponse)
 from django.template.response import TemplateResponse
+from django.shortcuts import render
 
 from rest_api.models import RecordingGuide
 
@@ -16,11 +18,11 @@ from .models import CaptureCard, Node, System, VideoSource
 
 
 @login_required
-def nodes_index(request):
+def index(request):
     """
     Renders the Nodes page.
     """
-    return TemplateResponse(request, 'monitoring/nodes.html')
+    return TemplateResponse(request, 'monitoring/index.html')
 
 @login_required
 def nodes(request, node_id=None):
@@ -173,19 +175,6 @@ def obs(request, node_id):
             response = "Not Running"
 
     return JsonResponse(data = {"response": response})
-
-@login_required
-def recording_guides_index(request):
-    """
-    Renders the Recording Guides page.
-    """
-    return TemplateResponse(request, 'monitoring/recording_guides.html')
-
-@login_required
-def recording_guides(request):
-    guides = list(RecordingGuide.objects.all().values())
-
-    return JsonResponse(data = {"guides": guides})
 
 @login_required
 def deploy(request, node_id):

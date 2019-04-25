@@ -386,7 +386,7 @@ Vue.component('obs', {
 new Vue({
     el: '#nodes',
     data: {
-        apiURL: 'data/',
+        apiURL: 'nodes/',
         nodes: [],
         loading: true,
         errored: false,
