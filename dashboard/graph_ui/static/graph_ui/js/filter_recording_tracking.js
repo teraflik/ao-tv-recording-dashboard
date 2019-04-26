@@ -181,7 +181,11 @@ const prepareRecordingGuideDataTableEntries = (recordingGuideRawData, date) => {
     return recordingGuideDataTableEntries;
 }
 
-const prepareDataForGoogleChartTimeline = (recordingRawData, filterRawData, recordingGuideRawData, date) => {
+const prepareDataForGoogleChartTimeline = (data, date) => {
+
+    let recordingRawData = data[0];
+    let recordingGuideRawData = data[1];
+    let filterRawData = data[2];
 
     let emptyEntryStartDate = new Date(date + " 00:00:00");
     
@@ -215,130 +219,66 @@ const prepareDataForGoogleChartTimeline = (recordingRawData, filterRawData, reco
     return dataTableEntries;
 }
 
-const populateTimeline = (timeline, endpoint, index) => {
+const populateDevice = (apiCalls, timeline, params) => {
     
-    let filterEndPoint = new URL(endpoint.href);
-
-    //  1. making corresponding endpoint for recording table.
-    let recordingEndPoint = new URL(endpoint.href);
-
-    let url = document.createElement('a');
-    url.href = endpoint.href;
-    let protocol = url.protocol;
-    let host = url.host;
-    let path = '/api/recording';
-    let searchParams = url.search;
-    recordingEndPoint = new URL(protocol + "//" + host + path + searchParams);
-    // console.log("recordingEndPoint is .... " + recordingEndPoint.href);
-
-    //  2. making corresponding endpoint for recording_guide table.
-    let recordingGuideEndPointA = new URL(endpoint.href);
-    let recordingGuideEndPointB = new URL(endpoint.href);
-
-    url = document.createElement('a');
-    url.href = endpoint.href;
-    protocol = url.protocol;
-    host = url.host;
-    path = '/api/recording_guide';
-    searchParams = url.search;
-
-    recordingGuideEndPointA = new URL(protocol + "//" + host + path + searchParams);
-    recordingGuideEndPointA = addGETParameters(recordingGuideEndPointA, {'device_id': 'a'});
-
-    recordingGuideEndPointB = new URL(protocol + "//" + host + path + searchParams);
-    recordingGuideEndPointB = addGETParameters(recordingGuideEndPointB, {'device_id': 'b'});
-
-    $.when(
-
-        //  1. get data from filterEndPoint
-        getValidResponse(filterEndPoint),
-
-        //  2. get data from recordingEndPoint
-        getValidResponse(recordingEndPoint),
-
-        //  3. get data from recordingGuideEndPoint
-        getValidResponse([recordingGuideEndPointA, recordingGuideEndPointB])
-
-    ).then(function(filterRawData, recordingRawData, recordingGuideRawData) {
-        
-        // let recordingSlots = createRecordingSlotsFromRecordingGuideEntries(recordingGuideRawData, endpoint.searchParams.get('date') || yyyy_mm_dd(new Date()) );
-
-        //  2. prepare data in the format to be feeded to the visualisation library.
-        let dataTableEntries = prepareDataForGoogleChartTimeline(recordingRawData, filterRawData, recordingGuideRawData , endpoint.searchParams.get('date'));
-
-        //  3. create dataTable object
-        let dataTable = initializeDataTable();
-
-        //  4. add the data to the dataTable object
-        dataTable.addRows(dataTableEntries);
-        
-        //  5. define options.
-        let date = endpoint.searchParams.get('date');
-        let startDateTimeline = new Date(date + " 00:00:00");        
-        let endDateTimeline = new Date(startDateTimeline);
-        endDateTimeline.setDate(endDateTimeline.getDate() + 1);
-
-        let options = {
-            timeline: { showRowLabels: false, showBarLabels: false, barLabelStyle: { fontSize: 9 } },
-            tooltip: { isHtml: false },
-            hAxis: {
-                    minValue: startDateTimeline,
-                    maxValue: endDateTimeline,
-                },
-            width: '100%',
-            height: '145'
-        };
-        
-        //  6. feed data to the timeline.
-        timeline.draw(dataTable, options);
-        
-        //  7. updating the globalDataTable lookup
-        globalDataTable[index] = dataTable;
-
+    resolveAll(apiCalls).then(([recordingRawData, recordingGuideRawData, filterRawData]) => {
+     
+        let formattedData = prepareDataForGoogleChartTimeline([recordingRawData, recordingGuideRawData, filterRawData], params['date']);
+        let dataTable = populateTimeline(timeline, formattedData, params['date']);
+    
     });
 }
 
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
-    let baseEndPoint = getBaseEndPoint(tableName = 'FILTER_RECORDING_TRACKING');
+    let date = setDefaultDate(document.URL).searchParams.get('date');
 
-    // let filterBaseEndPoint = getBaseEndPoint(tableName = 'FILTER_RECORDING_TRACKING', defaultDate = 'yesterday');
-    // let recordingBaseEndPoint = getBaseEndPoint(tableName = 'RECORDING', defaultDate = 'yesterday');
-    // let recordingGuideBaseEndPoint = getBaseEndPoint(tableName = 'RECORDING_GUIDE', defaultDate = 'yesterday');
+    let baseEndPoint = addGETParameters(getBaseEndPoint(tableName = 'FILTER_RECORDING_TRACKING'), {"date": date});
 
     //  patch:  set the date in the datepicker
-    setDateInDatePicker('#date', baseEndPoint.searchParams.get('date'));
+    setDateInDatePicker('#date', date);
 
     //  patch:  add color labels to page top
     setColorLabels("#timeline-color-labels", timelineStagesEnum, timelineStagesToGraphic);
 
-    //  2. make specificEndPoints array
-    let specificEndPoints = [];
-    for (let i = 0; i < channelValues.length; i++) {
-        specificEndPoints.push(addGETParameters(baseEndPoint.href, {'channel_values': channelValues[i]}));
-    }
+    let devices = ['a', 'b'];
 
-    //  3. initialize timeline
-    let timelines = [];
-    for (let i = 0; i < specificEndPoints.length; i++) {
-        //  self invoking function to make a local scope for the index value which'll be used during callback.
-        (function(i){
+    let tables = ['RECORDING', 'RECORDING_GUIDE', 'FILTER_RECORDING_TRACKING'];
 
-            let timelineQuerySelector = "#filter_" + specificEndPoints[i].searchParams.get('channel_values');
-            timelines.push(initializeTimeline(timelineQuerySelector));
+    channelValues.forEach((channelValue) => {
 
-            //  no eventHandler required as of now.
-            // google.visualization.events.addListener(timelines[i], 'select', function() {
-            //     selectHandler(timelines[i], i);
-            // });
+        //  a. set params dict.
+        let params = {"date": date, "channel_values": channelValue};
+
+        //  b. initialize timeline
+        let timelineQuerySelector = "#filter" + "_" + channelValue;
+        let timeline = initializeTimeline(timelineQuerySelector);
+
+        //  c. prepare requests to get data.            
+        let apiCalls = [];
+        tables.forEach((table) => {
+            
+            let tableRawDataEndPoint = addGETParameters(getBaseEndPoint(tableName = table), params);
+
+            if (table == "RECORDING_GUIDE") {
+                
+                let deviceSpecificEndPoints = [];    
+                devices.forEach((device) => {
+                    deviceSpecificEndPoints.push(addGETParameters(tableRawDataEndPoint, {"device": device}));
+                });
+                apiCalls.push(getValidResponse(deviceSpecificEndPoints));
+            
+            }
+            else {
+                apiCalls.push($.get(tableRawDataEndPoint));
+            }
+        });
+
+        //  d. 
+        populateDevice(apiCalls, timeline, params);
         
-        })(i);
-    }
-
-    //  4. populate charts with periodic refreshing
-    for (let i = 0; i < timelines.length; i++) {
-        populateTimeline(timelines[i], specificEndPoints[i], i);
-        //  Since this isn't live tracking, no need to refresh every 5 mins. Manual refresh is enough.
-    }
+        //  e. refresh every 5 mins.
+        setTimeout(populateDevice, 300000, apiCalls, timeline, params);
+    });
 });

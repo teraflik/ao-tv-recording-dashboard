@@ -1,5 +1,3 @@
-let globalDataTable = {};
-
 let stageToColor = {
     "Start Recording":  'green',
     "Clipping Started":  'yellow',
@@ -127,22 +125,23 @@ const getHighestStageNumberEntries = (rawData) => {
     return highestStageNumberEntries;
 }
 
-const prepareDataForGoogleChartTimeline = (rawData, endpoint) => {
+const prepareDataForGoogleChartTimeline = (data, date) => {
 
-    let date = endpoint.searchParams.get('date');
+    let recordingRawData = data[0];
+
     let startDate = new Date(date + " 00:00:00");
     
     let endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 1);
 
-    if (!rawData || rawData.length == 0) {
+    if (!recordingRawData || recordingRawData.length == 0) {
         return [['Empty', '', 'No recordings available', stageToColor['empty'], startDate, endDate]];
     }
 
     //  1. for each request_id, get single entry having the maximum stage_number
-    let highestStageNumberEntries = getHighestStageNumberEntries(rawData);    
+    let highestStageNumberEntries = getHighestStageNumberEntries(recordingRawData);    
 
-    let dataTableContents = [];
+    let formattedData = [];
 
     for(let i = 0; i < highestStageNumberEntries.length; i++) {
         let entry = highestStageNumberEntries[i];
@@ -218,22 +217,46 @@ const prepareDataForGoogleChartTimeline = (rawData, endpoint) => {
             let startTimeString = hh_mm_ss(startTime);
             let endTimeString = hh_mm_ss(endTime);
             tooltip = entry['stage_message'] + ' ' + startTimeString + ' - ' + endTimeString;
-            
-            // console.log("Clipnumber from database is " + entry['clip_number']);
-            // console.log("Clipnumber calculated in JS is " + getClipNumber(startTimeString));
-            // console.log(entry['clip_number'] == getClipNumber(startTimeString));
         }
 
         if (startTimeTimeline < endTimeTimeline) {
-            dataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+            formattedData.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
         }
     }
 
+
+    //  2.1 filter out recordingEntries and processingEntries
+    let startStopEntries = recordingRawData.filter((entry) => {
+        return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
+    });
+
+    //  2.2 sort these according to their timestamp (asc)
+    startStopEntries.sort( (r1, r2) => {
+        if (r1.timestamp < r2.timestamp) return -1;
+        if (r1.timestamp > r2.timestamp) return 1;
+        return 0;
+    });
+
+    //  2.3 filter the processing entries
+    let processingEntries = formattedData.filter((dataTableEntry) => {
+        return dataTableEntry[dataTableEnum.category] == 'Processing';
+    });
+
+    //  2.4 create a mapping of clipNumber --> processingEntry
+    let clipNoToProcessingEntry = makeClipNoToProcessingEntry(processingEntries);
+
+    //  2.5 make recording slots
+    let recordingSlots = createRecordingSlots(startStopEntries, date);
+
+    let dummyEntries = getDummyEntries(recordingSlots, clipNoToProcessingEntry, date);
+
+    let totalFormattedData = formattedData.concat(dummyEntries);
+
     //  3. return it.
-    return dataTableContents;
+    return totalFormattedData;
 }
 
-const updateSummaryTable = (formattedData, blankRawData, endpoint) => {
+const updateSummaryTable = (formattedData, blankRawData, params) => {
     
     //  create a colorToStage mapping
     let colorToStage = reverseJsonMapper(stageToColor);
@@ -275,8 +298,8 @@ const updateSummaryTable = (formattedData, blankRawData, endpoint) => {
     let bgcolor = summaryStagesToGraphic[status].bgcolor;
 
     // select the DOM element corresponding to summaryBox of this channel.
-    let deviceID = endpoint.searchParams.get('device_id');
-    let channelValue = endpoint.searchParams.get('channel_values');
+    let deviceID = params['device_id'];
+    let channelValue = params['channel_values'];
     let summaryBoxID = ['s', deviceID, channelValue].join("_");
     let summaryBox = document.getElementById(summaryBoxID);
 
@@ -300,10 +323,9 @@ const makeClipNoToProcessingEntry = (processingEntries) => {
     return clipNoToProcessingEntry;
 }
 
-const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, endpoint) => {
+const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, inputDate) => {
     
     let dummyEntries = [];
-    let inputDate = endpoint.searchParams.get('date');
 
     let currentTime = new Date();
 
@@ -367,171 +389,9 @@ const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, endpoint) => {
     return dummyEntries;
 }
 
-const populateTimeline = (timeline, endpoint, index) => {
-    
-    //  1. get the endpoint for recording_table
-    let recordingEndPoint = new URL(endpoint.href);
+const selectHandler = (timeline, dataTable) => {
 
-    //  this one has bug
-    //  recording.athenasowl.tv/graph_ui/recording?date=... --> blank.athenasowl.tv/graph_ui/blank?date=...
-    //  let blankEndPoint = new URL(endpoint.href.replace('recording', 'blank'));
-    
-    //  2. get the endpoint for invalid_frame_tracking_table
-    //  creating an element with capability to extract protocol, host, path, etc...
-    let url = document.createElement('a');
-    url.href = endpoint.href;
-    let protocol = url.protocol;
-    let host = url.host;
-    let path = url.pathname.replace('recording', 'blank');
-    let searchParams = url.search;
-    let blankEndPoint = new URL(protocol + "//" + host + path + searchParams);
-    // console.log("blankEndPoint is .... " + blankEndPoint.href);
-
-    //  3. get the endpoint for filter_recording_tracking_table
-    url = document.createElement('a');
-    url.href = endpoint.href;
-    protocol = url.protocol;
-    host = url.host;
-    path = url.pathname.replace('recording', 'filter_recording_tracking');
-    searchParams = url.search;
-    let filterRecordingTrackingEndPoint = new URL(protocol + "//" + host + path + searchParams);
-    filterRecordingTrackingEndPoint.searchParams.delete("device_id");
-
-    // console.log("filterRecordingTrackingEndPoint is .... " + filterRecordingTrackingEndPoint.href);
-
-    $.when(
-
-        //  1. get data from recordingEndPoint
-        getValidResponse(recordingEndPoint),
-
-        //  2. get data from blankEndPoint
-        getValidResponse(blankEndPoint)
-
-    ).then((recordingRawData, blankRawData) => {
-
-        //  2. prepare data in the format to be feeded to the visualisation library.
-        let formattedData = prepareDataForGoogleChartTimeline(recordingRawData, endpoint);
-
-        //  2.1 filter out recordingEntries and processingEntries
-        let startStopEntries = recordingRawData.filter((entry) => {
-            return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
-        });
-
-        //  2.2 sort these according to their timestamp (asc)
-        startStopEntries.sort( (r1, r2) => {
-            if (r1.timestamp < r2.timestamp) return -1;
-            if (r1.timestamp > r2.timestamp) return 1;
-            return 0;
-        });
-
-        //  2.3 filter the processing entries
-        let processingEntries = formattedData.filter((dataTableEntry) => {
-            return dataTableEntry[dataTableEnum.category] == 'Processing';
-        });
-
-        // console.log("processingEntries are.........");
-        // console.log(processingEntries);
-
-        //  2.4 create a mapping of clipNumber --> processingEntry
-        let clipNoToProcessingEntry = makeClipNoToProcessingEntry(processingEntries);
-        // console.log("clipNoToProcessingEntry is........");
-        // console.log(clipNoToProcessingEntry);
-
-
-        console.log("startStopEntries sorted are.........");
-        console.log(startStopEntries);
-
-        //  2.5 make recording slots
-        let recordingSlots = createRecordingSlots(startStopEntries, endpoint.searchParams.get("date"));
-        console.log("Recording Slots are......");
-        console.log(recordingSlots);
-
-
-        let dummyEntries = getDummyEntries(recordingSlots, clipNoToProcessingEntry, endpoint);
-
-        console.log("dummyEntries are.......");
-        console.log(dummyEntries);
-
-
-        //  3. If its today's date, then add current recordings
-        let date = endpoint.searchParams.get('date');
-        let device_id = endpoint.searchParams.get('device_id');
-        // let currentRecordingEntries = [];
-        // let today = yyyy_mm_dd(new Date());
-        
-        // if (date == today) {
-        //     currentRecordingEntries = getCurrentRecordingEntries(formattedData);
-        // }
-
-        // // currentRecordingEntries = getCurrentRecordingEntries(formattedData);
-
-        // let totalFormattedData = formattedData.concat(currentRecordingEntries);
-
-        let totalFormattedData = formattedData.concat(dummyEntries);
-
-        console.log("totalFormattedData is ....");
-        console.log(totalFormattedData);
-
-        //  3. create dataTable object
-        let dataTable = initializeDataTable();
-
-        
-        //  4. add the data to the dataTable object
-        dataTable.addRows(totalFormattedData);
-
-        
-        //  5. define options.
-        let startDate = new Date(date + " 00:00:00");
-        
-        let endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 1);
-
-        let options = {
-            timeline: { showRowLabels: false, showBarLabels: false, barLabelStyle: { fontSize: 8 } },
-            tooltip: { isHtml: false },
-            hAxis: {
-                    minValue: startDate,
-                    maxValue: endDate,
-                    gridlines: {color: 'pink', count: 4},
-                    // format: 'HH'
-                },
-            width: '100%',
-            height: '105'
-        };
-
-        
-        //  6. feed data to the timeline.
-        timeline.draw(dataTable, options);
-
-        
-        //  7. updating the globalDataTable lookup
-        globalDataTable[index] = dataTable;
-
-        
-        //  8. update the summary table : 
-        //  NOTE :--> this takes formattedData and not totalFormattedData.
-        // updateSummaryTable(formattedData, endpoint);
-        updateSummaryTable(totalFormattedData, blankRawData, endpoint);
-
-        //  9. add total blank minutes
-        updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint);
-
-        // //  10. create entries in report (if its not today's date and device_id = 'a' {either one will do.})
-        // if (date != yyyy_mm_dd(new Date()) && device_id == 'a') {
-        //     generateDailyReport(filterRecordingTrackingEndPoint, filterRecordingTrackingRawData, recordingSlots);
-        // }
-
-        //  8. debugging
-        // console.log("Endpoint is :- " + endpoint.href);
-        // console.log(formattedData);
-        // console.log("formattedData is ");
-        // console.log(formattedData);
-    });
-}
-
-const selectHandler = (timeline, index) => {
-
-    let selectedDataTable = globalDataTable[index];
+    let selectedDataTable = dataTable;
     let selection = timeline.getSelection()[0];
     let rowNo = selection.row;
     let label = selectedDataTable.getValue(rowNo, dataTableEnum.label);
@@ -553,11 +413,6 @@ const selectHandler = (timeline, index) => {
     for (key in GETparams) {
         redirectURL.searchParams.set(key, GETparams[key]);
     }
-
-    // //  b. this is for on-click: graph_view redirect
-    // let redirectURL = new URL(labelJSON['video_path'].replace("gs://", "https://storage.cloud.google.com/"));
-    // console.log(redirectURL.href);
-
 
     window.open(redirectURL);
 }
@@ -592,16 +447,31 @@ const linkToBlankFramesUI = () => {
     }
 }
 
-google.charts.setOnLoadCallback(() => {
+const populateDevice = (apiCalls, timeline, params) => {
     
-    //  1. get baseEndPoint for corresponding table.
-    let baseEndPoint = getBaseEndPoint(tableName = 'RECORDING');
+    resolveAll(apiCalls).then(([recordingRawData, blankRawData]) => {
+     
+        let formattedData = prepareDataForGoogleChartTimeline([recordingRawData, blankRawData], params['date']);
+        
+        let dataTable = populateTimeline(timeline, formattedData, params['date']);
 
-    //  2. set date.
-    baseEndPoint = setDefaultDate(baseEndPoint);
+        updateSummaryTable(formattedData, blankRawData, params);
+        
+        updateTotalBlankMinutes(recordingRawData, blankRawData, params);
+        
+        google.visualization.events.addListener(timeline, 'select', () => {
+            selectHandler(timeline, dataTable);
+        });
+    
+    });
+}
+
+google.charts.setOnLoadCallback(() => {
+
+    let date = setDefaultDate(document.URL).searchParams.get('date');
 
     //  patch:  set the date in the datepicker
-    setDateInDatePicker('#date', baseEndPoint.searchParams.get('date'));
+    setDateInDatePicker('#date', date);
 
     //  patch:  add timeline-color-labels labels to page top.
     setColorLabels('#timeline-color-labels', timelineStagesEnum, timelineStageToGraphic);
@@ -615,40 +485,35 @@ google.charts.setOnLoadCallback(() => {
     //  patch: link to blankFrames UI
     linkToBlankFramesUI();
 
-    //  2. make specificEndPoints array
-    let specificEndPoints = [];
-    for (let i = 0; i < channelValues.length; i++) {
-        specificEndPoints.push(addGETParameters(baseEndPoint.href, {"device_id": 'a', 'channel_values': channelValues[i]}));
-        specificEndPoints.push(addGETParameters(baseEndPoint.href, {"device_id": 'b', 'channel_values': channelValues[i]}));
-    }
+    //  specify the devices from which we need data from.
+    let devices = ['a', 'b'];
 
-    //  3. initialize timeline
-    let timelines = [];
-    for (let i = 0; i < specificEndPoints.length; i++) {
-        //  self invoking const to make a local scope for the index value which'll be used during callback.
-        ((i) => {
-            
-            let timelineQuerySelector = "#" + specificEndPoints[i].searchParams.get('device_id') + "_" + specificEndPoints[i].searchParams.get('channel_values');
-            timelines.push(initializeTimeline(timelineQuerySelector));
+    //  specify the tables from which each timeline would fetch data.
+    let tables = ['RECORDING', 'INVALID_FRAME_TRACKING'];
 
-            google.visualization.events.addListener(timelines[i], 'select', () => {
-                selectHandler(timelines[i], i);
+    //  main loop.
+    channelValues.forEach((channelValue) => {
+        devices.forEach((device) => { 
+
+            //  a. set params dict.
+            let params = {"date": date, "channel_values": channelValue, "device_id": device}; 
+
+            //  b. initialize timeline
+            let timelineQuerySelector = "#" + device + "_" + channelValue;
+            let timeline = initializeTimeline(timelineQuerySelector);
+ 
+            //  c. prepare requests to get data.            
+            let apiCalls = [];
+            tables.forEach((table) => {
+                let tableRawDataEndPoint = addGETParameters(getBaseEndPoint(tableName = table), params);
+                apiCalls.push($.get(tableRawDataEndPoint));
             });
-        
-        })(i);
-    }
 
-    //  4. populate charts with periodic refreshing
-    for (let i = 0; i < timelines.length; i++) {
-        populateTimeline(timelines[i], specificEndPoints[i], i);
-
-        //  if date is TODAY, then refresh every 5mins.
-        if (baseEndPoint.searchParams.get('date') == yyyy_mm_dd(new Date())) {
-            // console.log("refreshing every 5mins");
-            setInterval(populateTimeline, 300000, timelines[i], specificEndPoints[i], i);
-        }
-        else {
-            // console.log("NOT refreshing every 5mins");
-        }
-    }
+            //  d. 
+            populateDevice(apiCalls, timeline, params);
+            
+            //  e. refresh every 5 mins.
+            setTimeout(populateDevice, 300000, apiCalls, timeline, params);
+        });
+    });
 });

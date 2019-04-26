@@ -168,8 +168,8 @@ const getBaseEndPoint = (tableName) => {
     let protocol = window.location.protocol;
     let host = window.location.host;
     let pathname = DBNAME_TO_URL_PATHNAME_MAPPING[tableName];
-    let searchParams = window.location.search;
-    let baseEndPoint = new URL(protocol + "//" + host + pathname + searchParams);
+        
+    let baseEndPoint = new URL(protocol + "//" + host + pathname);
 
     return baseEndPoint;
 }
@@ -184,7 +184,6 @@ const setDefaultDate = (endpoint) => {
 
     return newEndPoint;
 }
-
 
 /**
  * Takes an array of endpoints, loops through them sequentially
@@ -253,12 +252,13 @@ const attachSummaryToTimeline = () => {
     }
 }
 
-const updateTotalBlankMinutes = (recordingRawData, blankRawData, endpoint) => {
+const updateTotalBlankMinutes = (recordingRawData, blankRawData, params) => {
 
     //  get the HTML DOM element where this is going to happen
-    let channelValue = endpoint.searchParams.get('channel_values');
-    let deviceID = endpoint.searchParams.get('device_id');
+    let channelValue = params['channel_values'];
+    let deviceID = params['device_id'];
     let divID = [deviceID, channelValue, "blank"].join("_");
+
     let DOMElement = document.getElementById(divID);
     
     if (!recordingRawData || recordingRawData.length == 0) {
@@ -279,4 +279,36 @@ const updateTotalBlankMinutes = (recordingRawData, blankRawData, endpoint) => {
         DOMElement.innerHTML = "" + (totalBlankSeconds / 60).toFixed(2) + " minutes of Blank Frames.";
         DOMElement.setAttribute('style', 'color: red');
     }
+}
+
+const populateTimeline = (timeline, formattedData, date) => {
+
+    //  1. create dataTable object
+    let dataTable = initializeDataTable();
+
+    //  2. add the data to the dataTable object
+    dataTable.addRows(formattedData);
+    
+    //  3. define options.
+    let startDate = new Date(date + " 00:00:00");
+    
+    let endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+
+    let options = {
+        timeline: { showRowLabels: false, showBarLabels: false, barLabelStyle: { fontSize: 8 } },
+        tooltip: { isHtml: false },
+        hAxis: {
+                minValue: startDate,
+                maxValue: endDate,
+                gridlines: {color: 'pink', count: 4},
+            },
+        width: '100%',
+        height: '145'
+    };
+    
+    //  4. feed data to the timeline.
+    timeline.draw(dataTable, options);
+
+    return dataTable;
 }

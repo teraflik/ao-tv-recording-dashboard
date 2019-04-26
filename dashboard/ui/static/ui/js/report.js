@@ -17,39 +17,6 @@ const prepareRecordingSlotsFromRawData = (recordingRawData, date) => {
     return recordingSlots;
 }
 
-const getDailyReportsRawData = (date) => {
-
-    let slotInfoBaseEndPoint = addGETParameters(window.location.origin + "/api/recording", {"date": date});
-    let reportDataBaseEndPoint = addGETParameters(window.location.origin + "/api/filter_recording_tracking", {"date": date});
-
-    let apiCalls = [];
-
-    //  3. LOOP THROUGH EACH CHANNEL
-    channelValues.forEach((channelValue) => {
-        
-        //  1. creating specific endpoints for the channel
-        let channelSpecificSlotInfoEndPoint = addGETParameters(slotInfoBaseEndPoint, {"channel_values": channelValue});
-        let channelSpecificReportDataEndPoint = addGETParameters(reportDataBaseEndPoint, {"channel_values": channelValue});
-
-        console.log("Details for channel = " + channelValue);
-        console.log("slotInfoEndPoint is ... " + channelSpecificSlotInfoEndPoint.href);
-        console.log("reportDataEndPoint is ... " + channelSpecificReportDataEndPoint.href);
-
-        let slotInfoRequest = $.get(channelSpecificSlotInfoEndPoint);
-        let reportDataRequest = $.get(channelSpecificReportDataEndPoint);
-
-        apiCalls.push(slotInfoRequest)
-        apiCalls.push(reportDataRequest)
-    });
-
-    return new Promise((resolve, reject) => {
-
-        Promise.all(apiCalls).then((data) => {
-            resolve(data); 
-        });
-    });
-}
-
 const preprocessDailyReport = (data, date) => {
 
     let formattedReportData = [];
@@ -93,21 +60,6 @@ const preprocessDailyReport = (data, date) => {
         formattedReportData = formattedReportData.concat(channelSpecificFormattedReportData);
         filteredFormattedReportData = filteredFormattedReportData.concat(channelSpecificFilteredFormattedReportData);
 
-
-        console.log("details for channelValue = " + channelValue);
-        
-        console.log("recordingSlots is ...");
-        console.log(recordingSlots);
-
-        console.log("indexedBlankPercentageData is ...");
-        console.log(indexedBlankPercentageData);
-
-        console.log("channelSpecificFormattedReportData is ...");
-        console.log(channelSpecificFormattedReportData);
-
-        console.log("channelSpecificFilteredFormattedReportData is ...");
-        console.log(channelSpecificFilteredFormattedReportData);
-
     });
 
     return {
@@ -115,6 +67,31 @@ const preprocessDailyReport = (data, date) => {
         "filteredFormattedReportData" : filteredFormattedReportData
     };
 }
+
+const getDailyReportsRawData = (date) => {
+
+    let slotInfoBaseEndPoint = addGETParameters(window.location.origin + "/api/recording", {"date": date});
+    let reportDataBaseEndPoint = addGETParameters(window.location.origin + "/api/filter_recording_tracking", {"date": date});
+
+    let apiCalls = [];
+
+    //  3. LOOP THROUGH EACH CHANNEL
+    channelValues.forEach((channelValue) => {
+        
+        //  1. creating specific endpoints for the channel
+        let channelSpecificSlotInfoEndPoint = addGETParameters(slotInfoBaseEndPoint, {"channel_values": channelValue});
+        let channelSpecificReportDataEndPoint = addGETParameters(reportDataBaseEndPoint, {"channel_values": channelValue});
+
+        let slotInfoRequest = $.get(channelSpecificSlotInfoEndPoint);
+        let reportDataRequest = $.get(channelSpecificReportDataEndPoint);
+
+        apiCalls.push(slotInfoRequest);
+        apiCalls.push(reportDataRequest);
+    });
+
+    return resolveAll(apiCalls);
+}
+
 
 const generateDailyReport = (date) => {
 
@@ -143,14 +120,7 @@ const getWeeklyReportsRawData = (startDate, endDate) => {
         apiCalls.push(dailyReportRequest);
     }
 
-    return new Promise((resolve, reject) => {
-
-        Promise.all(apiCalls).then((data) => {
-            resolve(data); 
-        });
-    });
-
-
+    return resolveAll(apiCalls);
 }
 
 const preprocessWeeklyReport = (data, startDate, endDate) => {

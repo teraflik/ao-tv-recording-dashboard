@@ -242,3 +242,19 @@ const createRecordingSlots = (startStopEntries, date) => {
     }
     return recordingSlots;
 }
+
+
+/**
+ * 
+ * @param {Array} apiCalls -  Array of promises to resolve.
+ * @returns {Array} of response data. 
+ */
+const resolveAll = (apiCalls) => {
+
+    return new Promise((resolve, reject) => {
+
+        Promise.all(apiCalls).then((data) => {
+            resolve(data); 
+        });
+    });
+}

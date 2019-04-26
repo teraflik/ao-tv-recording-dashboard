@@ -61,6 +61,7 @@ const summaryStagesToGraphic = Object.freeze({
                             },
 });
 
+
 function createBlankDateRangeEntries(uniqueBlankRawData) {
 
     let blankDateRangeEntries = [];
@@ -84,10 +85,9 @@ function createBlankDateRangeEntries(uniqueBlankRawData) {
     return blankDateRangeEntries;
 }
 
-function prepareRecordingSlots(startStopEntries, blankDateRangeEntries, endpoint) {
+function prepareRecordingSlots(startStopEntries, blankDateRangeEntries, date) {
     
     //  extract date from endpoint and get today's date
-    let date = endpoint.searchParams.get('date');
     let today = yyyy_mm_dd(new Date());
 
     let recordingSlots = [];
@@ -151,17 +151,11 @@ function prepareRecordingSlots(startStopEntries, blankDateRangeEntries, endpoint
     return recordingSlots;
 }
 
-function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpoint) {
-    
-    console.log("Endpoint is :- " + endpoint.href);
+function prepareDataForGoogleChartTimeline(data, date) {
 
-    console.log("blankRawData is....");
-    console.log(blankRawData);
+    let recordingRawData = data[0];
+    let blankRawData = data[1];
 
-    console.log("recordingRawData is....");
-    console.log(recordingRawData);
-
-    let date = endpoint.searchParams.get('date');
     let startDate = new Date(date + " 00:00:00");
     
     let endDate = new Date(startDate);
@@ -221,16 +215,8 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
     }
 
     dataTableContents = dataTableContents.concat(recordingDataTableContents);
-    
-    //  6. remove duplicates from blankRawData
-    // console.log("blankRawData is....");
-    // console.log(blankRawData);
 
     uniqueBlankRawData = removeDuplicateObjects(blankRawData);
-
-    //  7. convert each entry of uniqueBlankRawData into blankDateRangeEntries
-    // console.log("uniqueBlankRawData is....");
-    // console.log(uniqueBlankRawData);
 
     blankDateRangeEntries = createBlankDateRangeEntries(uniqueBlankRawData);
 
@@ -241,12 +227,9 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
         return 0;
     });
 
-    // console.log("blankDateRangeEntries ascending sorted is....");
-    // console.log(blankDateRangeEntries);
-
     //  9. prepare recording slots
 
-    let recordingSlots = prepareRecordingSlots(startStopEntries, blankDateRangeEntries, endpoint);
+    let recordingSlots = prepareRecordingSlots(startStopEntries, blankDateRangeEntries, date);
 
     console.log("recordingSlots is..........");
     console.log(recordingSlots);
@@ -323,7 +306,7 @@ function prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpo
     return dataTableContents;
 }
 
-function updateSummaryTable(formattedData, endpoint) {
+const updateSummaryTable = (formattedData, blankRawData, params) => {
     
     //  create a colorToStage mapping
     let colorToStage = reverseJsonMapper(stageToColor);
@@ -353,9 +336,8 @@ function updateSummaryTable(formattedData, endpoint) {
     let bgcolor = summaryStagesToGraphic[status].bgcolor;
 
     // select the DOM element corresponding to summaryBox of this channel.
-    let deviceID = endpoint.searchParams.get('device_id');
-    let channelValue = endpoint.searchParams.get('channel_values');
-
+    let deviceID = params['device_id'];
+    let channelValue = params['channel_values'];
 
     let summaryBoxID = ['s', deviceID, channelValue].join("_");
     let summaryBox = document.getElementById(summaryBoxID);
@@ -365,69 +347,7 @@ function updateSummaryTable(formattedData, endpoint) {
     summaryBox.setAttribute('bgcolor', bgcolor);
 }
 
-function populateTimeline(timeline, endpoint, index) {
-
-    let blankEndPoint = new URL(endpoint.href);
-    let recordingEndPoint = new URL(endpoint.href.replace('blank', 'recording'));
-
-
-    $.when(
-
-        //  1. get data from recordingEndPoint
-        getValidResponse(recordingEndPoint),
-
-        //  2. get data from blankEndPoint
-        getValidResponse(blankEndPoint)
-
-    ).then(function(recordingRawData, blankRawData) {
-        
-        //  2. prepare data in the format to be feeded to the visualisation library.
-        let formattedData = prepareDataForGoogleChartTimeline(recordingRawData, blankRawData, endpoint);
-
-        //  3. create dataTable object
-        let dataTable = initializeDataTable();
-
-        //  4. add the data to the dataTable object
-        dataTable.addRows(formattedData);
-
-        //  5. define options.
-        let date = endpoint.searchParams.get('date');
-    
-        let startDate = new Date(date + " 00:00:00");
-        
-        let endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 1);
-
-        let options = {
-            timeline: { showRowLabels: false, showBarLabels: false, barLabelStyle: { fontSize: 8 } },
-            tooltip: { isHtml: false },
-            hAxis: {
-                    minValue: startDate,
-                    maxValue: endDate,
-                    gridlines: {color: 'pink', count: 4},
-                    // format: 'HH'
-                },
-            avoidOverlappingGridLines: false,
-            width: '100%',
-            height: '105'
-        };
-        
-        //  6. feed data to the timeline.
-        timeline.draw(dataTable, options);
-
-        //  7. updating the globalDataTable lookup
-        globalDataTable[index] = dataTable;
-
-        
-        //  8. update the summary table : 
-        updateSummaryTable(formattedData, endpoint);
-
-        //  9. add total blank minutes
-        updateTotalBlankMinutes(recordingRawData, blankRawData, endpoint);
-    });
-}
-
-function scrollToGivenID() {
+const scrollToGivenID = () => {
     let currentURL = new URL(document.URL);
     let idToScroll = currentURL.searchParams.get('scroll_to');
 
@@ -440,98 +360,101 @@ function scrollToGivenID() {
         'slow');
 }
 
-function selectHandler(timeline, index) {
+const selectHandler = (timeline, selectedDataTable) => {
 
-    let selectedDataTable = globalDataTable[index];
     let selection = timeline.getSelection()[0];
-    let rowNo = selection.row;
-    let label = selectedDataTable.getValue(rowNo, dataTableEnum.label);
+    let label = selectedDataTable.getValue(selection.row, dataTableEnum.label);
 
-    console.log("label of the clicked entry is ---> " + label);
     let labelJSON;
     
-    //  if label isn't a JSON dump, then simply skip.
     try {
         labelJSON = JSON.parse(label);
     }
     catch(err) {
         return;
     }
-    console.log("labelJSON is ....");
-    console.log(labelJSON);
+    
     //  a. this was for on-click: table-view redirect
     let GETparams = labelJSON;
     let getVideoURLEndpoint = new URL(window.location.origin + "/api/recording_tracking");
 
-    for (key in GETparams) {
-        getVideoURLEndpoint.searchParams.set(key, GETparams[key]);
-    }
+    getVideoURLEndpoint = addGETParameters(getVideoURLEndpoint, GETparams);
 
-    $.ajax({
-        type: 'GET',
-        url: getVideoURLEndpoint,
-        async: false,
-        dataType: 'json',
-        success: function(data){
-                let entry = data[0];
-                let redirectURL = new URL(entry['clip_path'].replace("gs://", "https://storage.cloud.google.com/"));
-                console.log("redirectURL is .....");
-                console.log(redirectURL.href);
-                window.open(redirectURL);
-            }
+    $.get(getVideoURLEndpoint).then((data) => {
+        let entry = data[0];
+        let redirectURL = new URL(entry['clip_path'].replace("gs://", "https://storage.cloud.google.com/"));
+        window.open(redirectURL);
+    })
+
+}
+
+const populateDevice = (apiCalls, timeline, params) => {
+    
+    resolveAll(apiCalls).then(([recordingRawData, blankRawData]) => {
+
+        let formattedData = prepareDataForGoogleChartTimeline([recordingRawData, blankRawData], params['date']);
+     
+        let dataTable = populateTimeline(timeline, formattedData, params['date']);
+
+        updateSummaryTable(formattedData, blankRawData, params);
+        
+        updateTotalBlankMinutes(recordingRawData, blankRawData, params);
+        
+        google.visualization.events.addListener(timeline, 'select', () => {
+            selectHandler(timeline, dataTable);
+        });
+    
     });
-
-
-    // //  b. this is for on-click: graph_view redirect
-    // let redirectURL = new URL(labelJSON['video_path'].replace("gs://", "https://storage.cloud.google.com/"));
-    // window.open(redirectURL);
 }
 
 google.charts.setOnLoadCallback(function() {
     
     //  1. get baseEndPoint
-    let baseEndPoint = getBaseEndPoint(tableName = 'INVALID_FRAME_TRACKING');
+    let date = setDefaultDate(document.URL).searchParams.get('date');
 
     //  patch:  set the date in the datepicker
-    setDateInDatePicker('#date', baseEndPoint.searchParams.get('date'));
+    setDateInDatePicker('#date', date);
 
     //  patch:  add color labels to page top
     setColorLabels("#timeline-color-labels", timelineStagesEnum, timelineStageToGraphic);
 
     //  patch:  add summaryColorLabels at top of summaryTable.
-    setColorLabels("#summary-color-labels", timelineStagesEnum, timelineStageToGraphic);
+    setColorLabels("#summary-color-labels", summaryStagesEnum, summaryStagesToGraphic);
 
     //  patch:  attach summaryTable to timelines
     attachSummaryToTimeline();
 
-    //  2. make specificEndPoints array
-    let specificEndPoints = [];
-    for (let i = 0; i < channelValues.length; i++) {
-        specificEndPoints.push(addGETParameters(baseEndPoint.href, {"device_id": 'a', 'channel_values': channelValues[i]}));
-        specificEndPoints.push(addGETParameters(baseEndPoint.href, {"device_id": 'b', 'channel_values': channelValues[i]}));
-    }
+    //  specify the devices from which we need data from.
+    let devices = ['a', 'b'];
 
-    //  3. initialize timeline
-    let timelines = [];
-    for (let i = 0; i < specificEndPoints.length; i++) {
-        //  self invoking function to make a local scope for the index value which'll be used during callback.
-        (function(i){
-            
-            let timelineQuerySelector = "#" + specificEndPoints[i].searchParams.get('device_id') + "_" + specificEndPoints[i].searchParams.get('channel_values');
-            timelines.push(initializeTimeline(timelineQuerySelector));
+    //  specify the tables from which each timeline would fetch data.
+    let tables = ['RECORDING', 'INVALID_FRAME_TRACKING'];
 
-            google.visualization.events.addListener(timelines[i], 'select', function() {
-                selectHandler(timelines[i], i);
+    //  main loop
+    channelValues.forEach((channelValue) => {
+        devices.forEach((device) => { 
+
+            //  a. set params dict.
+            let params = {"date": date, "channel_values": channelValue, "device_id": device}; 
+
+            //  b. initialize timeline
+            let timelineQuerySelector = "#" + device + "_" + channelValue;
+            let timeline = initializeTimeline(timelineQuerySelector);
+ 
+            //  c. prepare requests to get data.            
+            let apiCalls = [];
+            tables.forEach((table) => {
+                let tableRawDataEndPoint = addGETParameters(getBaseEndPoint(tableName = table), params);
+                apiCalls.push($.get(tableRawDataEndPoint));
             });
-        
-        })(i);
-    }
 
-    //  4. populate charts with periodic refreshing
-    for (let i = 0; i < timelines.length; i++) {
-        populateTimeline(timelines[i], specificEndPoints[i], i);
-        setInterval(populateTimeline, 300000, timelines[i], specificEndPoints[i], i);
-    }
+            //  d. 
+            populateDevice(apiCalls, timeline, params);
+            
+            //  e. refresh every 5 mins.
+            setTimeout(populateDevice, 300000, apiCalls, timeline, params);
+        });
+    });
 
     //  5. scroll to given ID if specified
     setTimeout(scrollToGivenID, 2000);
