@@ -16,11 +16,24 @@ def index(request):
 
 class ScheduleAPIView(APIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = ScheduleSerializer
 
-    def get(self, request):
-        schedules = Schedule.objects.all()
-        serializer = ScheduleSerializer(schedules, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        """
+        Optionally restricts the returned purchases to a given user,
+        by filtering against a `username` query parameter in the URL.
+        """
+        queryset = Schedule.objects.all()
+        channel = self.request.query_params.get('channel_id', None)
+        if channel is not None:
+            queryset = queryset.filter(channel=channel)
+        return queryset
+
+    # def get(self, request):
+    #     channel = request.GET.get('channel_id') or None
+    #     schedules = Schedule.objects.all()
+    #     serializer = ScheduleSerializer(schedules, many=True)
+    #     return Response(serializer.data)
 
     def post(self, request):
         pass
