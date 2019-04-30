@@ -258,16 +258,14 @@ const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, inputDate) => 
                 label = '';
 
                 let [startTime, endTime] = clipNoToInterval(inputDate, j);
-                
-                //  incase if recording starts in abrupt time, say 5:15
-                if (j == startClipNumber) {
-                    startTime = startRecordingTime;
-                }
 
-                //  incase if recording stops in abrupt time, say 5:15
-                if (j == stopClipNumber) {
-                    endTime = stopRecordingTime;
+                //  if that slot is yet to occur, skip making any entry for it.
+                if (startTime > currentTime) {
+                    continue;
                 }
+                
+                startTime = new Date(Math.max(startTime, startRecordingTime));
+                endTime = new Date(Math.min(endTime, currentTime, stopRecordingTime));
 
                 let stageMessage = 'Now Recording';
                 let hoursElapsed = (currentTime - startTime) / (60 * 60 * 1000);
@@ -275,11 +273,6 @@ const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, inputDate) => 
                 //  If there is no entry for beyond 1hr.
                 if (hoursElapsed > 1) {
                     stageMessage = 'Failed';
-                }
-
-                //  If the slot hasn't happened yet.
-                if (hoursElapsed < 0) {
-                    continue;
                 }
 
                 tooltip = stageMessage + " - " + hh_mm_ss(startTime) + " - " + hh_mm_ss(endTime);
