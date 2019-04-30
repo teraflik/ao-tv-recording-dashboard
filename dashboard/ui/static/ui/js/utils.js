@@ -161,89 +161,6 @@ const createDataTable = (querySelector, data, addFooter, options) => {
 
 }
 
-const createRecordingSlots = (startStopEntries, date) => {
-    
-    //  sort the startStopEntries according to timestamp in ASC order.
-    startStopEntries.sort( (r1, r2) => {
-        if (r1.timestamp < r2.timestamp) return -1;
-        if (r1.timestamp > r2.timestamp) return 1;
-        return 0;
-    });
-    
-    //  extract date from endpoint and get today's date
-    let today = yyyy_mm_dd(new Date());
-
-    let recordingSlots = [];
-
-    let j = 0;
-    for(let i = 0; i < startStopEntries.length; ) {
-        
-        let entry = {};
-        let startRecordingDateTime;
-        let stopRecordingDateTime;
-
-        //  1. if the first entry is stop recording,
-        //     and corresponding clipNumber is 1, then skip it.
-
-        //  1. if the first entry is stop recording,
-        //     then the slot will be from 
-        //     dayStart - stopRecording
-        if (startStopEntries[i]['stage_message'] == 'Stop Recording') {
-
-            startRecordingDateTime = new Date(date + " 00:00:00");
-            stopRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
-            
-            if (getClipNumber(hh_mm_ss(stopRecordingDateTime)) == 1) {
-                i++;
-                continue;
-            }
-            else {
-                //  jugaad: to prevent entering the next clipNumber
-                stopRecordingDateTime.setMinutes(stopRecordingDateTime.getMinutes() - 2);
-                i++;
-            }
-        }
-        //  2. if this entry is the last entry and its start recording,
-        else if (i == startStopEntries.length - 1) {
-            //  a. if its today, then the slot will be from
-            //  startRecording - currentTime
-            if (date == today) {
-                startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
-                stopRecordingDateTime = new Date();
-            }
-
-            //  b. if its not today, then the slot will be from
-            //  startRecording - dayEnd
-            else {
-                startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
-                stopRecordingDateTime = new Date(date + " 00:00:00");
-                stopRecordingDateTime.setDate(stopRecordingDateTime.getDate() + 1);
-    
-                //  jugaad: to prevent entering the next clipNumber
-                stopRecordingDateTime.setMinutes(stopRecordingDateTime.getMinutes() - 2);
-            }
-            
-            i++;
-        }
-        else {
-            startRecordingDateTime = new Date(startStopEntries[i]['timestamp']);
-            stopRecordingDateTime = new Date(startStopEntries[i+1]['timestamp']);
-
-            //  jugaad: to prevent entering the next clipNumber
-            stopRecordingDateTime.setMinutes(stopRecordingDateTime.getMinutes() - 2);
-
-            i += 2;
-        }
-
-        entry['startRecordingTime'] = startRecordingDateTime;
-        entry['stopRecordingTime'] = stopRecordingDateTime;
-
-        recordingSlots.push(entry);
-    }
-    return recordingSlots;
-}
-
-
 /**
  * 
  * @param {Array} apiCalls -  Array of promises to resolve.
@@ -257,4 +174,63 @@ const resolveAll = (apiCalls) => {
             resolve(data); 
         });
     });
+}
+
+const createRecordingSlotsFromRecordingGuideEntries = (recordingGuideRawData, date) => {
+    
+    let recordingSlots = [];
+
+    const SAFETY_MARGIN_MINUTES = 2;
+
+    recordingGuideRawData.forEach((recordingGuideEntry) => {
+        
+        let startTimeString = recordingGuideEntry['start_time'];
+        let stopTimeString = recordingGuideEntry['stop_time'];
+
+        if (startTimeString < stopTimeString) {
+
+            //  This corresponds to a single slot spanning from (startTime - stopTime)
+            let startRecordingTime = new Date([date, startTimeString].join(" "));
+            let stopRecordingTime = new Date([date, stopTimeString].join(" "));
+            
+            //  patch: to prevent entering the next clipNumber
+            stopRecordingTime.setMinutes(stopRecordingTime.getMinutes() - SAFETY_MARGIN_MINUTES);
+ 
+            recordingSlots.push({
+                "startRecordingTime"    :   startRecordingTime,
+                "stopRecordingTime"     :   stopRecordingTime
+            });
+        }
+        else {
+
+            //  This corresponds to 2 slots
+
+            //  1 from (00:00:00 - stopTime)
+            let startRecordingTimeFirst = new Date([date, "00:00:00"].join(" "));
+            let stopRecordingTimeFirst = new Date([date, stopTimeString].join(" "));
+            
+            //  patch: to prevent entering the next clipNumber
+            stopRecordingTimeFirst.setMinutes(stopRecordingTimeFirst.getMinutes() - SAFETY_MARGIN_MINUTES);
+
+            recordingSlots.push({
+                "startRecordingTime"    :   startRecordingTimeFirst,
+                "stopRecordingTime"     :   stopRecordingTimeFirst
+            });
+
+
+            //  2 from (startTime - 24:00:00)
+            let startRecordingTimeSecond = new Date([date, startTimeString].join(" "));
+            let stopRecordingTimeSecond = new Date([date, "24:00:00"].join(" "));
+            
+            //  patch: to prevent entering the next clipNumber
+            stopRecordingTimeSecond.setMinutes(stopRecordingTimeSecond.getMinutes() - SAFETY_MARGIN_MINUTES);
+
+            recordingSlots.push({
+                "startRecordingTime"    :   startRecordingTimeSecond,
+                "stopRecordingTime"     :   stopRecordingTimeSecond
+            });       
+        }
+    });
+
+    return recordingSlots;
 }

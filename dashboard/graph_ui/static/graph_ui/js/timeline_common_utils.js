@@ -2,7 +2,8 @@ google.charts.load('46', {'packages':['timeline']});
 
 const DBNAME_TO_URL_PATHNAME_MAPPING = Object.freeze({
     "RECORDING"                 :   "/api/recording", 
-    "RECORDING_GUIDE"           :   "/api/recording_guide", 
+    "RECORDING_GUIDE"           :   "/api/recording_guide",
+    "RECORDING_TRACKING"        :   "/api/recording_tracking",
     "FILTER_RECORDING_TRACKING" :   "/api/filter_recording_tracking",
     "INVALID_FRAME_TRACKING"    :   "/api/blank"
 });
@@ -87,6 +88,7 @@ const setDateInDatePicker = (datePickerElementQuerySelector, dateValue) => {
 }
 
 const setColorLabels = (querySelector, stagesEnum, stageToGraphic) => {
+    
     let table = document.querySelector(querySelector);
     let trElement = table.childNodes[1].childNodes[1];
 
@@ -104,65 +106,6 @@ const setColorLabels = (querySelector, stagesEnum, stageToGraphic) => {
     
 }
 
-const createRecordingSlotsFromRecordingGuideEntries = (recordingGuideRawData, date) => {
-    
-    let recordingSlots = [];
-
-    const SAFETY_MARGIN_MINUTES = 2;
-
-    recordingGuideRawData.forEach((recordingGuideEntry, index) => {
-        
-        let startTimeString = recordingGuideEntry['start_time'];
-        let stopTimeString = recordingGuideEntry['stop_time'];
-
-        if (startTimeString < stopTimeString) {
-
-            //  This corresponds to a single slot spanning from (startTime - stopTime)
-            let startRecordingTime = new Date([date, startTimeString].join(" "));
-            let stopRecordingTime = new Date([date, stopTimeString].join(" "));
-            
-            //  patch: to prevent entering the next clipNumber
-            stopRecordingTime.setMinutes(stopRecordingTime.getMinutes() - SAFETY_MARGIN_MINUTES);
- 
-            recordingSlots.push({
-                "startRecordingTime"    :   startRecordingTime,
-                "stopRecordingTime"     :   stopRecordingTime
-            });
-        }
-        else {
-
-            //  This corresponds to 2 slots
-
-            //  1 from (00:00:00 - stopTime)
-            let startRecordingTimeFirst = new Date([date, "00:00:00"].join(" "));
-            let stopRecordingTimeFirst = new Date([date, stopTimeString].join(" "));
-            
-            //  patch: to prevent entering the next clipNumber
-            stopRecordingTimeFirst.setMinutes(stopRecordingTimeFirst.getMinutes() - SAFETY_MARGIN_MINUTES);
-
-            recordingSlots.push({
-                "startRecordingTime"    :   startRecordingTimeFirst,
-                "stopRecordingTime"     :   stopRecordingTimeFirst
-            });
-
-
-            //  2 from (startTime - 24:00:00)
-            let startRecordingTimeSecond = new Date([date, startTimeString].join(" "));
-            let stopRecordingTimeSecond = new Date([date, "24:00:00"].join(" "));
-            
-            //  patch: to prevent entering the next clipNumber
-            stopRecordingTimeSecond.setMinutes(stopRecordingTimeSecond.getMinutes() - SAFETY_MARGIN_MINUTES);
-
-            recordingSlots.push({
-                "startRecordingTime"    :   startRecordingTimeSecond,
-                "stopRecordingTime"     :   stopRecordingTimeSecond
-            });       
-        }
-    });
-
-    return recordingSlots;
-}
-
 const getBaseEndPoint = (tableName) => {
 
     let protocol = window.location.protocol;
@@ -174,15 +117,12 @@ const getBaseEndPoint = (tableName) => {
     return baseEndPoint;
 }
 
-const setDefaultDate = (endpoint) => {
-
-    let newEndPoint = new URL(endpoint);
-
-    if(!newEndPoint.searchParams.get("date")) {
-        newEndPoint.searchParams.set("date", yyyy_mm_dd(new Date()));
-    }
-
-    return newEndPoint;
+/**
+ * Returns `date` param from URL if exists, else returns today's date, in yyyy-mm-dd format.
+ * @param {*} endpoint 
+ */
+const getDefaultDate = (endpoint) => {
+    return new URL(endpoint).searchParams.get("date") || yyyy_mm_dd(new Date());
 }
 
 /**
@@ -223,64 +163,6 @@ const initializeTimeline = (timelineQuerySelector) => {
     return new google.visualization.Timeline(container);
 }
 
-const attachSummaryToTimeline = () => {
-    
-    for(let i = 0; i < channelValues.length; i++) {
-
-        //  self invoking const to make a local scope for the index value which'll be used during callback.
-        ((i) => {
-
-            let summaryBoxIDA = "#s_a_" + channelValues[i];
-            let timelineIDA = "#a_" + channelValues[i] + "_blank";
-    
-            $(summaryBoxIDA).click(() => {
-                $('html,body').animate({
-                    scrollTop: $(timelineIDA).offset().top},
-                    'slow');
-            });
-    
-            let summaryBoxIDB = "#s_b_" + channelValues[i];
-            let timelineIDB = "#b_" + channelValues[i] + "_blank";
-    
-            $(summaryBoxIDB).click(() => {
-                $('html,body').animate({
-                    scrollTop: $(timelineIDB).offset().top},
-                    'slow');
-            });
-    
-        })(i);
-    }
-}
-
-const updateTotalBlankMinutes = (recordingRawData, blankRawData, params) => {
-
-    //  get the HTML DOM element where this is going to happen
-    let channelValue = params['channel_values'];
-    let deviceID = params['device_id'];
-    let divID = [deviceID, channelValue, "blank"].join("_");
-
-    let DOMElement = document.getElementById(divID);
-    
-    if (!recordingRawData || recordingRawData.length == 0) {
-        DOMElement.innerHTML = "No recordings available.";
-        DOMElement.setAttribute('style', 'color: blue');
-    }
-    else if (!blankRawData || blankRawData.length == 0) {
-        DOMElement.innerHTML = "No blank frames.";
-        DOMElement.setAttribute('style', 'color: green');
-    }
-    else {
-        let uniqueBlankRawData = removeDuplicateObjects(blankRawData);
-        let totalBlankSeconds = 0;
-        for(let i = 0; i < uniqueBlankRawData.length; i++) {
-            let entry = uniqueBlankRawData[i];
-            totalBlankSeconds += parseFloat(entry['invalid_frame_to']) - parseFloat(entry['invalid_frame_from']);
-        }
-        DOMElement.innerHTML = "" + (totalBlankSeconds / 60).toFixed(2) + " minutes of Blank Frames.";
-        DOMElement.setAttribute('style', 'color: red');
-    }
-}
-
 const populateTimeline = (timeline, formattedData, date) => {
 
     //  1. create dataTable object
@@ -311,4 +193,147 @@ const populateTimeline = (timeline, formattedData, date) => {
     timeline.draw(dataTable, options);
 
     return dataTable;
+}
+
+const getDataForTimeline = (tables, params) => {
+
+    let apiCalls = tables.map((table) => {
+        let tableRawDataEndPoint = addGETParameters(getBaseEndPoint(tableName = table), params);
+        return $.get(tableRawDataEndPoint);
+    });
+
+    return new Promise((resolve, reject) => {
+        
+        resolveAll(apiCalls).then((data) => {
+            
+            //  create a mapping of {"<tableName>" : "<tableRawData>"}
+            let dataMapping = {};
+
+            tables.forEach((table, index) => {
+                dataMapping[table] = data[index];
+            });
+
+            resolve(dataMapping);
+        });
+
+    });
+}
+
+const prepareStartStopDataTableEntries = (recordingRawData, date) => {
+    
+    //  A. Extracting StartStopEntries from recordingRawData
+
+    let startStopRawData = recordingRawData.filter(function(entry) {
+        return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
+    });
+    
+
+    //  B. prepare dataTableContent.
+
+    let startStopDataTableContents = [];
+
+    for(let i = 0; i < startStopRawData.length; i++) {
+        let entry = startStopRawData[i];
+
+        let category;
+        let label;
+        let tooltip;
+        let color;
+        let startTimeTimeline;
+        let endTimeTimeline;
+
+
+        category = 'Recording';
+        label = '';
+        color = timelineStageToGraphic[timelineStagesEnum[[entry['stage_message']]]].bgcolor;
+            
+        startTimeTimeline = new Date(entry['timestamp']);
+
+        endTimeTimeline = new Date(entry['timestamp']);
+        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
+        
+        tooltip = entry['stage_message'] + ' ' + hh_mm_ss(startTimeTimeline);
+            
+        startStopDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+    }
+
+    //  3. return it.
+    return startStopDataTableContents;
+}
+
+const prepareRecordingGuideDataTableEntries = (recordingGuideRawData, date) => {
+
+    let recordingGuideDataTableEntries = [];
+
+    recordingGuideRawData.forEach((recordingGuideEntry) => {
+        
+        //  corresponding to each entry in recoringGuideRawData, there will be two entries.
+        //  1 for START
+        //  2 for STOP
+
+        let category;
+        let label;
+        let tooltip;
+        let color;
+        let startTimeTimeline;
+        let endTimeTimeline;
+
+
+        //  START ENTRY
+        category = 'Expected';
+        label = '';
+        color = timelineStageToGraphic[timelineStagesEnum[['Expected Start Recording']]].bgcolor;
+        
+        startTimeTimeline = new Date([date, recordingGuideEntry['start_time']].join(" "));
+
+        endTimeTimeline = new Date(startTimeTimeline);
+        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
+        
+        tooltip = "Expected Start Recording" + ' ' + hh_mm_ss(startTimeTimeline);
+
+        recordingGuideDataTableEntries.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+
+
+        //  STOP ENTRY
+        color = timelineStageToGraphic[timelineStagesEnum[['Expected Stop Recording']]].bgcolor;
+        
+        startTimeTimeline = new Date([date, recordingGuideEntry['stop_time']].join(" "));
+
+        endTimeTimeline = new Date(startTimeTimeline);
+        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
+        
+        tooltip = "Expected Stop Recording" + ' ' + hh_mm_ss(startTimeTimeline);
+            
+        recordingGuideDataTableEntries.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+    });
+
+    return recordingGuideDataTableEntries;
+}
+
+const prepareDataForGoogleChartTimeline = (dataMapping, dataProcessingMappings, date) => {
+
+    let totalFormattedData = [];
+
+    dataProcessingMappings.forEach((dataProcessingMapping) => {
+        
+        let tables = dataProcessingMapping.data_source_tables;
+        
+        let dataArray = tables.map(table => dataMapping[table]);
+
+        let processingMethod = dataProcessingMapping.processing_method;
+
+        totalFormattedData = totalFormattedData.concat(processingMethod(...dataArray, date));
+    });
+
+    if (totalFormattedData.length == 0) {
+        
+        let emptyEntryStartDate = new Date(date + " 00:00:00");
+    
+        let emptyEntryEndDate = new Date(emptyEntryStartDate);
+        emptyEntryEndDate.setDate(emptyEntryEndDate.getDate() + 1);
+        
+        totalFormattedData = [['Empty', '', 'No recordings available', timelineStageToGraphic[timelineStagesEnum[['Empty']]].bgcolor, emptyEntryStartDate, emptyEntryEndDate]];
+    }
+
+    return totalFormattedData;
 }

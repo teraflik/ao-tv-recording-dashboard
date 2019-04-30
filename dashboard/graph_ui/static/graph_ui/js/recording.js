@@ -11,15 +11,17 @@ let stageToColor = {
 }
 
 const timelineStagesEnum = Object.freeze({
-    "Start Recording"   :  1,
-    "Clipping Started"  :  2,
-    "Clipping Done"     :  3,
-    "Uploading start"   :  4,
-    "Uploading done"    :  5,
-    "Stop Recording"    :  6,
-    "empty"             :  7,
-    "Now Recording"     :  8,
-    "Failed"            :  9,
+    "Start Recording"           :   1,
+    "Clipping Started"          :   2,
+    "Clipping Done"             :   3,
+    "Uploading start"           :   4,
+    "Uploading done"            :   5,
+    "Stop Recording"            :   6,
+    "Empty"                     :   7,
+    "Now Recording"             :   8,
+    "Failed"                    :   9,
+    "Expected Start Recording"  :   10,
+    "Expected Stop Recording"   :   11,
 });
 
 const timelineStageToGraphic = Object.freeze({
@@ -47,7 +49,7 @@ const timelineStageToGraphic = Object.freeze({
                                                     'bgcolor': 'black',
                                                     'innerHTML': '',
                                                 },
-    [timelineStagesEnum["empty"]]             :  {
+    [timelineStagesEnum["Empty"]]             :  {
                                                     'bgcolor': 'grey',
                                                     'innerHTML': '',
                                                 }, 
@@ -59,6 +61,14 @@ const timelineStageToGraphic = Object.freeze({
                                                     'bgcolor': 'red',
                                                     'innerHTML': '',
                                                 },
+    [timelineStagesEnum['Expected Start Recording']] : {
+                                                    "bgcolor" : "pink",
+                                                    "innerHTML" : "",
+                                                },
+    [timelineStagesEnum['Expected Stop Recording']]  : {
+                                                    "bgcolor" : "violet",
+                                                    "innerHTML" : "",
+                                                    },
 });
 
 const summaryStagesEnum  = Object.freeze({
@@ -92,8 +102,11 @@ const summaryStagesToGraphic = Object.freeze({
                             },
 });
 
-
 const getHighestStageNumberEntries = (rawData) => {
+
+    if (rawData.length == 0) {
+        return [];
+    }
 
     //  1. sort by stage_number (desc)
     rawData.sort( (r1, r2) => {
@@ -125,29 +138,41 @@ const getHighestStageNumberEntries = (rawData) => {
     return highestStageNumberEntries;
 }
 
-const prepareDataForGoogleChartTimeline = (data, date) => {
+const makeAvailableClipsMap = (processingRawData) => {
 
-    let recordingRawData = data[0];
+    let isClipAvailable = {};
 
-    let startDate = new Date(date + " 00:00:00");
-    
-    let endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 1);
+    processingRawData.forEach((processingEntry) => {
+        let startTime = dateTimeFromProcessingRequestID(processingEntry['request_id'])['start_time'];
+        let clipNumber = getClipNumber(hh_mm_ss(startTime));
+        isClipAvailable[clipNumber] = true;
+    });
 
-    if (!recordingRawData || recordingRawData.length == 0) {
-        return [['Empty', '', 'No recordings available', stageToColor['empty'], startDate, endDate]];
-    }
+    return isClipAvailable;
+}
 
-    //  1. for each request_id, get single entry having the maximum stage_number
-    let highestStageNumberEntries = getHighestStageNumberEntries(recordingRawData);    
+/**
+ * Prepares data in format as required by google-charts dataTable.
+ * @param {*} data 
+ * @param {*} date 
+ * @returns Empty array.
+ */
 
-    let formattedData = [];
+const prepareProcessingDataTableEntries = (recordingRawData, date) => {
 
-    for(let i = 0; i < highestStageNumberEntries.length; i++) {
-        let entry = highestStageNumberEntries[i];
-        
-        let category;
-        let label;
+    let processingRawData = recordingRawData.filter((entry) => {
+        return (entry['stage_number'] != 1 && entry['stage_number'] != 6);
+    });
+
+    let highestStageNumberEntries = getHighestStageNumberEntries(processingRawData);   
+
+
+    let processingDataTableContents = [];
+
+    highestStageNumberEntries.forEach((entry) => {
+
+        let category;                                       //  used to 
+        let label;                                          //  used for storing hidden data for each entry to be used later.
         let tooltip;
         let color;
         let startTimeTimeline;
@@ -155,20 +180,12 @@ const prepareDataForGoogleChartTimeline = (data, date) => {
         
         let safeTyMargin = 2;
 
-        //  label
-        //  a. this was for on-click: tableview redirect
+        category = 'Processing';
         label = '{"request_id": "' + entry['request_id'] + '", "device_id": "' + entry['device_id'] +'"}';
 
-        // //  b. this is for on-click: redirect to bucket video.
-        // if (entry['stage_number'] == 5) {
-        //     label = '{"video_path": "' + entry['video_path'] +'"}';
-        // }
-        // else {
-        //     label = '';
-        // }
-
+        
         //  color
-        if (entry['stage_number'] == 1 || entry['stage_number'] == 6 || entry['stage_number'] == 5) {
+        if (entry['stage_number'] == 5) {
             color = stageToColor[entry['stage_message']];
         }
         else {
@@ -186,141 +203,26 @@ const prepareDataForGoogleChartTimeline = (data, date) => {
         }
 
 
-        //  start & end times and tooltip.
-        if (entry['stage_number'] == 1 || entry['stage_number'] == 6) {
-            
-            category = 'Recording';
-            startTimeTimeline = new Date(entry['timestamp']);
+        times = dateTimeFromProcessingRequestID(entry['request_id']);
+        
+        let startTime = times['start_time'];
+        let endTime = times['end_time'];
 
-            endTimeTimeline = new Date(entry['timestamp']);
-            endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
-            
-            let startTimeString = hh_mm_ss(startTimeTimeline);
-            tooltip = entry['stage_message'] + ' ' + startTimeString;
-            
-            // console.log("Clipnumber for start/stop entries is " + entry['clip_number']);
-        }
-        else {
+        tooltip = entry['stage_message'] + ' ' + hh_mm_ss(startTime) + ' - ' + hh_mm_ss(endTime);
 
-            category = 'Processing';
-
-            times = dateTimeFromProcessingRequestID(entry['request_id']);
-            
-            let startTime = times['start_time'];
-            startTimeTimeline = new Date(startTime);
-            startTimeTimeline.setMinutes(startTimeTimeline.getMinutes() + safeTyMargin);
-            
-            let endTime = times['end_time'];
-            endTimeTimeline = new Date(endTime);
-            endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
-
-            let startTimeString = hh_mm_ss(startTime);
-            let endTimeString = hh_mm_ss(endTime);
-            tooltip = entry['stage_message'] + ' ' + startTimeString + ' - ' + endTimeString;
-        }
+        startTimeTimeline = new Date(startTime);
+        startTimeTimeline.setMinutes(startTimeTimeline.getMinutes() + safeTyMargin);
+        
+        endTimeTimeline = new Date(endTime);
+        endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() - safeTyMargin);
 
         if (startTimeTimeline < endTimeTimeline) {
-            formattedData.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
-        }
-    }
+            processingDataTableContents.push([category, label, tooltip, color, startTimeTimeline, endTimeTimeline]);
+        }        
 
-
-    //  2.1 filter out recordingEntries and processingEntries
-    let startStopEntries = recordingRawData.filter((entry) => {
-        return (entry['stage_number'] == 1 || entry['stage_number'] == 6);
     });
 
-    //  2.2 sort these according to their timestamp (asc)
-    startStopEntries.sort( (r1, r2) => {
-        if (r1.timestamp < r2.timestamp) return -1;
-        if (r1.timestamp > r2.timestamp) return 1;
-        return 0;
-    });
-
-    //  2.3 filter the processing entries
-    let processingEntries = formattedData.filter((dataTableEntry) => {
-        return dataTableEntry[dataTableEnum.category] == 'Processing';
-    });
-
-    //  2.4 create a mapping of clipNumber --> processingEntry
-    let clipNoToProcessingEntry = makeClipNoToProcessingEntry(processingEntries);
-
-    //  2.5 make recording slots
-    let recordingSlots = createRecordingSlots(startStopEntries, date);
-
-    let dummyEntries = getDummyEntries(recordingSlots, clipNoToProcessingEntry, date);
-
-    let totalFormattedData = formattedData.concat(dummyEntries);
-
-    //  3. return it.
-    return totalFormattedData;
-}
-
-const updateSummaryTable = (formattedData, blankRawData, params) => {
-    
-    //  create a colorToStage mapping
-    let colorToStage = reverseJsonMapper(stageToColor);
-
-    //  check status
-    let status;
-    if (!blankRawData || blankRawData.length == 0) {
-        status = summaryStagesEnum.ok;
-    }
-    else {
-        status = summaryStagesEnum.blank;
-    }
-
-    for(let i = 0; i < formattedData.length; i++) {
-        let color = formattedData[i][dataTableEnum.color];
-        let stage = colorToStage[color];
-
-        if (stage == 'empty') {
-            status = summaryStagesEnum.empty;
-            break;
-        }
-        else if (stage == "Start Recording" || stage == "Stop Recording") {
-            continue;
-        }
-        else if (stage == 'Failed') {
-            status = summaryStagesEnum.error;
-            break;
-        }
-        else if (stage != 'Uploading done') {
-            status = summaryStagesEnum.inprogress;
-        }
-        // else if (stage == 'Now Recording') {
-        //     console.log("Now Recording Hitted!!");
-        //     status = summaryStagesEnum.inprogress;
-        // }
-    }
-
-    let innerHTML = summaryStagesToGraphic[status].innerHTML;
-    let bgcolor = summaryStagesToGraphic[status].bgcolor;
-
-    // select the DOM element corresponding to summaryBox of this channel.
-    let deviceID = params['device_id'];
-    let channelValue = params['channel_values'];
-    let summaryBoxID = ['s', deviceID, channelValue].join("_");
-    let summaryBox = document.getElementById(summaryBoxID);
-
-    // fill the DOM Element with the details.
-    summaryBox.innerHTML = innerHTML;
-    summaryBox.setAttribute('bgcolor', bgcolor);
-}
-
-const makeClipNoToProcessingEntry = (processingEntries) => {
-    
-    let clipNoToProcessingEntry = {};
-    
-    for(let i = 0; i < processingEntries.length; i++) {
-        let entry = processingEntries[i];
-        let startTime = entry[dataTableEnum.startTime];
-
-        let clipNumber = getClipNumber(hh_mm_ss(startTime));
-        clipNoToProcessingEntry[clipNumber] = entry;
-    }
-
-    return clipNoToProcessingEntry;
+    return processingDataTableContents;
 }
 
 const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, inputDate) => {
@@ -339,8 +241,6 @@ const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, inputDate) => 
         let startClipNumber = getClipNumber(hh_mm_ss(startRecordingTime));
         let stopClipNumber = getClipNumber(hh_mm_ss(stopRecordingTime));
 
-        // console.log("startClipNumber is........ " + startClipNumber);
-
         let safeTyMargin = 2;
 
         //  2. loop through the clipNumbers
@@ -348,36 +248,46 @@ const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, inputDate) => 
             
             //  3. check if entry corresponding to that clipNumber is present in the mapping - clipNoToProcessingEntry
             if (!clipNoToProcessingEntry[j]) {
+
+                let category;                                       //  used to 
+                let label;                                          //  used for storing hidden data for each entry to be used later.
+                let tooltip;
+                let color;
             
-                //  4. if not, create a dummy entry.
+                category = 'Processing';
+                label = '';
+
                 let [startTime, endTime] = clipNoToInterval(inputDate, j);
                 
+                //  incase if recording starts in abrupt time, say 5:15
                 if (j == startClipNumber) {
                     startTime = startRecordingTime;
                 }
 
+                //  incase if recording stops in abrupt time, say 5:15
                 if (j == stopClipNumber) {
                     endTime = stopRecordingTime;
                 }
-                
-                let startTimeString = hh_mm_ss(startTime);
-                let endTimeString = hh_mm_ss(endTime);
-
-                let category = 'Processing';
 
                 let stageMessage = 'Now Recording';
                 let hoursElapsed = (currentTime - startTime) / (60 * 60 * 1000);
                 
+                //  If there is no entry for beyond 1hr.
                 if (hoursElapsed > 1) {
                     stageMessage = 'Failed';
                 }
 
-                let label = stageMessage;
-                let tooltip = stageMessage + " - " + startTimeString + " - " + endTimeString;
-                let color = stageToColor[stageMessage];
+                //  If the slot hasn't happened yet.
+                if (hoursElapsed < 0) {
+                    continue;
+                }
+
+                tooltip = stageMessage + " - " + hh_mm_ss(startTime) + " - " + hh_mm_ss(endTime);
+                color = stageToColor[stageMessage];
                 
                 startTime.setMinutes(startTime.getMinutes() + safeTyMargin);
                 endTime.setMinutes(endTime.getMinutes() - safeTyMargin);
+
 
                 if (startTime < endTime) {
                     dummyEntries.push([category, label, tooltip, color, startTime, endTime]);                        
@@ -389,16 +299,80 @@ const getDummyEntries = (recordingSlots, clipNoToProcessingEntry, inputDate) => 
     return dummyEntries;
 }
 
-const selectHandler = (timeline, dataTable) => {
+const prepareDummyDataTableEntries = (recordingGuideRawData, recordingRawData, date) => {
 
-    let selectedDataTable = dataTable;
-    let selection = timeline.getSelection()[0];
-    let rowNo = selection.row;
+    let processingRawData = recordingRawData.filter((entry) => {
+        return (entry['stage_number'] != 1 && entry['stage_number'] != 6);
+    });
+
+    let isClipNumberAvailable = makeAvailableClipsMap(processingRawData);
+
+    let recordingSlots = createRecordingSlotsFromRecordingGuideEntries(recordingGuideRawData, date);
+
+    let dummyDataTableEntries = getDummyEntries(recordingSlots, isClipNumberAvailable, date);
+
+    return dummyDataTableEntries;
+}
+
+const updateSummaryTable = (formattedData, blankRawData, params) => {
+    
+    //  create a colorToStage mapping
+    let colorToStage = reverseJsonMapper(stageToColor);
+
+    //  check status
+    let status;
+    if (!blankRawData || blankRawData.length == 0) {
+        status = summaryStagesEnum.ok;
+    }
+    else {
+        status = summaryStagesEnum.blank;
+    }
+
+    for(let i = 0; i < formattedData.length; i++) {
+
+        let color = formattedData[i][dataTableEnum.color];
+        let stage = colorToStage[color];
+
+        if (stage == 'empty') {
+            status = summaryStagesEnum.empty;
+            break;
+        }
+        else if (stage == "Start Recording" || stage == "Stop Recording") {
+            continue;
+        }
+        else if (stage == 'Failed') {
+            status = summaryStagesEnum.error;
+            break;
+        }
+        else if (stage == 'Now Recording') {
+            status = summaryStagesEnum.inprogress;
+        }
+    }
+
+    let innerHTML = summaryStagesToGraphic[status].innerHTML;
+    let bgcolor = summaryStagesToGraphic[status].bgcolor;
+
+    // select the DOM element corresponding to summaryBox of this channel.
+    let deviceID = params['device_id'];
+    let channelValue = params['channel_values'];
+    let summaryBoxID = ['s', deviceID, channelValue].join("_");
+    let summaryBox = document.getElementById(summaryBoxID);
+
+    // fill the DOM Element with the details.
+    summaryBox.innerHTML = innerHTML;
+    summaryBox.setAttribute('bgcolor', bgcolor);
+}
+
+const selectHandler = (timeline, selectedDataTable) => {
+
+    //  1. Find the particular dataTable row which was clicked.
+    let rowNo = timeline.getSelection()[0].row;
+
+    //  2. Extract its `label` attribute.
     let label = selectedDataTable.getValue(rowNo, dataTableEnum.label);
     
+    //  3. ensure that its a valid JSON dumped string.
     let labelJSON;
-    
-    //  if label isn't a JSON dump, then simply skip.
     try {
         labelJSON = JSON.parse(label);
     }
@@ -406,14 +380,13 @@ const selectHandler = (timeline, dataTable) => {
         return;
     }
 
-    //  a. this was for on-click: table-view redirect
+    //  4. this JSON is basically key-value pair of GET-Params to be added to the URL.
     let GETparams = labelJSON;
-    let redirectURL = new URL(window.location.origin + "/ui/recording_graph_ui_redirect");
 
-    for (key in GETparams) {
-        redirectURL.searchParams.set(key, GETparams[key]);
-    }
+    //  5. add them to the base URL of redirect view.
+    let redirectURL = addGETParameters(new URL(window.location.origin + "/ui/recording_graph_ui_redirect"), GETparams);
 
+    //  6. open that URL in a new tab.
     window.open(redirectURL);
 }
 
@@ -421,7 +394,6 @@ const linkToBlankFramesUI = () => {
     
     //  get the current URL & change it to get the URL for blank UI
 
-    //  new logic
     let protocol = window.location.protocol;
     let host = window.location.host;
     let path = window.location.pathname.replace('recording', 'blank');
@@ -447,28 +419,10 @@ const linkToBlankFramesUI = () => {
     }
 }
 
-const populateDevice = (apiCalls, timeline, params) => {
-    
-    resolveAll(apiCalls).then(([recordingRawData, blankRawData]) => {
-     
-        let formattedData = prepareDataForGoogleChartTimeline([recordingRawData, blankRawData], params['date']);
-        
-        let dataTable = populateTimeline(timeline, formattedData, params['date']);
-
-        updateSummaryTable(formattedData, blankRawData, params);
-        
-        updateTotalBlankMinutes(recordingRawData, blankRawData, params);
-        
-        google.visualization.events.addListener(timeline, 'select', () => {
-            selectHandler(timeline, dataTable);
-        });
-    
-    });
-}
-
 google.charts.setOnLoadCallback(() => {
 
-    let date = setDefaultDate(document.URL).searchParams.get('date');
+    //  extract date from current URL.
+    let date = getDefaultDate(document.URL);
 
     //  patch:  set the date in the datepicker
     setDateInDatePicker('#date', date);
@@ -489,31 +443,35 @@ google.charts.setOnLoadCallback(() => {
     let devices = ['a', 'b'];
 
     //  specify the tables from which each timeline would fetch data.
-    let tables = ['RECORDING', 'INVALID_FRAME_TRACKING'];
+    let tables = ['RECORDING', 'INVALID_FRAME_TRACKING', 'RECORDING_GUIDE'];
+
+
+    let processingMapping = [
+        {"data_source_tables" : ["RECORDING_GUIDE"], "processing_method" : prepareRecordingGuideDataTableEntries},
+        {"data_source_tables" : ["RECORDING"], "processing_method" : prepareStartStopDataTableEntries},
+        {"data_source_tables" : ["RECORDING"], "processing_method" : prepareProcessingDataTableEntries},
+        {"data_source_tables" : ["RECORDING_GUIDE", "RECORDING"], "processing_method" : prepareDummyDataTableEntries},
+    ];
 
     //  main loop.
     channelValues.forEach((channelValue) => {
         devices.forEach((device) => { 
 
-            //  a. set params dict.
+            //  a. prepare the params for each timeline.
             let params = {"date": date, "channel_values": channelValue, "device_id": device}; 
 
-            //  b. initialize timeline
+            //  b. prepare the timeline object.
             let timelineQuerySelector = "#" + device + "_" + channelValue;
             let timeline = initializeTimeline(timelineQuerySelector);
- 
-            //  c. prepare requests to get data.            
-            let apiCalls = [];
-            tables.forEach((table) => {
-                let tableRawDataEndPoint = addGETParameters(getBaseEndPoint(tableName = table), params);
-                apiCalls.push($.get(tableRawDataEndPoint));
-            });
 
-            //  d. 
-            populateDevice(apiCalls, timeline, params);
+            //  c. get data for the timeline.
+            let dataMappingPromise = getDataForTimeline(tables, params);
+
+            //  d. populate info for each device.
+            populateDevice(dataMappingPromise, timeline, params, processingMapping);
             
             //  e. refresh every 5 mins.
-            setTimeout(populateDevice, 300000, apiCalls, timeline, params);
+            setTimeout(populateDevice, 300000, dataMappingPromise, timeline, params, processingMapping);
         });
     });
 });

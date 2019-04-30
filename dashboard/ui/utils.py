@@ -123,7 +123,7 @@ def write_datatable_export_to_csv(datatable_export, csv_path):
 
     with open(csv_path, mode='w') as csv_file:
             fieldnames = datatable_export['header']
-            writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
             writer.writerow(fieldnames)
 

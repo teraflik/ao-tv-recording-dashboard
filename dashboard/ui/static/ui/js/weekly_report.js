@@ -22,7 +22,7 @@ $(document).ready(function(){
             $('#example').html(`<thead><tr id="header-row"></tr></thead><tfoot><tr id="footer-row"></tr></tfoot>`);          
 
             //  define filename of the downloaded CSV.
-            let csvFileName = startDate + '_' + endDate + 'weekly_report';
+            let csvFileName = startDate + '_' + endDate + '_weekly_report';
 
             let table = createDataTable('#example', data, false, {
                 scrollX: true,

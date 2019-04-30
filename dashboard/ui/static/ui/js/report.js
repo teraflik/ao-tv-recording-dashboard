@@ -1,22 +1,4 @@
 //  DAILY REPORTS
-
-const prepareRecordingSlotsFromRawData = (recordingRawData, date) => {
-
-    let startStopEntries = recordingRawData.filter(function(entry) {
-        return ((entry['device_id'] == 'a') && (entry['stage_number'] == 1 || entry['stage_number'] == 6));
-    });
-
-    if (startStopEntries.length == 0) {
-        startStopEntries = recordingRawData.filter(function(entry) {
-            return ((entry['device_id'] == 'b') && (entry['stage_number'] == 1 || entry['stage_number'] == 6));
-        });
-    }
-
-    let recordingSlots = createRecordingSlots(startStopEntries, date);
-
-    return recordingSlots;
-}
-
 const preprocessDailyReport = (data, date) => {
 
     let formattedReportData = [];
@@ -27,10 +9,11 @@ const preprocessDailyReport = (data, date) => {
         let channelSpecificFormattedReportData = [];
         let channelSpecificFilteredFormattedReportData = [];
 
-        let slotRawData = data[2 * index];
+        let recordingGuideRawData = data[2 * index];
         let reportRawData = data[2 * index + 1];
 
-        let recordingSlots = prepareRecordingSlotsFromRawData(slotRawData, date);
+        let recordingSlots = createRecordingSlotsFromRecordingGuideEntries(recordingGuideRawData, date);
+
         let blankPercentageData = alasql('SELECT clip_number, (1 - MIN(1, SUM(clip_duration)/29)) * 100 as blank_percentage FROM ? GROUP BY clip_number',[reportRawData]);
         let indexedBlankPercentageData = jsonIndexer(blankPercentageData, 'clip_number');
 
@@ -70,7 +53,7 @@ const preprocessDailyReport = (data, date) => {
 
 const getDailyReportsRawData = (date) => {
 
-    let slotInfoBaseEndPoint = addGETParameters(window.location.origin + "/api/recording", {"date": date});
+    let slotInfoBaseEndPoint = addGETParameters(window.location.origin + "/api/recording_guide", {"date": date});
     let reportDataBaseEndPoint = addGETParameters(window.location.origin + "/api/filter_recording_tracking", {"date": date});
 
     let apiCalls = [];
@@ -82,16 +65,12 @@ const getDailyReportsRawData = (date) => {
         let channelSpecificSlotInfoEndPoint = addGETParameters(slotInfoBaseEndPoint, {"channel_values": channelValue});
         let channelSpecificReportDataEndPoint = addGETParameters(reportDataBaseEndPoint, {"channel_values": channelValue});
 
-        let slotInfoRequest = $.get(channelSpecificSlotInfoEndPoint);
-        let reportDataRequest = $.get(channelSpecificReportDataEndPoint);
-
-        apiCalls.push(slotInfoRequest);
-        apiCalls.push(reportDataRequest);
+        apiCalls.push($.get(channelSpecificSlotInfoEndPoint));
+        apiCalls.push($.get(channelSpecificReportDataEndPoint));
     });
 
     return resolveAll(apiCalls);
 }
-
 
 const generateDailyReport = (date) => {
 

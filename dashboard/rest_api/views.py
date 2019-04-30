@@ -212,7 +212,7 @@ class RecordingGuideView(APIView):
         # get the input params
         input_date = request.GET.get('date') or str(datetime.datetime.date(datetime.datetime.now()))
         channel_values = request.GET.getlist('channel_values') or ChannelInfo.objects.values_list('channel_value', flat=True)
-        device_id = request.GET.get('device_id') or 'both'
+        device_id = request.GET.get('device_id') or 'a'
         
         utc_timezone = pytz.timezone('UTC')
         filters = {}
