@@ -4,7 +4,7 @@ from .models import Schedule, Channel, NodeAllocation
 
 @admin.register(Channel)
 class ChannelAdmin(admin.ModelAdmin):
-    list_display = ['name', 'value', 'logo']
+    list_display = ['value', 'name', 'logo']
 
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
