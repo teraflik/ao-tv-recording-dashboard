@@ -1,5 +1,7 @@
+import datetime
 import io
 import os
+import json
 from contextlib import redirect_stdout
 
 from ansi2html import Ansi2HTMLConverter
@@ -7,13 +9,20 @@ from django.contrib.auth.decorators import login_required
 from django.http import (HttpResponse, HttpResponseNotFound,
                          HttpResponseServerError, JsonResponse)
 from django.template.response import TemplateResponse
+from django.shortcuts import render
+
+from rest_api.models import RecordingGuide
 
 from .ao_inventory import AOInventoryManager, OBSWebsocket
-from .models import Node
+from .models import CaptureCard, Node, System, VideoSource
+
 
 @login_required
 def index(request):
-    return TemplateResponse(request, 'monitoring/monitoring.html')
+    """
+    Renders the Nodes page.
+    """
+    return TemplateResponse(request, 'monitoring/index.html')
 
 @login_required
 def nodes(request, node_id=None):
@@ -43,6 +52,7 @@ def nodes(request, node_id=None):
             - ``cron``: The output of ``crontab -l`` command on the Node (might need to be sanitized).
             - ``screenshot_url``: A URL to the screenshot that was last captured on the Node``s primary display.
             - ``netdata_host``: The host:port combination on which Node's Netdata daemon is exposed.
+            - ``slots``: The active entries in Recording Guide correspondng to this node.
         
         Note:
             If ping fails, the fields following ping will be empty.
@@ -54,29 +64,46 @@ def nodes(request, node_id=None):
     queryset = Node.objects.filter(pk=node_id) if node_id else Node.objects.all()
     
     for node in queryset:
-        if inv.ping(node.ip_address):
+        if inv.ping(node.system.ip_address):
             nodes.append({
                 "id": node.pk,
-                "ip_address": node.ip_address,
-                "label": node.label,
+                "ip_address": node.system.ip_address,
+                "label": node.__str__(),
                 "ping": True,
-                "channel_id": inv.get_channel_id(node.ip_address, node.username, node.password),
-                "uptime": inv.get_uptime(node.ip_address, node.username, node.password),
-                "cron": inv.get_cron(node.ip_address, node.username, node.password),
-                "screenshot_url": node.screenshot_url,
-                "netdata_host": node.netdata_host
+                "channel_id": inv.get_channel_id(node.system.ip_address, node.system.username, node.system.password),
+                "uptime": inv.get_uptime(node.system.ip_address, node.system.username, node.system.password),
+                "cron": inv.get_cron(node.system.ip_address, node.system.username, node.system.password),
+                "screenshot_url": node.system.screenshot_url,
+                "netdata_host": node.system.netdata_host,
+                "slots": list(RecordingGuide.objects.filter(
+                    node=node, 
+                    validity_end__gte=datetime.date.today()
+                    ).values(
+                        "channel_value_id__channel_name",
+                        "device_id",
+                        "start_time",
+                        "stop_time",
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday",
+                    )),
             })
         else:
             nodes.append({
-                "id": node.pk,
-                "ip_address": node.ip_address,
-                "label": node.label,
+                "id": node.pk,  
+                "ip_address": node.system.ip_address,
+                "label": node.__str__(),
                 "ping": False,
                 "channel_id": None,
                 "uptime": None,
                 "cron": None,
                 "screenshot_url": None,
-                "netdata_host": None
+                "netdata_host": None,
+                "slots": None,
             })
     
     return JsonResponse(data = {"nodes": nodes})
@@ -92,10 +119,10 @@ def screenshot(request, node_id):
     except Node.DoesNotExist:
         return HttpResponseNotFound()
     inv = AOInventoryManager()
-    image = inv.get_screengrab(node.ip_address, node.username, node.password)
-    node.update_screenshot(image)
+    image = inv.get_screengrab(node.system.ip_address, node.system.username, node.system.password)
+    node.system.update_screenshot(image)
     if request.GET.get("response") == "json":
-        return JsonResponse(data = {"screenshot_url": node.screenshot_url})
+        return JsonResponse(data = {"screenshot_url": node.system.screenshot_url})
     return HttpResponse(image, content_type="image/jpeg")
 
 @login_required
@@ -128,7 +155,7 @@ def obs(request, node_id):
         return HttpResponseNotFound()
 
     try:
-        obs = OBSWebsocket(node.ip_address)
+        obs = OBSWebsocket(node.system.ip_address)
         if request.GET.get("action") == "is_running":
             response = True
         elif request.GET.get("action") == "is_recording":

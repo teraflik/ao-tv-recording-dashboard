@@ -103,7 +103,7 @@ python manage.py collectstatic
 sudo cp template.conf /etc/apache2/sites-available/ao-tv-recording-db-ui.conf
 
 # set the values of placeholder variables
-project_name=ao_db_ui
+project_name=dashboard
 project_path=$PWD
 venv_name=env
 

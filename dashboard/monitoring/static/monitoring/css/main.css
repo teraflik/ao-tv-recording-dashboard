@@ -10,7 +10,14 @@ body{
     font-size: 1.25em;
     font-weight: bold;
 }
-.node > td{
+
+#monitoring-header {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 5px;
+}
+
+.node > td {
     vertical-align: middle;
 }
 

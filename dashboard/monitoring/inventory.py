@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Methods to monitor and control machines on a local network using SSH.
 """

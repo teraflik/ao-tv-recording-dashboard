@@ -2,9 +2,9 @@
 TV Recording Dashboard
 **********************
 
-.. image:: https://gitlab.com/athenasowl-intern/ao-tv-recording-db-ui/badges/master/pipeline.svg
+.. image:: https://gitlab.com/athenasowl-intern/ao-tv-recording-dashboard/badges/master/pipeline.svg
    :alt: Pipeline Status [Master]
-   :target: https://gitlab.com/athenasowl-intern/ao-tv-recording-db-ui/commits/master
+   :target: https://gitlab.com/athenasowl-intern/ao-tv-recording-dashboard/commits/master
 
 Track and manage TV Recording Pipeline, from anywhere.
 
@@ -13,8 +13,8 @@ Installation
 The application can be installed either by using the provided startup script, or
 by following the given steps::
 
-    git clone git@gitlab.com:athenasowl-intern/ao-tv-recording-db-ui.git
-    cd ao-tv-recording-db-ui
+    git clone git@gitlab.com:athenasowl-intern/ao-tv-recording-dashboard.git
+    cd ao-tv-recording-dashboard
     virtualenv env -p python3
     source env/bin/activate
     pip install -r requirements.txt

@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<main id="monitoring">
+<main id="nodes">
     <section v-if="errored">
         <div class="alert alert-danger text-center">
             <p>Unable to retrieve information at the moment.</p>
@@ -26,6 +26,15 @@
             </div>
         </div>
         <div v-else>
+            <header id="monitoring-header" class="row align-items-center alert-success">
+                <div class="col mx-2">
+                    <i class="fas fa-check-square"></i> All Systems Operational !
+                </div>
+                <div class="col text-right">
+                    <button type="button" class="btn btn-secondary">Request New Node</button>
+                    <button type="button" class="btn btn-secondary">Do Something</button>
+                </div>
+            </header>
             <table class="table table-hover">
                 <thead class="thead-dark text-center">
                     <th style="max-width: 50px">#</th>
@@ -50,6 +59,7 @@
                         :cron="node.cron"
                         :screenshot_url="node.screenshot_url"
                         :netdata_host="node.netdata_host"
+                        :slots="node.slots"
                         ></tr>
                 </tbody>
             </table>
