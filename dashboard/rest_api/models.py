@@ -107,8 +107,8 @@ class RecordingTracking(models.Model):
 class RecordingGuide(models.Model):
     channel_value = models.ForeignKey(ChannelInfo, models.DO_NOTHING, db_column='channel_value', blank=False)
     device_id = models.CharField(blank=False, max_length=255)
-    start_time = models.TimeField(blank=False)
-    stop_time = models.TimeField(blank=False)
+    rec_start = models.TimeField(blank=False)
+    rec_stop = models.TimeField(blank=False)
     validity_start = models.DateField(blank=False, default=datetime.date.today)
     validity_end = models.DateField(blank=False, default=datetime.date.max)
     monday = models.BooleanField(blank=False, default=True)

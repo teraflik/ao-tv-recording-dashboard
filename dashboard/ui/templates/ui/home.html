@@ -91,9 +91,6 @@
     var start_time_input = document.forms["form"]["start_time"].value;
     var finish_time_input = document.forms["form"]["finish_time"].value;
 		
-		// console.log("start_time is " + start_time_input);
-		// console.log("finish_time is " + finish_time_input);
-		
     if (date_input =="" || start_time_input =="" || finish_time_input == "") {
 			alert("Please Fill All Required Field!");
 			return false;
@@ -101,9 +98,6 @@
 		else { //	check if start_time more than end_time
 			start_time = new Date('2000-01-01T' + start_time_input).getTime();
 			finish_time = new Date('2000-01-01T' + finish_time_input).getTime();
-
-			// console.log("Start time in seconds is " + start_time);
-			// console.log("Finish time in seconds is " + finish_time);
       
 			if (start_time > finish_time) {
 				alert("Starting time can't exceed ending time!");

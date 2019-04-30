@@ -88,8 +88,7 @@
   }
 
   function setDatesAccordingToWeek() {
-
-    console.log("onchange callback triggered");
+    
     var HTMLWeekInput = document.getElementById('week').value;
     var [year, weekNo] = [HTMLWeekInput.split('-')[0], HTMLWeekInput.split('-')[1].slice(1)].map((x) => parseInt(x));
 

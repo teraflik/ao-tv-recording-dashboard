@@ -1,29 +1,10 @@
 /**
- * Makes a synchronous ajax request to given endpoint and returns an array of JSON as Response.
- * Incase of failure, returns an empty array. 
- * @param {string} endpoint - The API endpoint that serves the data.
- * @returns {Array} Response JSON array.
+ * GENERIC UTILITIES 
  */
-const getJSONSynchronous = (endpoint) => {
-    var data = [];
-    $.ajax({
-        type: 'GET',
-        url: endpoint,
-        async: false,
-        dataType: 'json',
-        success: function(response){
-            data = response;
-        },
-        error: function() {
-            data = [];
-        }
-    });
-    return data;
-}
 
 /**
- * Gets date in `yyyy-mm-dd` format. 
- * @param {Date} dateObject - A JavaScript Date object whose corresponding `yyyy-mm-dd` we need
+ * Converts a `JavaScript Date Object` to `String yyyy-mm-dd`
+ * @param {Date} dateObject - A JavaScript Date object
  * @returns {String} `yyyy-mm-dd` String.
  */
 const yyyy_mm_dd = (dateObject) => {
@@ -44,8 +25,8 @@ const yyyy_mm_dd = (dateObject) => {
 }
 
 /**
- * Gets time in `hh:mm:ss` format. 
- * @param {Date} dateObject - A JavaScript Date object whose corresponding `hh:mm:ss` we need
+ * Converts a `JavaScript Date Object` to `String hh:mm:ss`
+ * @param {Date} dateObject - A JavaScript Date object
  * @returns {String} `hh:mm:ss` String.
  */
 const hh_mm_ss = (dateObject) => {
@@ -70,7 +51,90 @@ const hh_mm_ss = (dateObject) => {
 }
 
 /**
- * Gets the unique clipNumber corresponding to a given time in the day. 
+ * Performs indexing on a given Array of JSONs using the given attribute, 
+ * provided that each JSON has a unique value for that given attribute.
+ * 
+ * @param {Array} jsonArray - An array of JSONs.
+ * @param {String} indexAttribute - Name of the attribute to be used as index. 
+ * @returns {Object} Key-Value pair with `key`:`attribute_value` and `value`:`corresponding JSON Object`.
+ */
+const jsonIndexer = (jsonArray, indexAttribute) => {
+    
+    var index = {};
+    
+    for (var i = 0; i < jsonArray.length; i++) {
+        var entry = jsonArray[i];
+        var indexAttributeValue = entry[indexAttribute];
+        index[indexAttributeValue] = entry;
+    }
+
+    return index;
+}
+
+/**
+ * Adds GET Parameters to a given URL.
+ * @param {String} baseEndPoint - A URL String.
+ * @param {Object} GETParams - Key value pair with `key`: `attribute_name` & `value`: `attribute_value`
+ * @returns {URLObject} with GETParams added to the URL.
+ */
+const addGETParameters = (baseEndPoint, GETParams) => {
+
+    var specificEndPoint = new URL(baseEndPoint);
+    
+    for (var key in GETParams) {
+        specificEndPoint.searchParams.set(key, GETParams[key]);
+    }
+
+    return specificEndPoint;
+}
+
+
+/**
+ * Resolves an array of promises and returns their corresponding response data in the same order.
+ * @param {Array} apiCalls -  Array of promises to resolve.
+ * @returns {Array} of response data for each corresponding `Promise`.
+ */
+const resolveAll = (apiCalls) => {
+
+    return new Promise((resolve, reject) => {
+
+        Promise.all(apiCalls).then((data) => {
+            resolve(data); 
+        });
+    });
+}
+
+
+/**
+ * PROJECT SPECIFIC UTILITIES 
+ */
+const DBNAME_TO_URL_PATHNAME_MAPPING = Object.freeze({
+    "RECORDING"                 :   "/api/recording", 
+    "RECORDING_GUIDE"           :   "/api/recording_guide",
+    "RECORDING_TRACKING"        :   "/api/recording_tracking",
+    "FILTER_RECORDING_TRACKING" :   "/api/filter_recording_tracking",
+    "INVALID_FRAME_TRACKING"    :   "/api/blank"
+});
+
+
+/**
+ * Gets the REST-API EndPoint of a given Database Table.
+ * @param {String} tableName - Name of the Database Table.
+ * @returns {URLObject} REST-API EndPoint URL of the table. 
+ */
+const getBaseEndPoint = (tableName) => {
+
+    let protocol = window.location.protocol;
+    let host = window.location.host;
+    let pathname = DBNAME_TO_URL_PATHNAME_MAPPING[tableName];
+        
+    let baseEndPoint = new URL(protocol + "//" + host + pathname);
+
+    return baseEndPoint;
+}
+
+/**
+ * Gets the corresponding unique clipNumber to a given time in the day. 
  * @param {String} timeString - Time in `hh:mm:ss` format.
  * @returns {number} clipNumber corresponding to given time.
  */
@@ -94,39 +158,10 @@ const getClipNumber = (timeString) => {
 }
 
 /**
- * Performs indexing on a given JSONArray as per given  
- * @param {Array} jsonArray - AN array of JSON 
- * @param {String} indexAttribute - A JavaScript Data object whose corresponding `yyyy-mm-dd` we need
- * @returns {String} `yyyy-mm-dd` String.
+ * 
+ * @param {*} columnNames 
+ * @param {*} addFooter 
  */
-const jsonIndexer = (jsonArray, indexAttribute) => {
-    
-    var index = {};
-    
-    for (var i = 0; i < jsonArray.length; i++) {
-        var entry = jsonArray[i];
-        var indexAttributeValue = entry[indexAttribute];
-        index[indexAttributeValue] = entry;
-    }
-
-    return index;
-}
-
-/** 
- * Adds GET Parameters to a base URL given
- * @param {String} baseEndPoint - The base URL to 
- */
-const addGETParameters = (baseEndPoint, GETParams) => {
-
-    var specificEndPoint = new URL(baseEndPoint);
-    
-    for (var key in GETParams) {
-        specificEndPoint.searchParams.set(key, GETParams[key]);
-    }
-
-    return specificEndPoint;
-}
-
 const setColumns = (columnNames, addFooter = false) => {
 
     rowHtml = '';
@@ -142,6 +177,13 @@ const setColumns = (columnNames, addFooter = false) => {
     }
 }
 
+/**
+ * 
+ * @param {*} querySelector 
+ * @param {*} data 
+ * @param {*} addFooter 
+ * @param {*} options 
+ */
 const createDataTable = (querySelector, data, addFooter, options) => {
 
     let columnNames = Object.keys(data[0]);
@@ -162,20 +204,15 @@ const createDataTable = (querySelector, data, addFooter, options) => {
 }
 
 /**
+ * Gives the scheduled recordingSlots using the raw data obtained from `recording_guide` table.
  * 
- * @param {Array} apiCalls -  Array of promises to resolve.
- * @returns {Array} of response data. 
+ * It makes use of the `start_time` and `stop_time` attributes present in the data obtained from
+ * `recording_guide` table's endpoint
+ * 
+ * 
+ * @param {*} recordingGuideRawData 
+ * @param {*} date 
  */
-const resolveAll = (apiCalls) => {
-
-    return new Promise((resolve, reject) => {
-
-        Promise.all(apiCalls).then((data) => {
-            resolve(data); 
-        });
-    });
-}
-
 const createRecordingSlotsFromRecordingGuideEntries = (recordingGuideRawData, date) => {
     
     let recordingSlots = [];
@@ -184,8 +221,8 @@ const createRecordingSlotsFromRecordingGuideEntries = (recordingGuideRawData, da
 
     recordingGuideRawData.forEach((recordingGuideEntry) => {
         
-        let startTimeString = recordingGuideEntry['start_time'];
-        let stopTimeString = recordingGuideEntry['stop_time'];
+        let startTimeString = recordingGuideEntry['rec_start'];
+        let stopTimeString = recordingGuideEntry['rec_stop'];
 
         if (startTimeString < stopTimeString) {
 

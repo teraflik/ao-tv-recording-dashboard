@@ -1,13 +1,5 @@
 google.charts.load('46', {'packages':['timeline']});
 
-const DBNAME_TO_URL_PATHNAME_MAPPING = Object.freeze({
-    "RECORDING"                 :   "/api/recording", 
-    "RECORDING_GUIDE"           :   "/api/recording_guide",
-    "RECORDING_TRACKING"        :   "/api/recording_tracking",
-    "FILTER_RECORDING_TRACKING" :   "/api/filter_recording_tracking",
-    "INVALID_FRAME_TRACKING"    :   "/api/blank"
-});
-
 const dataTableEnum  = Object.freeze({
     "category"    :   0, 
     "label"   :   1, 
@@ -104,17 +96,6 @@ const setColorLabels = (querySelector, stagesEnum, stageToGraphic) => {
         trElement.appendChild(stage);
     });
     
-}
-
-const getBaseEndPoint = (tableName) => {
-
-    let protocol = window.location.protocol;
-    let host = window.location.host;
-    let pathname = DBNAME_TO_URL_PATHNAME_MAPPING[tableName];
-        
-    let baseEndPoint = new URL(protocol + "//" + host + pathname);
-
-    return baseEndPoint;
 }
 
 /**
@@ -284,7 +265,7 @@ const prepareRecordingGuideDataTableEntries = (recordingGuideRawData, date) => {
         label = '';
         color = timelineStageToGraphic[timelineStagesEnum[['Expected Start Recording']]].bgcolor;
         
-        startTimeTimeline = new Date([date, recordingGuideEntry['start_time']].join(" "));
+        startTimeTimeline = new Date([date, recordingGuideEntry['rec_start']].join(" "));
 
         endTimeTimeline = new Date(startTimeTimeline);
         endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);
@@ -297,7 +278,7 @@ const prepareRecordingGuideDataTableEntries = (recordingGuideRawData, date) => {
         //  STOP ENTRY
         color = timelineStageToGraphic[timelineStagesEnum[['Expected Stop Recording']]].bgcolor;
         
-        startTimeTimeline = new Date([date, recordingGuideEntry['stop_time']].join(" "));
+        startTimeTimeline = new Date([date, recordingGuideEntry['rec_stop']].join(" "));
 
         endTimeTimeline = new Date(startTimeTimeline);
         endTimeTimeline.setMinutes(endTimeTimeline.getMinutes() + 1);

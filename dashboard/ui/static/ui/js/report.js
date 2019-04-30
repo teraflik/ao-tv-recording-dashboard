@@ -53,8 +53,8 @@ const preprocessDailyReport = (data, date) => {
 
 const getDailyReportsRawData = (date) => {
 
-    let slotInfoBaseEndPoint = addGETParameters(window.location.origin + "/api/recording_guide", {"date": date});
-    let reportDataBaseEndPoint = addGETParameters(window.location.origin + "/api/filter_recording_tracking", {"date": date});
+    let slotInfoBaseEndPoint = addGETParameters(getBaseEndPoint(tableName = 'RECORDING_GUIDE'), {"date": date});
+    let reportDataBaseEndPoint = addGETParameters(getBaseEndPoint(tableName = 'FILTER_RECORDING_TRACKING'), {"date": date});
 
     let apiCalls = [];
 
@@ -117,9 +117,6 @@ const preprocessWeeklyReport = (data, startDate, endDate) => {
 
         let channelWiseDailyReport = alasql('SELECT channel_name, AVG(blank_percentage) AS avg_blank, COUNT(*) AS no_of_slots FROM ? GROUP BY channel_name', [dailyReport['formattedReportData']]);
         let indexedChannelWiseDailyReport = jsonIndexer(channelWiseDailyReport, 'channel_name');
-
-        console.log("indexedChannelWiseDailyReport ...");
-        console.log(indexedChannelWiseDailyReport);
         
         let dailyEntryWeeklyReport = {'date': date};
 
