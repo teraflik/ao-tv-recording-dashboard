@@ -18,7 +18,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
 # Project dependencies
 from rest_api import models
-from utils.constant import Constant
+from common.util.constants import Constant
 from . import utils
 
 # Getting the list of channels

@@ -12,7 +12,7 @@ from requests_toolbelt import MultipartEncoder
 from django.urls import resolve
 
 # Project dependencies
-from utils.constant import Constant
+from common.util.constants import Constant
 
 
 def make_table_dict(request, channels):
