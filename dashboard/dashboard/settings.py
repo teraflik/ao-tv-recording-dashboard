@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'rest_api.apps.RestApiConfig',
     'ui.apps.UiConfig',
     'graph_ui.apps.GraphUiConfig',
-    'schedule.apps.ScheduleApiConfig',
+    'schedule.apps.ScheduleConfig',
     'monitoring.apps.MonitoringConfig',
 ]
 

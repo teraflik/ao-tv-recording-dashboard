@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class ScheduleApiConfig(AppConfig):
+class ScheduleConfig(AppConfig):
     name = 'schedule'
