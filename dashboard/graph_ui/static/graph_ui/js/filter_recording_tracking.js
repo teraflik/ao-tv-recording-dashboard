@@ -1,5 +1,3 @@
-let globalDataTable = {};
-
 const timelineStagesEnum  = Object.freeze({
     "Expected Start Recording"  :   1,
     "Expected Stop Recording"   :   2,
