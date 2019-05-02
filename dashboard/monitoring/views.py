@@ -85,7 +85,7 @@ def nodes(request, node_id=None):
                 "friday": device.schedule.friday,
                 "saturday": device.schedule.saturday,
                 "sunday": device.schedule.sunday,
-            } for device in NodeAllocation.objects.filter(node=node) ]
+            } for device in NodeAllocation.objects.filter(node=node).order_by("schedule__rec_start") ]
 
         if inv.ping(node.system.ip_address):
             data["ping"] = True
