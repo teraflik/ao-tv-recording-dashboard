@@ -30,4 +30,7 @@ class MonitoringDBRouter(object):
 
         if app_label == 'monitoring':
             return db == 'db_monitoring'
+        elif db == 'db_monitoring':
+            return False
+
         return None

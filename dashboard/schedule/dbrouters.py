@@ -30,4 +30,6 @@ class ScheduleDBRouter(object):
 
         if app_label == 'schedule':
             return db == 'db_schedule'
+        elif db == 'db_schedule':
+            return False
         return None
