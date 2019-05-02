@@ -233,7 +233,7 @@ class InventoryManager():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            ssh.connect(host, username=username, password=password)
+            ssh.connect(host, username=username, password=password, banner_timeout=2)
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
                 "cat {0}".format(file_path))
         except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError) as e:
@@ -275,7 +275,7 @@ class InventoryManager():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            ssh.connect(host, username=username, password=password)
+            ssh.connect(host, username=username, password=password, banner_timeout=2)
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
                 "DISPLAY=:0.0 import -window root .shot.png")
             sftp = ssh.open_sftp()
@@ -318,7 +318,7 @@ class InventoryManager():
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
-            ssh.connect(host, username=username, password=password)
+            ssh.connect(host, username=username, password=password, banner_timeout=2)
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
         except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError) as e:
             self.log.exception(
