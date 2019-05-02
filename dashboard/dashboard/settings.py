@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'rest_api.apps.RestApiConfig',
     'ui.apps.UiConfig',
     'graph_ui.apps.GraphUiConfig',
-    'schedule_api.apps.ScheduleApiConfig',
+    'schedule.apps.ScheduleApiConfig',
     'monitoring.apps.MonitoringConfig',
 ]
 
@@ -112,7 +112,7 @@ for section in ['db_monitoring', 'db_rest_api']:
 DATABASE_ROUTERS = (
     'rest_api.dbrouters.CloudDBRouter',
     'monitoring.dbrouters.MonitoringDBRouter',
-    'schedule_api.dbrouters.ScheduleAPIDBRouter',
+    'schedule.dbrouters.ScheduleAPIDBRouter',
 )
 
 

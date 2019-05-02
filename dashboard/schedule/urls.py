@@ -3,7 +3,7 @@ from rest_framework import routers
 
 from . import views
 
-app_name = 'schedule_api'
+app_name = 'schedule'
 
 router = routers.DefaultRouter()
 router.register(r'channels', views.ChannelViewSet)
