@@ -39,7 +39,6 @@ class Migration(migrations.Migration):
                 ('saturday', models.BooleanField(default=True)),
                 ('sunday', models.BooleanField(default=True)),
                 ('channel', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='schedules', to='schedule.Channel', verbose_name='Channel Name')),
-                ('nodes', models.ManyToManyField(related_name='schedules', through='schedule.NodeAllocation', to='monitoring.Node')),
             ],
         ),
         migrations.CreateModel(
@@ -50,6 +49,11 @@ class Migration(migrations.Migration):
                 ('node', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='monitoring.Node', verbose_name='Node')),
                 ('schedule', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='schedule.Schedule', verbose_name='Schedule')),
             ],
+        ),
+        migrations.AddField(
+            model_name='schedule',
+            name='nodes',
+            field=models.ManyToManyField(related_name='schedules', through='schedule.NodeAllocation', to='monitoring.Node'),
         ),
         migrations.RunSQL('ALTER TABLE `schedule_channel` ADD SYSTEM VERSIONING;'),
         migrations.RunSQL('ALTER TABLE `schedule_schedule` ADD SYSTEM VERSIONING;'),

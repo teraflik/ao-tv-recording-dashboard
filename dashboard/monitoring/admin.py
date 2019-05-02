@@ -20,7 +20,7 @@ class VideoSourceAdmin(admin.ModelAdmin):
     """
     Configure the admin dashboard for :py:class:`models.VideoSource` model.
     """
-    list_display = ['__str__', 'source_type', 'manufacturer', 'model', 'identifier']
+    list_display = ['__str__', 'source_type', 'manufacturer', 'model', 'identifier', 'comments']
 
 class NodeAdmin(admin.ModelAdmin):
     """

@@ -33,3 +33,4 @@ six==1.12.0
 websocket-client==0.55.0
 Sphinx==2.0.1
 sphinxcontrib-napoleon==0.7
+sqlparse==0.3.0

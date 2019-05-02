@@ -53,8 +53,8 @@ class Migration(migrations.Migration):
                 ('video_source', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='monitoring.VideoSource')),
             ],
         ),
-        migrations.RunSQL('ALTER TABLE `monitoring_capturecard` ADD SYSTEM VERSIONING;'),
-        migrations.RunSQL('ALTER TABLE `monitoring_system` ADD SYSTEM VERSIONING;'),
-        migrations.RunSQL('ALTER TABLE `monitoring_videosource` ADD SYSTEM VERSIONING;'),
-        migrations.RunSQL('ALTER TABLE `monitoring_node` ADD SYSTEM VERSIONING;'),
+        migrations.RunSQL('ALTER TABLE `monitoring_capturecard` ADD SYSTEM VERSIONING'),
+        migrations.RunSQL('ALTER TABLE `monitoring_system` ADD SYSTEM VERSIONING'),
+        migrations.RunSQL('ALTER TABLE `monitoring_videosource` ADD SYSTEM VERSIONING'),
+        migrations.RunSQL('ALTER TABLE `monitoring_node` ADD SYSTEM VERSIONING'),
     ]

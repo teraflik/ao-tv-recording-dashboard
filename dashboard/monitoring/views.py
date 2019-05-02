@@ -68,7 +68,7 @@ def nodes(request, node_id=None):
             nodes.append({
                 "id": node.pk,
                 "ip_address": node.system.ip_address,
-                "label": node.__str__(),
+                "label": str(node),
                 "ping": True,
                 "channel_id": inv.get_channel_id(node.system.ip_address, node.system.username, node.system.password),
                 "uptime": inv.get_uptime(node.system.ip_address, node.system.username, node.system.password),
