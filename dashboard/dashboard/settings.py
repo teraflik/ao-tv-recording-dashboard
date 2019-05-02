@@ -95,7 +95,7 @@ DATABASES = {
     'default': DB_DEFAULT
 }
 
-for section in ['db_monitoring', 'db_rest_api']:
+for section in ['db_monitoring', 'db_rest_api', 'db_schedule']:
     if section in config.sections():
         DATABASES[section] = {
             'ENGINE': config.get(section, 'ENGINE'),
@@ -112,7 +112,7 @@ for section in ['db_monitoring', 'db_rest_api']:
 DATABASE_ROUTERS = (
     'rest_api.dbrouters.CloudDBRouter',
     'monitoring.dbrouters.MonitoringDBRouter',
-    'schedule.dbrouters.ScheduleAPIDBRouter',
+    'schedule.dbrouters.ScheduleDBRouter',
 )
 
 

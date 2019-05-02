@@ -22,13 +22,6 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Node',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('capture_card', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='monitoring.CaptureCard')),
-            ],
-        ),
-        migrations.CreateModel(
             name='System',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -51,14 +44,17 @@ class Migration(migrations.Migration):
                 ('comments', models.CharField(blank=True, max_length=200, verbose_name='Comments')),
             ],
         ),
-        migrations.AddField(
-            model_name='node',
-            name='system',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='monitoring.System'),
+        migrations.CreateModel(
+            name='Node',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('capture_card', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='monitoring.CaptureCard')),
+                ('system', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='monitoring.System')),
+                ('video_source', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='monitoring.VideoSource')),
+            ],
         ),
-        migrations.AddField(
-            model_name='node',
-            name='video_source',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='monitoring.VideoSource'),
-        ),
+        migrations.RunSQL('ALTER TABLE `monitoring_capturecard` ADD SYSTEM VERSIONING;'),
+        migrations.RunSQL('ALTER TABLE `monitoring_system` ADD SYSTEM VERSIONING;'),
+        migrations.RunSQL('ALTER TABLE `monitoring_videosource` ADD SYSTEM VERSIONING;'),
+        migrations.RunSQL('ALTER TABLE `monitoring_node` ADD SYSTEM VERSIONING;'),
     ]

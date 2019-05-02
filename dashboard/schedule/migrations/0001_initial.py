@@ -26,14 +26,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='NodeAllocation',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('label', models.CharField(choices=[('A', 'A'), ('B', 'B'), ('C', 'C')], default='A', max_length=1, verbose_name='Device ID')),
-                ('node', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='monitoring.Node', verbose_name='Node')),
-            ],
-        ),
-        migrations.CreateModel(
             name='Schedule',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -50,9 +42,16 @@ class Migration(migrations.Migration):
                 ('nodes', models.ManyToManyField(related_name='schedules', through='schedule.NodeAllocation', to='monitoring.Node')),
             ],
         ),
-        migrations.AddField(
-            model_name='nodeallocation',
-            name='schedule',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='schedule.Schedule', verbose_name='Schedule'),
+        migrations.CreateModel(
+            name='NodeAllocation',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('label', models.CharField(choices=[('A', 'A'), ('B', 'B'), ('C', 'C')], default='A', max_length=1, verbose_name='Device ID')),
+                ('node', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='monitoring.Node', verbose_name='Node')),
+                ('schedule', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='schedule.Schedule', verbose_name='Schedule')),
+            ],
         ),
+        migrations.RunSQL('ALTER TABLE `schedule_channel` ADD SYSTEM VERSIONING;'),
+        migrations.RunSQL('ALTER TABLE `schedule_schedule` ADD SYSTEM VERSIONING;'),
+        migrations.RunSQL('ALTER TABLE `schedule_nodeallocation` ADD SYSTEM VERSIONING;'),
     ]
