@@ -1,17 +1,17 @@
 import datetime
 import io
-import os
 import json
+import os
 from contextlib import redirect_stdout
 
 from ansi2html import Ansi2HTMLConverter
 from django.contrib.auth.decorators import login_required
 from django.http import (HttpResponse, HttpResponseNotFound,
                          HttpResponseServerError, JsonResponse)
-from django.template.response import TemplateResponse
 from django.shortcuts import render
+from django.template.response import TemplateResponse
 
-from rest_api.models import RecordingGuide
+from schedule.models import NodeAllocation, Schedule
 
 from .ao_inventory import AOInventoryManager, OBSWebsocket
 from .models import CaptureCard, Node, System, VideoSource
@@ -64,47 +64,40 @@ def nodes(request, node_id=None):
     queryset = Node.objects.filter(pk=node_id) if node_id else Node.objects.all()
     
     for node in queryset:
-        if inv.ping(node.system.ip_address):
-            nodes.append({
-                "id": node.pk,
-                "ip_address": node.system.ip_address,
-                "label": str(node),
-                "ping": True,
-                "channel_id": inv.get_channel_id(node.system.ip_address, node.system.username, node.system.password),
-                "uptime": inv.get_uptime(node.system.ip_address, node.system.username, node.system.password),
-                "cron": inv.get_cron(node.system.ip_address, node.system.username, node.system.password),
-                "screenshot_url": node.system.screenshot_url,
-                "netdata_host": node.system.netdata_host,
-                "slots": list(RecordingGuide.objects.filter(
-                    node=node, 
-                    validity_end__gte=datetime.date.today()
-                    ).values(
-                        "channel_value_id__channel_name",
-                        "device_id",
-                        "start_time",
-                        "stop_time",
-                        "monday",
-                        "tuesday",
-                        "wednesday",
-                        "thursday",
-                        "friday",
-                        "saturday",
-                        "sunday",
+        data = {}
+        data["id"] = node.pk
+        data["ip_address"] = node.system.ip_address
+        data["label"] = str(node)
+        data["screenshot_url"] = node.system.screenshot_url
+        data["netdata_host"] = node.system.netdata_host
+        data["slots"] = list(NodeAllocation.objects.filter(node=node).values(
+                        "schedule__channel",
+                        "label",
+                        "schedule__rec_start",
+                        "schedule__rec_stop",
+                        "schedule__monday",
+                        "schedule__tuesday",
+                        "schedule__wednesday",
+                        "schedule__thursday",
+                        "schedule__friday",
+                        "schedule__saturday",
+                        "schedule__sunday",
                     )),
-            })
+        if inv.ping(node.system.ip_address):
+            data["ping"] = True
+            if inv.auth(node.system.ip_address, node.system.username, node.system.password):
+                data["auth"] = True
+                data["channel_id"] = inv.get_channel_id(node.system.ip_address, node.system.username, node.system.password),
+                data["uptime"] = inv.get_uptime(node.system.ip_address, node.system.username, node.system.password),
+                data["cron"] = inv.get_cron(node.system.ip_address, node.system.username, node.system.password),
+            else:
+                data["auth"] = False
+                data["channel_id"] = None
+                data["uptime"] = None
+                data["cron"] = None
         else:
-            nodes.append({
-                "id": node.pk,  
-                "ip_address": node.system.ip_address,
-                "label": node.__str__(),
-                "ping": False,
-                "channel_id": None,
-                "uptime": None,
-                "cron": None,
-                "screenshot_url": None,
-                "netdata_host": None,
-                "slots": None,
-            })
+            data["ping"] = False
+        nodes.append(data)
     
     return JsonResponse(data = {"nodes": nodes})
 
