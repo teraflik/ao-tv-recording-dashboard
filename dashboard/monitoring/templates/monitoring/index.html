@@ -39,6 +39,7 @@
                 <thead class="thead-dark text-center">
                     <th style="max-width: 50px">#</th>
                     <th style="min-width: 220px">Channel</th>
+                    <th style="min-width: 220px">Slots</th>
                     <th style="min-width: 200px">OBS</th>
                     <th style="min-width: 220px">CPU</th>
                     <th style="min-width: 100px">Temperature</th>
@@ -53,13 +54,14 @@
                         :id="node.id"
                         :ip_address="node.ip_address"
                         :label="node.label"
-                        :ping="node.ping"
-                        :channel_id="node.channel_id"
-                        :uptime="node.uptime"
-                        :cron="node.cron"
                         :screenshot_url="node.screenshot_url"
                         :netdata_host="node.netdata_host"
                         :slots="node.slots"
+                        :ping="node.ping"
+                        :auth="node.auth"
+                        :channel_id="node.channel_id"
+                        :uptime="node.uptime"
+                        :cron="node.cron"
                         ></tr>
                 </tbody>
             </table>

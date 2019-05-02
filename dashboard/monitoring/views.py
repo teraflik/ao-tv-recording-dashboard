@@ -70,19 +70,23 @@ def nodes(request, node_id=None):
         data["label"] = str(node)
         data["screenshot_url"] = node.system.screenshot_url
         data["netdata_host"] = node.system.netdata_host
-        data["slots"] = list(NodeAllocation.objects.filter(node=node).values(
-                        "schedule__channel",
-                        "label",
-                        "schedule__rec_start",
-                        "schedule__rec_stop",
-                        "schedule__monday",
-                        "schedule__tuesday",
-                        "schedule__wednesday",
-                        "schedule__thursday",
-                        "schedule__friday",
-                        "schedule__saturday",
-                        "schedule__sunday",
-                    )),
+        data["slots"] = [ 
+            {
+                "id": device.id,
+                "schedule": str(device.schedule),
+                "channel": str(device.schedule.channel),
+                "label": device.label,
+                "rec_start": device.schedule.rec_start,
+                "rec_stop": device.schedule.rec_stop,
+                "monday": device.schedule.monday,
+                "tuesday": device.schedule.tuesday,
+                "wednesday": device.schedule.wednesday,
+                "thursday": device.schedule.thursday,
+                "friday": device.schedule.friday,
+                "saturday": device.schedule.saturday,
+                "sunday": device.schedule.sunday,
+            } for device in NodeAllocation.objects.filter(node=node) ]
+
         if inv.ping(node.system.ip_address):
             data["ping"] = True
             if inv.auth(node.system.ip_address, node.system.username, node.system.password):
