@@ -84,24 +84,6 @@ const generateDailyReport = (date) => {
 }
 
 //  WEEKLY REPORTS
-const getWeeklyReportsRawData = (startDate, endDate) => {
-
-    let apiCalls = [];
-
-    let startDateTimeObject = new Date(startDate);
-    let endDateTimeObject = new Date(endDate);
-
-    for (let dateTimeObject = startDateTimeObject; dateTimeObject <= endDateTimeObject; dateTimeObject.setDate(dateTimeObject.getDate() + 1)) {
-
-        let date = yyyy_mm_dd(dateTimeObject);
-        let dailyReportRequest = generateDailyReport(date);
-
-        apiCalls.push(dailyReportRequest);
-    }
-
-    return resolveAll(apiCalls);
-}
-
 const preprocessWeeklyReport = (data, startDate, endDate) => {
     
     
@@ -115,7 +97,7 @@ const preprocessWeeklyReport = (data, startDate, endDate) => {
         
         let dailyReport = data[index];
 
-        let channelWiseDailyReport = alasql('SELECT channel_name, AVG(blank_percentage) AS avg_blank, COUNT(*) AS no_of_slots FROM ? GROUP BY channel_name', [dailyReport['formattedReportData']]);
+        let channelWiseDailyReport = alasql('SELECT channel_name, AVG(blank_percentage) AS avg_blank FROM ? GROUP BY channel_name', [dailyReport['formattedReportData']]);
         let indexedChannelWiseDailyReport = jsonIndexer(channelWiseDailyReport, 'channel_name');
         
         let dailyEntryWeeklyReport = {'date': date};
@@ -141,6 +123,24 @@ const preprocessWeeklyReport = (data, startDate, endDate) => {
     }
     
     return weeklyReport;
+}
+
+const getWeeklyReportsRawData = (startDate, endDate) => {
+
+    let apiCalls = [];
+
+    let startDateTimeObject = new Date(startDate);
+    let endDateTimeObject = new Date(endDate);
+
+    for (let dateTimeObject = startDateTimeObject; dateTimeObject <= endDateTimeObject; dateTimeObject.setDate(dateTimeObject.getDate() + 1)) {
+
+        let date = yyyy_mm_dd(dateTimeObject);
+        let dailyReportRequest = generateDailyReport(date);
+
+        apiCalls.push(dailyReportRequest);
+    }
+
+    return resolveAll(apiCalls);
 }
 
 const generateWeeklyReport = (startDate, endDate) => {

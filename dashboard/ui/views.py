@@ -25,14 +25,6 @@ from . import utils
 channels = models.ChannelInfo.objects.values('channel_name', 'channel_value')
 
 @login_required
-def home(request):
-    '''
-    Page to select filters for Recording table.
-    '''
-
-    return render(request, 'ui/home.html', {'channels': channels})
-
-@login_required
 def daily_report_home(request):
     '''
     Page to select date for daily report.
