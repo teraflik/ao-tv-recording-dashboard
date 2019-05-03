@@ -99,8 +99,20 @@ class System(models.Model):
     Note:
         The MAC Address verification has not been implemented.
     """
+
+    OS_WINDOWS = 0
+    OS_LINUX = 1
+    OS_MACOS = 2
+
+    OS_CHOICES = (
+        (OS_WINDOWS, "Windows"),
+        (OS_LINUX, "Linux"),
+        (OS_MACOS, "Mac OS"),
+    )
     ip_address = models.GenericIPAddressField(
         verbose_name="IP Address", blank=False)
+    os = models.PositiveSmallIntegerField(
+        verbose_name="Operating System", default=OS_LINUX, choices=OS_CHOICES, blank=False)
     username = models.CharField(
         verbose_name="SSH Username", max_length=200, default="user", blank=False)
     password = models.CharField(

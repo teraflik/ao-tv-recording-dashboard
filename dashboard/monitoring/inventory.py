@@ -251,7 +251,7 @@ class InventoryManager():
 
         return ssh_stdout.read().decode('utf-8').strip()
 
-    def get_screengrab(self, host, username, password):
+    def get_screengrab(self, host, os, username, password):
         """
         Captures a fullscreen screenshot of the specified remote host. 
 
@@ -263,6 +263,7 @@ class InventoryManager():
 
         Args:
             host (str): Hostname or IP address.
+            os (int): The Operating System. 0 - Windows, 1 - Linux.
             username (str): SSH user.
             password (str): SSH password.
 
@@ -279,8 +280,12 @@ class InventoryManager():
 
         try:
             ssh.connect(host, username=username, password=password, banner_timeout=2)
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
-                "DISPLAY=:0.0 import -window root .shot.png", timeout=3)
+            if os == 0:
+                ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
+                    "ScreenCapture.bat .shot.png", timeout=3)
+            elif os == 1:
+                ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
+                    "DISPLAY=:0.0 import -window root .shot.png", timeout=3)
             sftp = ssh.open_sftp()
         except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError) as e:
             self.log.exception(

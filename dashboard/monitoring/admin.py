@@ -7,7 +7,7 @@ class SystemAdmin(admin.ModelAdmin):
     """
     Configure the admin dashboard for :py:class:`models.System` model.
     """
-    list_display = ['__str__', 'ip_address', 'username',
+    list_display = ['__str__', 'ip_address', 'os', 'username',
                     'password', 'mac_address', 'screenshot', 'netdata_host']
 
 class CaptureCardAdmin(admin.ModelAdmin):

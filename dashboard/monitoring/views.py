@@ -70,7 +70,7 @@ def nodes(request, node_id=None):
         data["label"] = str(node)
         data["screenshot_url"] = node.system.screenshot_url
         data["netdata_host"] = node.system.netdata_host
-        data["slots"] = [ 
+        data["slots"] = [
             {
                 "id": device.id,
                 "schedule": str(device.schedule),
@@ -91,9 +91,9 @@ def nodes(request, node_id=None):
             data["ping"] = True
             if inv.auth(node.system.ip_address, node.system.username, node.system.password):
                 data["auth"] = True
-                data["channel_id"] = inv.get_channel_id(node.system.ip_address, node.system.username, node.system.password),
-                data["uptime"] = inv.get_uptime(node.system.ip_address, node.system.username, node.system.password),
-                data["cron"] = inv.get_cron(node.system.ip_address, node.system.username, node.system.password),
+                data["channel_id"] = inv.get_channel_id(node.system.ip_address, node.system.username, node.system.password)
+                data["uptime"] = inv.get_uptime(node.system.ip_address, node.system.username, node.system.password)
+                data["cron"] = inv.get_cron(node.system.ip_address, node.system.username, node.system.password)
             else:
                 data["auth"] = False
                 data["channel_id"] = None
@@ -101,6 +101,10 @@ def nodes(request, node_id=None):
                 data["cron"] = None
         else:
             data["ping"] = False
+            data["auth"] = False
+            data["channel_id"] = None
+            data["uptime"] = None
+            data["cron"] = None
         nodes.append(data)
     
     return JsonResponse(data = {"nodes": nodes})
@@ -116,7 +120,7 @@ def screenshot(request, node_id):
     except Node.DoesNotExist:
         return HttpResponseNotFound()
     inv = AOInventoryManager()
-    image = inv.get_screengrab(node.system.ip_address, node.system.username, node.system.password)
+    image = inv.get_screengrab(node.system.ip_address, node.system.os, node.system.username, node.system.password)
     node.system.update_screenshot(image)
     if request.GET.get("response") == "json":
         return JsonResponse(data = {"screenshot_url": node.system.screenshot_url})
