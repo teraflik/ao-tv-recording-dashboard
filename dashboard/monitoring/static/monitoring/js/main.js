@@ -92,16 +92,17 @@ Vue.component('netdata-cpu', {
         NETDATA.updatedDom()
     },
     template:
-    `<div data-netdata="system.cpu"
-            :data-host="netdata_host"
-            data-chart-library="dygraph"
-            data-legend="no"
-            data-dygraph-valuerange="[0, 100]"
-            data-height="70px"
-            data-width="220px"
-            data-after="-100"
-            data-title=""
-            data-units=""></div>`
+    `<div v-if="netdata_host"
+        data-netdata="system.cpu"
+        :data-host="netdata_host"
+        data-chart-library="dygraph"
+        data-legend="no"
+        data-dygraph-valuerange="[0, 100]"
+        data-height="70px"
+        data-width="220px"
+        data-after="-100"
+        data-title=""
+        data-units=""></div>`
 })
 
 Vue.component('netdata-temp', {
@@ -110,15 +111,16 @@ Vue.component('netdata-temp', {
         NETDATA.updatedDom()
     },
     template:
-    `<div data-netdata="sensors.coretemp_isa_0000_temperature"
-            :data-host="netdata_host"
-            data-dimensions="coretemp-isa-0000_temp1"
-            data-chart-library="gauge"
-            data-gauge-max-value="60"
-            data-width="100px"
-            data-after="-100"
-            data-title="Celsius"
-            data-units=""></div>`
+    `<div v-if="netdata_host"
+        data-netdata="sensors.coretemp_isa_0000_temperature"
+        :data-host="netdata_host"
+        data-dimensions="coretemp-isa-0000_temp1"
+        data-chart-library="gauge"
+        data-gauge-max-value="60"
+        data-width="100px"
+        data-after="-100"
+        data-title="Celsius"
+        data-units=""></div>`
 })
 
 Vue.component('netdata-ram', {
@@ -127,18 +129,19 @@ Vue.component('netdata-ram', {
         NETDATA.updatedDom()
     },
     template:
-    `<div data-netdata="system.ram"
-            :data-host="netdata_host"
-            data-dimensions="used|buffers|active|wired"
-            data-chart-library="easypiechart"
-            data-append-options="percentage"
-            data-easypiechart-linewidth="4"
-            data-easypiechart-scaleColor="false"
-            data-easypiechart-max-value="100"
-            data-width="80px"
-            data-after="-100"
-            data-title=""
-            data-units=""></div>`
+    `<div v-if="netdata_host"
+        data-netdata="system.ram"
+        :data-host="netdata_host"
+        data-dimensions="used|buffers|active|wired"
+        data-chart-library="easypiechart"
+        data-append-options="percentage"
+        data-easypiechart-linewidth="4"
+        data-easypiechart-scaleColor="false"
+        data-easypiechart-max-value="100"
+        data-width="80px"
+        data-after="-100"
+        data-title=""
+        data-units=""></div>`
 })
 
 Vue.component('screenshot', {
