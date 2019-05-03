@@ -62,10 +62,12 @@ class VideoSource(models.Model):
     source_type = models.CharField(
         verbose_name="Type", max_length=200, choices=TYPE_CHOICES, default=TYPE_STB)
     manufacturer = models.CharField(
-        verbose_name="Manufacturer", max_length=200, blank=True)
+        verbose_name="Manufacturer/Provider", max_length=200, blank=True)
     model = models.CharField(verbose_name="Model", max_length=200, blank=True)
     identifier = models.CharField(
         verbose_name="Unique Identifier", max_length=200, blank=True)
+    comments = models.CharField(
+        verbose_name="Comments", max_length=200, blank=True)
 
     def __str__(self):
         """Provide a string representation to the object."""

@@ -171,3 +171,21 @@ class AOInventoryManager(InventoryManager):
             return self.run_command("reboot")
         except (ConnectionError, OSError) as e:
             return str(e)
+        
+    def auth(self, host, username, password):
+        """
+        Checks if authentication is successful using SSH.
+
+        Args:
+            host (str): hostname or IP address.
+            username (str): SSH user.
+            password (str): SSH password.
+
+        Returns:
+            Booelan: True if auth over SSH is successful, otherwise False.
+        """
+        try:
+            return self.run_command(host, username, password, "echo 'True'")
+        except (ConnectionError, OSError) as e:
+            return False
+

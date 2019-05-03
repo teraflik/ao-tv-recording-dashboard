@@ -26,8 +26,11 @@ class MonitoringDBRouter(object):
         return None
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
-        "Make sure the monitoring app only appears on the 'monitoring' db"
+        "Make sure the monitoring app only appears on the 'db_monitoring' db"
 
         if app_label == 'monitoring':
             return db == 'db_monitoring'
+        elif db == 'db_monitoring':
+            return False
+
         return None

@@ -20,5 +20,5 @@ class ScheduleSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('channel_name','channel', 'rec_start', 'rec_stop', 'monday', 'tuesday',
                   'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'devices')
         extra_kwargs = {
-            'channel': {'view_name': 'schedule_api:channel-detail'},
+            'channel': {'view_name': 'schedule:channel-detail'},
         }

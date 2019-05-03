@@ -188,7 +188,10 @@ class InventoryManager():
     def ping(self, host, timeout=3):
         """
         Send a ping (ICMP) request to a remote host.
-
+        
+        The command is set to ``ping -c 1 -W 1 <host>``, which sends exactly 1 ping
+        packet, and waits for 1 second before terminating.
+        
         Args:
             host (str): Hostname or IP address.
             timeout (int): Ping request timeout (in seconds).
@@ -201,10 +204,10 @@ class InventoryManager():
             A host may not respond to a ping (ICMP) request even if the host name is valid.
         """
         # Building the command. Ex: "ping -c 1 google.com"
-        command = ['ping', '-c', '1', host]
+        command = ['ping', host, '-W', '1', '-c', '1']
 
         try:
-            subprocess.run(command, check=True, timeout=timeout)
+            subprocess.run(command, check=True)
             return True
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             self.log.warning(
@@ -233,9 +236,9 @@ class InventoryManager():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            ssh.connect(host, username=username, password=password)
+            ssh.connect(host, username=username, password=password, banner_timeout=2)
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
-                "cat {0}".format(file_path))
+                "cat {0}".format(file_path), timeout=3)
         except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError) as e:
             self.log.exception(
                 "get_file_contents() failed for %s@%s file_path: %s", username, host, file_path)
@@ -275,9 +278,9 @@ class InventoryManager():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            ssh.connect(host, username=username, password=password)
+            ssh.connect(host, username=username, password=password, banner_timeout=2)
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
-                "DISPLAY=:0.0 import -window root .shot.png")
+                "DISPLAY=:0.0 import -window root .shot.png", timeout=3)
             sftp = ssh.open_sftp()
         except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError) as e:
             self.log.exception(
@@ -318,8 +321,8 @@ class InventoryManager():
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
-            ssh.connect(host, username=username, password=password)
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
+            ssh.connect(host, username=username, password=password, banner_timeout=2, auth_timeout=2, timeout=2)
+            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command, timeout=3)
         except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError) as e:
             self.log.exception(
                 "run_command() failed for %s@%s, command: %s", username, host, command)

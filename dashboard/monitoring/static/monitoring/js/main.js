@@ -1,5 +1,5 @@
 Vue.component('node', {
-    props: ['id', 'ip_address', 'label', 'ping', 'channel_id', 'uptime', 'cron', 'screenshot_url', 'netdata_host', 'slots'],
+    props: ['id', 'ip_address', 'label', 'screenshot_url', 'netdata_host', 'slots', 'ping', 'auth', 'channel_id', 'uptime', 'cron'],
     data () {
         return {
             hover: false,
@@ -13,8 +13,8 @@ Vue.component('node', {
         show_cron() {
             this.bus.$emit('show_cron')
         },
-        show_recording_guide() {
-            this.bus.$emit('show_recording_guide')
+        show_schedule() {
+            this.bus.$emit('show_schedule')
         }
     },
     template:
@@ -33,16 +33,22 @@ Vue.component('node', {
                 </div>
             </div>
         </td>
-        <td v-if="ping" class="node-obs text-center">
-            <obs
-            :id=id></obs>
+        <td class="node-slots">
+            <div v-for="slot in slots" :key="slot.id">
+                <div class="pt-2">
+                    <strong>{{ slot.label }}.</strong> {{ slot.schedule }}
+                </div>
+            </div>
         </td>
-        <td v-else colspan="99" class="text-center">Host Unreachable!</td>
+        <td class="node-obs text-center">
+            <obs :id=id></obs>
+        </td>
         <td v-if="ping" class="node-cpu text-center">
             <netdata-cpu
             :ip_address="ip_address"
             :netdata_host="netdata_host"></netdata-cpu>
         </td>
+        <td v-else colspan="99" class="text-center">Host Unreachable!</td>
         <td v-if="ping" class="node-temp text-center">
             <netdata-temp
             :ip_address="ip_address"
@@ -57,7 +63,7 @@ Vue.component('node', {
         <td v-if="ping" class="node-actions">
             <button @click="show_screenshot()" title="Screenshot" class="btn btn-lg btn-outline-secondary"><i class="fas fa-camera"></i></button>
             <button @click="show_cron()" title="Cron" class="btn btn-lg btn-outline-secondary"><i class="fas fa-hourglass-start"></i></button>
-            <button @click="show_recording_guide()" title="Recording Guide" class="btn btn-lg btn-outline-secondary"><i class="fas fa-video"></i></button>
+            <button @click="show_schedule()" title="Recording Guide" class="btn btn-lg btn-outline-secondary"><i class="fas fa-video"></i></button>
         </td>
         <screenshot v-if="ping"
             :bus="bus"
@@ -71,12 +77,12 @@ Vue.component('node', {
             :ip_address="ip_address"
             :label="label"
             :cron="cron"></cron>
-        <recording_guide v-if="ping"
+        <schedule v-if="ping"
             :bus="bus"
             :id="id"
             :ip_address="ip_address"
             :label="label"
-            :slots="slots"></recording_guide>
+            :slots="slots"></schedule>
     </tr>`
 })
 
@@ -257,7 +263,7 @@ Vue.component('cron', {
     </div>`
 })
 
-Vue.component('recording_guide', {
+Vue.component('schedule', {
     props: ['bus', 'id', 'ip_address', 'label', 'slots'],
     data () {
         return {
@@ -275,14 +281,14 @@ Vue.component('recording_guide', {
         },
     },
     mounted () {
-        this.bus.$on('show_recording_guide', this.open)
+        this.bus.$on('show_schedule', this.open)
     },
     template:
     `<div v-show="visible" class="modal node-modal" style="display: block">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Recording Guide</h5>
+                    <h5 class="modal-title">Schedule</h5>
                     <button type="button" class="close" @click="close()">
                     <span aria-hidden="true">&times;</span>
                     </button>
