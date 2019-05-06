@@ -286,6 +286,10 @@ class InventoryManager():
             elif os == 1:
                 ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
                     "DISPLAY=:0.0 import -window root .shot.png", timeout=3)
+            elif os == 2:
+                raise OSError("Mac OS not supported")
+            else:
+                raise OSError("Invalid OS type")
             sftp = ssh.open_sftp()
         except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError) as e:
             self.log.exception(

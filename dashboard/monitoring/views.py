@@ -32,28 +32,42 @@ def nodes(request, node_id=None):
     If no `node_id` is specified, returns information about all the nodes in database.
 
     Args:
-        request (:obj:`django.http.request.Request`): An HTTPRequest parameter. 
+        request (:obj:`django.http.request.Request`): An HTTPRequest parameter.
             Can be used in future to parse custom GET parameters.
-        node_id (int): The unique ID of the Node, for which information is required. 
+        node_id (int): The unique ID of the Node, for which information is required.
             If `None`, returns returns info about all the nodes in the database.
     
     Returns:
         :obj:`django.http.JSONResponse` object containing information about the 
         desired nodes as a list.
 
-        Each item in the list is a dictionary with the following keys:
-
-            - ``id``: The unique integer ID of the Node.
-            - ``ip_address``: IP address or hostname of the Node.
-            - ``label``: The custom label for the Node.
-            - ``ping``: Whether the Node responded to a Ping (ICMP) request.
-            - ``channel_id``: The channel ID currently configured on the Node's ``/home/user/Desktop/TV/scripts/channel_value.txt`` file. 
-            - ``uptime``: The total uptime of the Node in HH:MM format.
-            - ``cron``: The output of ``crontab -l`` command on the Node (might need to be sanitized).
-            - ``screenshot_url``: A URL to the screenshot that was last captured on the Node``s primary display.
-            - ``netdata_host``: The host:port combination on which Node's Netdata daemon is exposed.
-            - ``slots``: The active entries in Recording Guide correspondng to this node.
+        Each item in the list is a dictionary with the following information:
         
+        - ``id``: The unique integer ID of the Node.
+        - ``ip_address``: IP address or hostname of the Node.
+        - ``label``: The custom label for the Node.
+        - ``screenshot_url``: A URL to the screenshot that was last captured on the Node``s primary display.
+        - ``netdata_host``: The host:port combination on which Node's Netdata daemon is exposed.
+        - ``slots``: The slots which are supposed to be recorded on this Node.
+            - ``id``: Unique id for this slot out of all slots.
+            - ``schedule``: A string representation of the slot.
+            - ``channel``: The channel configured to be recorded in this slot.
+            - ``label``: A label for the device (Device ID: A/B).
+            - ``rec_start``: Recording start time.
+            - ``rec_stop``: Recording stop time.
+            - ``monday``: If the slot is active on monday.
+            - ``tuesday``: If the slot is active on tuesday.
+            - ``wednesday``: If the slot is active on wednesday.
+            - ``thursday``: If the slot is active on thursday.
+            - ``friday``: If the slot is active on friday.
+            - ``saturday``: If the slot is active on saturday.
+            - ``sunday``: If the slot is active on sunday.
+        - ``ping``: Whether the Node responded to a Ping (ICMP) request.
+        - ``auth``: Whether authentication to the system is successful using the given credentials.
+        - ``channel_id``: The channel ID currently configured on the Node's ``/home/user/Desktop/TV/scripts/channel_value.txt`` file. 
+        - ``uptime``: The total uptime of the Node in HH:MM format.
+        - ``cron``: The output of ``crontab -l`` command on the Node.
+            
         Note:
             If ping fails, the fields following ping will be empty.
 

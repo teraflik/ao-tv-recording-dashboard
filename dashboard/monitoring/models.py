@@ -88,6 +88,8 @@ class System(models.Model):
 
     Attributes:
         ip_address (:py:class:`models.GenericIPAddressField`): The IP address/host of the System.
+        os (:py:class:`models.PositiveSmallIntegerField`): Operating system type.
+            Available choices are: Windows, Linux, or MacOS. Default is Linux.
         username (:py:class:`models.CharField`): SSH user.
         password (:py:class:`models.CharField`): SSH password. Will be stored in plain text.
         mac_address (:py:class:`models.CharField`, Optional): HWaddress. Can be used

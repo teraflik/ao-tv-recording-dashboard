@@ -182,7 +182,7 @@ class AOInventoryManager(InventoryManager):
             password (str): SSH password.
 
         Returns:
-            Booelan: True if auth over SSH is successful, otherwise False.
+            Boolean: True if auth over SSH is successful, otherwise False.
         """
         try:
             return self.run_command(host, username, password, "echo 'True'")
