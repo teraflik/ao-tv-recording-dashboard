@@ -2,15 +2,12 @@ Vue.component('schedules', {
     props: ['schedule_list'],
     template:
     `
-    <table class="table table-sm" contenteditable="true">
-            <thead class="">
-                <th>#</th>
+    <table class="table table-sm text-center">
+            <thead class="thead-dark">
                 <th>Channel</th>
-                <th>Device id</th>
+                <th>Devices</th>
                 <th>Start time</th>
                 <th>Stop time</th>
-                <th>Validity start</th>
-                <th>Validity end</th>
                 <th>Monday</th>
                 <th>Tuesday</th>
                 <th>Wednesday</th>
@@ -23,11 +20,10 @@ Vue.component('schedules', {
                 <tr
                     is="schedule"
                     v-for="schedule in schedule_list" :key="schedule.id"
-                    :id="schedule.id"
-                    :channel="schedule.channel"
-                    :device_id="schedule.device_id"
-                    :start_time="schedule.start_time"
-                    :stop_time="schedule.stop_time"
+                    :channel="schedule.channel_name"
+                    :devices="schedule.devices"
+                    :rec_start="schedule.rec_start"
+                    :rec_stop="schedule.rec_stop"
                     :monday="schedule.monday"
                     :tuesday="schedule.tuesday"
                     :wednesday="schedule.wednesday"
@@ -42,7 +38,7 @@ Vue.component('schedules', {
 })
 
 Vue.component('schedule', {
-    props: ['id', 'channel', 'device_id', 'start_time', 'stop_time', 'validity_start', 'validity_end', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'node'],
+    props: ['id', 'channel', 'devices', 'rec_start', 'rec_stop', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'node'],
     data () {
         return {
             bus: new Vue(),
@@ -50,13 +46,10 @@ Vue.component('schedule', {
     },
     template:
     `<tr>
-        <td>{{ id }}</td>
         <td>{{ channel }}</td>
-        <td>{{ device_id }}</td>
-        <td>{{ start_time }}</td>
-        <td>{{ stop_time }}</td>
-        <td>{{ validity_start }}</td>
-        <td>{{ validity_end }}</td>
+        <td>{{ devices }}</td>
+        <td>{{ rec_start }}</td>
+        <td>{{ rec_stop }}</td>
         <td><i v-if="monday" class="fas fa-check-circle text-success"></i></td>
         <td><i v-if="tuesday" class="fas fa-check-circle text-success"></i></td>
         <td><i v-if="wednesday" class="fas fa-check-circle text-success"></i></td>
@@ -70,7 +63,7 @@ Vue.component('schedule', {
 new Vue({
     el: '#recording_guides',
     data: {
-        apiURL: 'api/',
+        apiURL: 'api/schedules/',
         schedule_list: [],
         loading: true,
         errored: false
