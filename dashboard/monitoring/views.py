@@ -160,6 +160,11 @@ def obs(request, node_id):
         node_id (int): The unique ID of the Node, on which the action is to be performed.
             OBS must be running on the Node for desired results.
 
+        Warning:
+            It should be checked if OBS is running first, before checking if its 
+            recording. If OBS is not running, the response of ``?action=is_recording``
+            will not be boolean.
+
     Returns:
         Result of the specified action. In absence of the action parameter, returns 
         the current recording status of OBS (Default Response).

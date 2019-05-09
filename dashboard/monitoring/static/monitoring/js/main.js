@@ -311,9 +311,9 @@ Vue.component('schedule', {
                             <th>Sun</th>
                         </thead>
                         <tr v-for="slot in slots">
-                            <td>{{ slot.channel_value_id__channel_name }}</td>
-                            <td>{{ slot.start_time }}</td>
-                            <td>{{ slot.stop_time }}</td>
+                            <td>{{ slot.channel }}</td>
+                            <td>{{ slot.rec_start }}</td>
+                            <td>{{ slot.rec_stop }}</td>
                             <td><i v-if="slot.monday" class="fas fa-check-circle text-success"></i></td>
                             <td><i v-if="slot.tuesday" class="fas fa-check-circle text-success"></i></td>
                             <td><i v-if="slot.wednesday" class="fas fa-check-circle text-success"></i></td>
