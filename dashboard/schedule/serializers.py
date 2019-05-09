@@ -24,9 +24,18 @@ class ScheduleSerializer(serializers.HyperlinkedModelSerializer):
             'channel': {'view_name' : 'schedule:channel-detail'},
         }
 
+class NodeAllocationSerializer(serializers.HyperlinkedModelSerializer):
+    channel_name = serializers.StringRelatedField(source='schedule.channel')
+    rec_start = serializers.ReadOnlyField(source='schedule.rec_start')
+    rec_stop = serializers.ReadOnlyField(source='schedule.rec_stop')
+
+    class Meta:
+        model = NodeAllocation
+        fields = ('id', 'channel_name', 'rec_start', 'rec_stop')
 
 class NodeSerializer(serializers.ModelSerializer):
+    schedules = NodeAllocationSerializer(source='nodeallocation_set', many=True)
 
     class Meta:
         model = Node
-        fields = ('system','nodeallocation_set')
+        fields = ('id','schedules')
