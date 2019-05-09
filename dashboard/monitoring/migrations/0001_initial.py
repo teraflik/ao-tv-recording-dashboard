@@ -25,6 +25,7 @@ class Migration(migrations.Migration):
             name='System',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('os', models.PositiveSmallIntegerField(choices=[(0, 'Windows'), (1, 'Linux'), (2, 'Mac OS')], default=1, verbose_name='Operating System')),
                 ('ip_address', models.GenericIPAddressField(verbose_name='IP Address')),
                 ('username', models.CharField(default='user', max_length=200, verbose_name='SSH Username')),
                 ('password', models.CharField(default='12345', max_length=200, verbose_name='SSH Password')),
