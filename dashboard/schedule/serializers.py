@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from .models import Channel, Schedule
+from .models import Channel, NodeAllocation, Schedule
+from monitoring.models import Node
 
 
 class ChannelSerializer(serializers.ModelSerializer):
@@ -13,12 +14,19 @@ class ChannelSerializer(serializers.ModelSerializer):
 
 class ScheduleSerializer(serializers.HyperlinkedModelSerializer):
     devices = serializers.ReadOnlyField(source='get_nodes')
-    channel_name = serializers.CharField(source='channel.name')
+    channel_name = serializers.CharField(source='channel')
     
     class Meta:
         model = Schedule
         fields = ('channel_name','channel', 'rec_start', 'rec_stop', 'monday', 'tuesday',
                   'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'devices')
         extra_kwargs = {
-            'channel': {'view_name': 'schedule:channel-detail'},
+            'channel': {'view_name' : 'schedule:channel-detail'},
         }
+
+
+class NodeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Node
+        fields = ('system','nodeallocation_set')

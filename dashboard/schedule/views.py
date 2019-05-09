@@ -6,8 +6,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Channel, Schedule
-from .serializers import ChannelSerializer, ScheduleSerializer
+from .models import Channel, NodeAllocation, Schedule
+from monitoring.models import Node
+from .serializers import ChannelSerializer, ScheduleSerializer, NodeSerializer
 
 
 class ChannelViewSet(viewsets.ModelViewSet):
@@ -25,6 +26,12 @@ class ScheduleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('channel','monday', 'tuesday', 'wednesday', 'thursday',
         'friday', 'saturday', 'sunday')
+
+class NodeViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated,]
+    serializer_class = NodeSerializer
+    
+    queryset = Node.objects.all()
 
 class ScheduleHistoryAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated,]

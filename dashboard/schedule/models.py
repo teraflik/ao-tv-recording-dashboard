@@ -23,10 +23,8 @@ class Channel(models.Model):
 class Schedule(models.Model):
     channel = models.ForeignKey(Channel, verbose_name="Channel Name", 
         on_delete=models.PROTECT, related_name="schedules", blank=False)
-    rec_start = models.TimeField(
-        verbose_name="Recording Start Time", blank=False)
-    rec_stop = models.TimeField(
-        verbose_name="Recording Stop Time", blank=False)
+    rec_start = models.TimeField(verbose_name="Recording Start Time", blank=False)
+    rec_stop = models.TimeField(verbose_name="Recording Stop Time", blank=False)
     monday = models.BooleanField(blank=False, default=True)
     tuesday = models.BooleanField(blank=False, default=True)
     wednesday = models.BooleanField(blank=False, default=True)
