@@ -21,8 +21,7 @@ by following the given steps::
 
 Database Configuration
 -----------------------
-The credentials are read from ``/var/.ao/parameters.ini``. A backup of the current
- configuration can be found in GCP bucket.
+The credentials are read from ``/var/.ao/parameters.ini``. A backup of the current configuration can be found in GCP bucket.
 
 A superuser is required to access the admin interface::
 
@@ -42,8 +41,7 @@ Deployment on Apache
 
     python manage.py collectstatic
 
-Place the SSL certificate and key file in ``/etc/ssl/certs`` and ``/etc/ssl/keys`` 
-respectively.
+Place the SSL certificate and key file in ``/etc/ssl/certs`` and ``/etc/ssl/keys`` respectively.
 Copy the contents of [dashboard.conf](dashboard.conf) to ``/etc/apache2/sites-available/dashboard.conf``
 
 Enable ``dashboard`` in apache2 and restart::
