@@ -8,14 +8,18 @@ Table Of Contents
 
 Tutorials
 ---------
-Some tutorials
+..  toctree::
+    :maxdepth: 1
+
+    using_ui
 
 How-to Guides
 -------------
 ..  toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     onboarding
+    schedule_assignment
 
 Indices and tables
 ==================

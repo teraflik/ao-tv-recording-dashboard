@@ -19,6 +19,8 @@ by following the given steps::
     source env/bin/activate
     pip install -r requirements.txt
 
+The loss_analysis app fetches reports from ``/home/user/Documents/Data_Loss_Reports``, so make sure that path exists.
+
 Database Configuration
 -----------------------
 The credentials are read from ``/var/.ao/parameters.ini``. A backup of the current configuration can be found in GCP bucket.
