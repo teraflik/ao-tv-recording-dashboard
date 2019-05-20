@@ -1,0 +1,27 @@
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block head %}
+<title>Data Loss Analysis | TV Recording Dashboard</title>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+{% endblock %}
+
+{% block content %}
+<main class="container">
+    <div class="d-flex justify-content-between p-3 my-3">
+        <h3>Data Loss Analysis Reports</h3>
+        <small>Retrieved from {{ report_dir }}</small>
+    </div>
+        <ul class="list-group">
+            {% for report in reports %}
+            <li class="list-group-item"><a href="/static/{{ report }}">{{ report }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+</main>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+{% endblock %}
