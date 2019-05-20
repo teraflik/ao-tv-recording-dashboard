@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'graph_ui.apps.GraphUiConfig',
     'schedule.apps.ScheduleConfig',
     'monitoring.apps.MonitoringConfig',
+    'loss_analysis.apps.LossAnalysisConfig',
 ]
 
 MIDDLEWARE = [
@@ -62,7 +63,7 @@ ROOT_URLCONF = 'dashboard.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [(os.path.join(BASE_DIR, 'common/templates/')),],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -154,6 +155,7 @@ USE_TZ = True
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "common/static"),
+    os.path.join("/home/user/Documents/Data_Loss_Reports/"),
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
