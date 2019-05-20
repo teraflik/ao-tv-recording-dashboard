@@ -1,26 +1,26 @@
 TV Recording Monitoring
 =======================
 .. automodule:: monitoring
-   :members:
+    :members:
 
 monitoring.models
 -----------------
 .. automodule:: monitoring.models
-   :members:
+    :members:
 
 monitoring.inventory
 --------------------
 .. autoclass:: monitoring.inventory.InventoryManager
-   :members:
+    :members:
 .. autoclass:: monitoring.inventory.AnsibleInventoryFile
-   :members:
+    :members:
 
 monitoring.ao_inventory
 -----------------------
 .. automodule:: monitoring.ao_inventory
-   :members:
+    :members:
 
 monitoring.views
 ----------------
 .. automodule:: monitoring.views
-   :members:
+    :members:
