@@ -1,5 +1,0 @@
-Using the Dashboard
-===================
-
-Monitoring
-----------

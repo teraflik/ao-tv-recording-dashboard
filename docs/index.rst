@@ -11,7 +11,7 @@ Tutorials
 ..  toctree::
     :maxdepth: 1
 
-    using_ui
+    using_dashboard
 
 How-to Guides
 -------------
