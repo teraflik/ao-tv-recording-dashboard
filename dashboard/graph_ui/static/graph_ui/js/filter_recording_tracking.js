@@ -74,7 +74,7 @@ const prepareProcessingDataTableEntries = (filterRawData, date) => {
         let safeTyMargin = 2;
 
         category = 'Processing';
-        label = '';
+        label = '{"clip_path": "' + entry['clip_path'] + '"}';
         color = 'blue';
 
         times = dateTimeFromProcessingRequestID(entry['request_id']);
@@ -102,6 +102,33 @@ const prepareProcessingDataTableEntries = (filterRawData, date) => {
     return processingDataTableContents;
 }
 
+const selectHandler = (timeline, selectedDataTable) => {
+
+    //  1. Find the particular dataTable row which was clicked.
+    let rowNo = timeline.getSelection()[0].row;
+
+    //  2. Extract its `label` attribute.
+    let label = selectedDataTable.getValue(rowNo, dataTableEnum.label);
+    
+    //  3. ensure that its a valid JSON dumped string.
+    let labelJSON;
+    try {
+        labelJSON = JSON.parse(label);
+    }
+    catch(err) {
+        return;
+    }
+
+    // 4. extract the value of the clip_path.
+    let clipPath = labelJSON['clip_path'];
+
+    //  5. get streamURL from clip_path
+    let streamURL = clipPath.replace("gs://", "https://storage.cloud.google.com/");
+
+    //  5. open that URL in a new tab.
+    window.open(streamURL);
+}
+
 const populateDevice = (dataMappingPromise, timeline, params, processingMapping) => {
     
     dataMappingPromise.then((dataMapping) => {
@@ -109,6 +136,10 @@ const populateDevice = (dataMappingPromise, timeline, params, processingMapping)
         let formattedData = prepareDataForGoogleChartTimeline(dataMapping, processingMapping, params['date']);
         
         let dataTable = populateTimeline(timeline, formattedData, params['date']);
+
+        google.visualization.events.addListener(timeline, 'select', () => {
+            selectHandler(timeline, dataTable);
+        });
     
     });
 }
