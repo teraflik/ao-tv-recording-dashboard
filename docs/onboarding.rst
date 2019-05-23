@@ -15,7 +15,7 @@ A node comprises of three individual components. The capture card, the video sou
 
     Fig. 2: List of Onboarded Capture Cards on Admin Interface.
 
-Start by adding the details of connected Capture Card. Right now we are using either on of BlackMagic Intensity Pro 4K, or BlackMagic Decklink Mini Recorder. Hence, the manufacturer will be BlackMagic. Its ideal to put the S/N of the capture card in the Unique Identifier field.
+Start by adding the details of connected Capture Card. Right now we are using either one of BlackMagic Intensity Pro 4K, or BlackMagic Decklink Mini Recorder. Hence, the manufacturer will be BlackMagic. Its ideal to put the S/N of the capture card in the Unique Identifier field.
 
 ..  figure:: _static/img/onboarding/3_adding_capture_card.png
 
@@ -27,7 +27,7 @@ The next component, Video Source can be similarly added. First, select the type 
 
     Fig. 4: Adding a new video source.
 
-Finally, the details for the system needs to be added. It includes the IP Address, Operating System (Windows, Linux or MacOS), SSH Credentials (Username and Password) and MAC Address.
+Finally, the details for the system have to be added. This includes the IP Address, Operating System (Windows, Linux or MacOS), SSH Credentials (Username and Password) and MAC Address.
 The Last Screenshot field stores the screenshot last captured on that system. Netdata Host is hostname to Netdata API endpoint for that System. If Netdata is installed, it usually is ``http://<ip_address>:19999``.
 Our dashboard can act as a reverse proxy to redirect requests from ``https://recording.athenasowl.tv/monitoring/netdata/<ip_address>/`` to ``http://<ip_address>:19999``
 

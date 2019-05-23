@@ -11,4 +11,4 @@ TV Recording Pipeline can be deployed on any number of Ubuntu (>16.04) machines 
 
 Monitoring
 ----------
-After deployment of pipeline, the Node needs to be onboarded on the **TV Recording Dashboard**. The instructions are at :doc:`onboarding`.
+After deployment of pipeline, the Node needs to be onboarded on the **TV Recording Dashboard**. The instructions are available at :doc:`onboarding`.
