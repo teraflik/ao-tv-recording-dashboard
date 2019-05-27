@@ -10,7 +10,6 @@ import pytz
 
 # django dependencies
 from django.db import models
-from monitoring.models import Node
 
 
 class ChannelInfo(models.Model):
@@ -118,7 +117,6 @@ class RecordingGuide(models.Model):
     friday = models.BooleanField(blank=False, default=True)
     saturday = models.BooleanField(blank=False, default=True)
     sunday = models.BooleanField(blank=False, default=True)
-    node = models.ForeignKey(Node, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         managed = False

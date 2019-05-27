@@ -171,7 +171,7 @@ class Node(models.Model):
     
     capture_card = models.ForeignKey(CaptureCard, on_delete=models.SET_NULL, blank=True, null=True)
     video_source = models.ForeignKey(VideoSource, on_delete=models.SET_NULL, blank=True, null=True)
-    system = models.ForeignKey(System, on_delete=models.SET_NULL, blank=True, null=True)
+    system = models.ForeignKey(System, on_delete=models.PROTECT, blank=False)
 
     def get_label(self):
         return "label"
