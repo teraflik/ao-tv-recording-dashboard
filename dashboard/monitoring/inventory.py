@@ -194,7 +194,7 @@ class InventoryManager():
         
         Args:
             host (str): Hostname or IP address.
-            timeout (int): Ping request timeout (in seconds).
+            timeout (int): Ping command timeout (in seconds).
 
         Returns:
             bool: The ping response. ``True`` if the host responds to a ping request 
@@ -207,7 +207,7 @@ class InventoryManager():
         command = ['ping', host, '-W', '1', '-c', '1']
 
         try:
-            subprocess.run(command, check=True)
+            subprocess.run(command, timeout=timeout, check=True)
             return True
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             self.log.warning(
