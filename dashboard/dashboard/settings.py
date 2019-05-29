@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'graph_ui.apps.GraphUiConfig',
     'schedule.apps.ScheduleConfig',
     'monitoring.apps.MonitoringConfig',
-    'loss_analysis.apps.LossAnalysisConfig',
 ]
 
 MIDDLEWARE = [
@@ -155,7 +154,6 @@ USE_TZ = True
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "common/static"),
-    os.path.join("/home/user/Documents/Data_Loss_Reports/"),
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
