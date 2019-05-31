@@ -15,6 +15,8 @@ Vue.component('schedules', {
                 <th>Friday</th>
                 <th>Saturday</th>
                 <th>Sunday</th>
+                <th>Validity Start</th>
+                <th>Validity end</th>
             </thead>
             <tbody>
                 <tr
@@ -31,6 +33,8 @@ Vue.component('schedules', {
                     :friday="schedule.friday"
                     :saturday="schedule.saturday"
                     :sunday="schedule.sunday"
+                    :validity_start="schedule.validity_start"
+                    :validity_end="schedule.validity_end"
                     ></tr>
             </tbody>
         </table>
@@ -38,7 +42,7 @@ Vue.component('schedules', {
 })
 
 Vue.component('schedule', {
-    props: ['id', 'channel', 'devices', 'rec_start', 'rec_stop', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'node'],
+    props: ['id', 'channel', 'devices', 'rec_start', 'rec_stop', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'node', 'validity_start', 'validity_end'],
     data () {
         return {
             bus: new Vue(),
@@ -57,13 +61,15 @@ Vue.component('schedule', {
         <td><i v-if="friday" class="fas fa-check-circle text-success"></i></td>
         <td><i v-if="saturday" class="fas fa-check-circle text-success"></i></td>
         <td><i v-if="sunday" class="fas fa-check-circle text-success"></i></td>
+        <td>{{ validity_start }}</td>
+        <td>{{ validity_end }}</td>
     </tr>`
 })
 
 new Vue({
     el: '#recording_guides',
     data: {
-        apiURL: 'api/schedules/',
+        apiURL: 'api/schedule/',
         schedule_list: [],
         loading: true,
         errored: false

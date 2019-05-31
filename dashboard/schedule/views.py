@@ -19,22 +19,13 @@ class ChannelViewSet(viewsets.ModelViewSet):
     queryset = Channel.objects.all()
     filter_backends = (DjangoFilterBackend,)
 
-class ScheduleViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated,]
-    serializer_class = ScheduleSerializer
-    
-    queryset = Schedule.objects.all()
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('channel','monday', 'tuesday', 'wednesday', 'thursday',
-        'friday', 'saturday', 'sunday')
-
 class NodeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated,]
     serializer_class = NodeSerializer
     
     queryset = Node.objects.all()
 
-class ScheduleHistoryAPIView(generics.ListAPIView):
+class ScheduleAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated,]
     serializer_class = ScheduleSerializer
 

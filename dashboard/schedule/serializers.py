@@ -19,7 +19,7 @@ class ScheduleSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Schedule
         fields = ('channel_name','channel', 'rec_start', 'rec_stop', 'monday', 'tuesday',
-                  'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'devices')
+                  'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'devices', 'validity_start', 'validity_end')
         extra_kwargs = {
             'channel': {'view_name' : 'schedule:channel-detail'},
         }
