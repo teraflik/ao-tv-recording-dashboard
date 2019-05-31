@@ -1,4 +1,5 @@
 import datetime
+import calendar
 
 from django.shortcuts import render
 from django.template.response import TemplateResponse
@@ -42,26 +43,25 @@ class ScheduleHistoryAPIView(generics.ListAPIView):
         channel_value = self.request.query_params.get('channel_values', None)
         device = self.request.query_params.get('device_id', None)
 
-        query_map = {'pk': 'id', 'channel': 'channel_id', 'rec_start': 'rec_start', 'rec_stop': 'rec_stop'}
-        
-        # If no date is provided, use current table state
-        timestamp = datetime.datetime.strptime(date,'%Y-%m-%d').strftime('%Y-%m-%d %H:%M:%S')
-        
-        query_string = "SELECT * FROM schedule_schedule as A, schedule_nodeallocation as B where A.id=B.schedule_id and A.ROW_START<='"+ timestamp+ "' and A.ROW_END>='" + timestamp + "'"
-        
+        date_object = datetime.datetime.strptime(date,'%Y-%m-%d')
+        weekday = calendar.day_name[date_object.weekday()].lower()
+
+        queryset = Schedule.objects.all()
+        queryset = queryset.filter(
+            validity_start__lte = date_object,
+            validity_end__gte = date_object,
+            **{weekday: True}
+            )
+
         if channel_value is not None:
-            try:
-                channel = Channel.objects.get(value=channel_value).id
-                query_string = query_string + " AND A.channel_id=" + str(channel)
-            except Channel.DoesNotExist:
-                return Channel.objects.none()
-
-        if device is not None:
-            query_string = query_string + " AND B.label='" + str(device).upper() + "'"
+            queryset = queryset.filter(channel__value = channel_value)
         else:
-            query_string = query_string + " AND B.label='A'"
-
-        queryset = Schedule.objects.raw(query_string, translations=query_map)
+            queryset = queryset
+        
+        if device is not None:
+            queryset = queryset.filter(nodeallocation__label= device)
+        else:
+            queryset = queryset
 
         return queryset
 

@@ -9,7 +9,7 @@ class ChannelAdmin(admin.ModelAdmin):
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
     list_display = ['channel', 'rec_start', 'rec_stop', 'monday', 'tuesday', 
-        'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'devices']
+        'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'devices', 'validity_start', 'validity_end']
     
     def devices(self, obj):
         return obj.get_nodes()

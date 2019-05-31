@@ -1,6 +1,7 @@
 import datetime
 
 from django.db import models
+from django.utils import timezone
 
 from monitoring.models import Node
 
@@ -25,6 +26,8 @@ class Schedule(models.Model):
         on_delete=models.PROTECT, related_name="schedules", blank=False)
     rec_start = models.TimeField(verbose_name="Recording Start Time", blank=False)
     rec_stop = models.TimeField(verbose_name="Recording Stop Time", blank=False)
+    validity_start = models.DateField(verbose_name="Validity Start", blank=False, default=datetime.date.today)
+    validity_end = models.DateField(verbose_name="Validity End", blank=False, default=datetime.datetime.max)
     monday = models.BooleanField(blank=False, default=True)
     tuesday = models.BooleanField(blank=False, default=True)
     wednesday = models.BooleanField(blank=False, default=True)
