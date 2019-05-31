@@ -110,7 +110,7 @@ const resolveAll = (apiCalls) => {
  */
 const DBNAME_TO_URL_PATHNAME_MAPPING = Object.freeze({
     "RECORDING"                 :   "/api/recording", 
-    "RECORDING_GUIDE"           :   "/api/recording_guide",
+    "RECORDING_GUIDE"           :   "/schedule/api/schedule_history",
     "RECORDING_TRACKING"        :   "/api/recording_tracking",
     "FILTER_RECORDING_TRACKING" :   "/api/filter_recording_tracking",
     "INVALID_FRAME_TRACKING"    :   "/api/blank"

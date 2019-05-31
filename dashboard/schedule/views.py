@@ -58,6 +58,8 @@ class ScheduleHistoryAPIView(generics.ListAPIView):
 
         if device is not None:
             query_string = query_string + " AND B.label='" + str(device).upper() + "'"
+        else:
+            query_string = query_string + " AND B.label='A'"
 
         queryset = Schedule.objects.raw(query_string, translations=query_map)
 

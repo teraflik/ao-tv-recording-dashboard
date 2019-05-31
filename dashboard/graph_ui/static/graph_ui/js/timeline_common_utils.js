@@ -294,6 +294,7 @@ const prepareRecordingGuideDataTableEntries = (recordingGuideRawData, date) => {
 const prepareDataForGoogleChartTimeline = (dataMapping, dataProcessingMappings, date) => {
 
     let totalFormattedData = [];
+    let hasRecordingGuideData = !!dataMapping['RECORDING_GUIDE'].length;
 
     dataProcessingMappings.forEach((dataProcessingMapping) => {
         
@@ -306,7 +307,7 @@ const prepareDataForGoogleChartTimeline = (dataMapping, dataProcessingMappings, 
         totalFormattedData = totalFormattedData.concat(processingMethod(...dataArray, date));
     });
 
-    if (totalFormattedData.length == 0) {
+    if (totalFormattedData.length == 0 || !hasRecordingGuideData){
         
         let emptyEntryStartDate = new Date(date + " 00:00:00");
     
