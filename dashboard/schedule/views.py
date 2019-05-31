@@ -38,28 +38,26 @@ class ScheduleHistoryAPIView(generics.ListAPIView):
     serializer_class = ScheduleSerializer
 
     def get_queryset(self):
-        date = self.request.query_params.get('date', None)
+        date = self.request.query_params.get('date',str(datetime.datetime.date(datetime.datetime.now())))
         channel_value = self.request.query_params.get('channel_values', None)
         device = self.request.query_params.get('device_id', None)
 
         query_map = {'pk': 'id', 'channel': 'channel_id', 'rec_start': 'rec_start', 'rec_stop': 'rec_stop'}
         
         # If no date is provided, use current table state
-        if not date:
-            query_string = "SELECT * FROM schedule_schedule FOR SYSTEM_TIME AS OF CURRENT_TIMESTAMP"
-        else:
-            timestamp = datetime.datetime.strptime(date,'%Y-%m-%d').strftime('%Y-%m-%d %H:%M:%S')
-            query_string = "SELECT * FROM schedule_schedule FOR SYSTEM_TIME AS OF TIMESTAMP '" + timestamp + "'"
+        timestamp = datetime.datetime.strptime(date,'%Y-%m-%d').strftime('%Y-%m-%d %H:%M:%S')
+        
+        query_string = "SELECT * FROM schedule_schedule as A, schedule_nodeallocation as B where A.id=B.schedule_id and A.ROW_START<='"+ timestamp+ "' and A.ROW_END>='" + timestamp + "'"
         
         if channel_value is not None:
             try:
                 channel = Channel.objects.get(value=channel_value).id
-                query_string = query_string + " WHERE channel_id = " + str(channel)
+                query_string = query_string + " AND A.channel_id=" + str(channel)
             except Channel.DoesNotExist:
                 return Channel.objects.none()
 
         if device is not None:
-            query_string = query_string #Can't filter on device.
+            query_string = query_string + " AND B.label='" + str(device).upper() + "'"
 
         queryset = Schedule.objects.raw(query_string, translations=query_map)
 
