@@ -5,7 +5,7 @@ asn1crypto==0.24.0
 autopep8==1.4.3
 Babel==2.6.0
 bcrypt==3.1.6
-certifi==2019.3.9
+certifi==2022.12.7
 cffi==1.12.2
 chardet==3.0.4
 commonmark==0.8.1
